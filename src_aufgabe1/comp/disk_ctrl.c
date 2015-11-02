@@ -5,18 +5,15 @@
 
 
 #define DISK_MEM_BASE   0xD000
-#define DISK_MEM_BASE_2 0x0200
-#define DISK_MEM_BASE_3 0x0300
+#define DISK_MEM_BORDER 0x400
+#define DISK_MEM_BUF    0x200
 
-#define DISK_MEM_MASK_UP 0xF000
-#define DISK_MEM_MASK_DOWN 0x0F00
-
-#define DISK_BNR		0x0000
-#define DISK_BNR_1		0x0001
-#define DISK_BNR_2		0x0002
-#define DISK_BNR_3		0x0003
-#define DISK_ERR_REG	0x0007
-#define DISK_READ_WRITE 0x000b
+#define DISK_BNR		0x0
+#define DISK_BNR_1		0x1
+#define DISK_BNR_2		0x2
+#define DISK_BNR_3		0x3
+#define DISK_ERR_REG	0x7
+#define DISK_READ_WRITE 0xb
 
 #define DISK_SIZE		5*1024*1024
 #define BUF_SIZE		512
@@ -36,51 +33,54 @@ struct cpssp {
 	/** state */
 };
 
-static bool
-validate_addr(uint32_t addr){
-	if(	(addr & DISK_MEM_MASK_UP) == DISK_MEM_BASE &&
-			(   (addr & DISK_MEM_MASK_DOWN) != DISK_MEM_BASE_2 ||
-				(addr & DISK_MEM_MASK_DOWN) != DISK_MEM_BASE_3  )
-	  ) {
-		return 1;
-	}
-	switch (addr) {
-		case DISK_BNR:
-			return 1;
-
-		case DISK_BNR_1:
-			return 1;
-
-		case DISK_BNR_2:
-			return 1;
-
-		case DISK_BNR_3:
-			return 1;
-
-		case DISK_ERR_REG:
-			return 1;
-
-		case DISK_READ_WRITE:
-			return 1;
-
-		default:
-			return 0;
-	}
-}
 
 static bool
 disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
-	if(!validate_addr(addr)){
-		return 0;
+	/*
+	 * This works because addr is an unsigned int.
+	 * Case: 0 < addr < 0xD offset is bigger than 0x0400 because
+	 * of underflow
+	 * Case: 0xD4 >= addr: offset is higher than 0x0400
+	 */
+	uint32_t offset = addr - DISK_MEM_BASE;
+
+	if(offset > DISK_MEM_BORDER){
+		return false;
 	}
+
+	*valp = 0;
+
+	switch (offset) {
+		case DISK_BNR:
+			*valp = bnr & 0xFF;
+			return true;
+		case DISK_BNR_1:
+			*valp = 8 >> (bnr & 0xFF00);
+			return true;
+		case DISK_BNR_2:
+			*valp = 16 >> (bnr & 0xFF0000);
+			return true;
+		case DISK_BNR_3:
+			*valp = 24 >> (bnr & 0xFF000000);
+			return true;
+		case DISK_ERR_REG:
+			*valp = err_reg;
+			return true;
+		case DISK_READ_WRITE:
+			*valp = read_write;
+			return true;
+		default:
+			/* Check if adress is in range [0xD200, 0xD400] */
+			if(offset < DISK_MEM_BUF){
+				return false;
+			}
+	}
+
 	return 0;
 }
 
 static bool
 disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
-	if(!validate_addr(addr)){
-		return 0;
-	}
 	return 0;
 }
 
