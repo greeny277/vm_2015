@@ -25,6 +25,7 @@
 static uint8_t err_reg;
 static uint32_t bnr;
 static bool read_write;
+static FILE *f;
 
 static char buffer[BUF_SIZE];
 
@@ -58,7 +59,7 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 	assert(cpssp != NULL);
 	cpssp->port_host = port_host;
 
-	FILE *f = fopen(fn, "w+");
+	f = fopen(fn, "w+");
 	assert(f != NULL);
 
 	int ret = fseek(f, DISK_SIZE, SEEK_SET);
@@ -72,4 +73,5 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 void
 disk_ctrl_destroy(void *_cpssp)
 {
+	fclose(f);
 }
