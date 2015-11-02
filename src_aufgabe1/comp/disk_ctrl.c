@@ -48,6 +48,8 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 		return false;
 	}
 
+	/* Adress is in range [0xD000; 0xD400] */
+
 	*valp = 0;
 
 	switch (offset) {
@@ -74,6 +76,10 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 			if(offset < DISK_MEM_BUF){
 				return false;
 			}
+
+			offset = offset - DISK_MEM_BUF;
+			*valp = buffer[offset];
+			return true;
 	}
 
 	return 0;
