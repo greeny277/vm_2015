@@ -37,16 +37,54 @@ struct cpssp {
 };
 
 static bool
+validate_addr(uint32_t addr){
+	if(	(addr & DISK_MEM_MASK_UP) == DISK_MEM_BASE &&
+			(   (addr & DISK_MEM_MASK_DOWN) != DISK_MEM_BASE_2 ||
+				(addr & DISK_MEM_MASK_DOWN) != DISK_MEM_BASE_3  )
+	  ) {
+		return 1;
+	}
+	switch (addr) {
+		case DISK_BNR:
+			return 1;
+
+		case DISK_BNR_1:
+			return 1;
+
+		case DISK_BNR_2:
+			return 1;
+
+		case DISK_BNR_3:
+			return 1;
+
+		case DISK_ERR_REG:
+			return 1;
+
+		case DISK_READ_WRITE:
+			return 1;
+
+		default:
+			return 0;
+	}
+}
+
+static bool
 disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
+	if(!validate_addr(addr)){
+		return 0;
+	}
 	return 0;
 }
 
 static bool
 disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
+	if(!validate_addr(addr)){
+		return 0;
+	}
 	return 0;
 }
 
-void *
+	void *
 disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 {
 	struct cpssp *cpssp;
@@ -70,7 +108,7 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 	return cpssp;
 }
 
-void
+	void
 disk_ctrl_destroy(void *_cpssp)
 {
 	fclose(f);
