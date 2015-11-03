@@ -149,8 +149,6 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 			err_reg = val;
 			return true;
 		case DISK_READ_WRITE:
-			/* XXX: clear the err_reg?? */
-			// err_reg = 0;
 			read_write = val;
 			if(read_write == 0) {
 				if(!read_from_disk()){
