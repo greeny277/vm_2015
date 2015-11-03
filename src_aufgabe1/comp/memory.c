@@ -13,6 +13,7 @@ struct cpssp {
 	/** state */
 	char ram[RAM_SIZE];
 };
+
 static bool
 ram_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 	struct cpssp* cpssp = (struct cpssp*) _cpssp;
