@@ -1,6 +1,7 @@
 #include "memory.h"
 #include <stdlib.h>
-
+#include <assert.h>
+#include <string.h>
 #define RAM_SIZE 32*1024
 
 #define RAM_MEM_BASE 0x0000
@@ -27,7 +28,7 @@ ram_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 }
 
 static bool
-ram_writeb(void *_cpssp, uint32_t addr, uint8_t *valp){
+ram_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 	struct cpssp* cpssp = (struct cpssp*) _cpssp;
 	uint32_t offset = addr - RAM_MEM_BASE;
 
@@ -35,7 +36,7 @@ ram_writeb(void *_cpssp, uint32_t addr, uint8_t *valp){
 		return false;
 	}
 
-	cpssp->ram[addr] = valp;
+	cpssp->ram[addr] = val;
 	return true;
 }
 
