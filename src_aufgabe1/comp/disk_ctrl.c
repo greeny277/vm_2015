@@ -20,6 +20,7 @@
 
 
 static uint8_t err_reg;
+/* Big endian representation */
 static uint32_t bnr;
 static uint8_t read_write;
 static FILE *f;
@@ -129,20 +130,20 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 
 	switch (offset) {
 		case DISK_BNR:
-			bnr = bnr & 0x00;
-			bnr = val | bnr;
+			bnr &= ~0xFF;
+			bnr |= val;
 			return true;
 		case DISK_BNR_1:
-			bnr = bnr & 0x00FF;
-			bnr = (val << 8) | bnr;
+			bnr &= ~0xFF00;
+			bnr |= (val << 8);
 			return true;
 		case DISK_BNR_2:
-			bnr = bnr & 0x00FFFF;
-			bnr = (val << 16) | bnr;
+			bnr &= ~0xFF0000;
+			bnr |= (val << 16);
 			return true;
 		case DISK_BNR_3:
-			bnr = bnr & 0x00FFFFFF;
-			bnr = (val << 24) | bnr;
+			bnr &= ~0xFF000000;
+			bnr |= (val << 24);
 			return true;
 		case DISK_ERR_REG:
 			err_reg = val;
