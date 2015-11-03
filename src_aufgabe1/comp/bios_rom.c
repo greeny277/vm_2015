@@ -46,8 +46,6 @@ rom_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 
 	cpssp->rom[offset] = val;
 	return true;
-
-	return false;
 }
 
 void *
