@@ -1,16 +1,15 @@
-#include "bios_rom.h"
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-
 #include <sys/types.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
+#include "bios_rom.h"
 
 #define ROM_MEM_BASE 0xE000
-#define ROM_SIZE 4*1024
+#define ROM_SIZE     4*1024
 
 struct cpssp {
 	/** ports */

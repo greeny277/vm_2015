@@ -2,9 +2,10 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#define RAM_SIZE 32*1024
+
 
 #define RAM_MEM_BASE 0x0000
+#define RAM_SIZE     32*1024
 
 struct cpssp {
 	/** ports */
