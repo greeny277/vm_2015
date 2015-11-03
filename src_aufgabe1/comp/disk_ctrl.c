@@ -21,7 +21,7 @@
 
 static uint8_t err_reg;
 static uint32_t bnr;
-static bool read_write;
+static uint8_t read_write;
 static FILE *f;
 
 static char buffer[BUF_SIZE];
@@ -86,8 +86,104 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 }
 
 static bool
+read_from_disk(){
+		int disk_addr = BUF_SIZE * bnr;
+		
+		if(disk_addr + BUF_SIZE > DISK_SIZE){
+				return false;
+		}
+		/* Set filepointer to dis_addr */
+		if(0 != fseek(f,disk_addr,SEEK_SET)){
+			return false;
+		}
+
+		/* Read BUF_SIZE bytes in buffer */
+		return (BUF_SIZE == fread(buffer,BUF_SIZE, sizeof(char),f));
+
+}
+
+static bool
+write_to_disk(){
+		int disk_addr = BUF_SIZE * bnr;
+		
+		if(disk_addr + BUF_SIZE > DISK_SIZE){
+				return false;
+		}
+		
+		/* Set filepointer to dis_addr */
+		if(0 != fseek(f,disk_addr,SEEK_SET)){
+			return false;
+		}
+
+		/* Read BUF_SIZE bytes in buffer */
+		return (BUF_SIZE == fwrite(buffer,BUF_SIZE, sizeof(char),f));
+}
+
+static bool
 disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
-	return 0;
+	uint32_t offset = addr - DISK_MEM_BASE;
+
+	if(offset > DISK_MEM_BORDER){
+		return false;
+	}
+	
+	/* Adress is in range [0xD000; 0xD400] */
+
+	/* TODO: check address in BNR? */
+
+	switch (offset) {
+		case DISK_BNR:
+			bnr = bnr & 0x00;
+			bnr = bnr | val;
+			return true;
+		case DISK_BNR_1:
+			bnr = bnr & 0x00FF;
+			bnr = (val << 8) | bnr;
+			return true;
+		case DISK_BNR_2:
+			bnr = bnr & 0x00FF;
+			bnr = (val << 16) | bnr;
+			return true;
+		case DISK_BNR_3:
+			bnr = bnr & 0x00FF;
+			bnr = (val << 24) | bnr;
+			return true;
+		case DISK_ERR_REG:
+			err_reg = val;
+			return true;
+		case DISK_READ_WRITE:
+			/* XXX: clear the err_reg?? */
+			err_reg = 0;
+			read_write = val;
+			if(read_write == 0) {
+				if(!read_from_disk()){
+					err_reg = 1;
+					return false;
+				}
+				return true;
+
+			} else if(read_write == 1)	{
+				if(!write_to_disk()){
+					err_reg = 1;
+					return false;
+				}
+				return true;
+			} else {
+				return true;
+			}
+		default:
+			/* TODO */
+			/* Check if adress is in range [0xD200, 0xD400] */
+			if(offset < DISK_MEM_BUF){
+				return false;
+			}
+
+			offset = offset - DISK_MEM_BUF;
+			return true;
+	}
+	
+
+		return 0;
 }
 
 	void *
