@@ -81,8 +81,6 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 			*valp = buffer[offset];
 			return true;
 	}
-
-	return 0;
 }
 
 static bool
@@ -172,18 +170,15 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 				return true;
 			}
 		default:
-			/* TODO */
 			/* Check if adress is in range [0xD200, 0xD400] */
 			if(offset < DISK_MEM_BUF){
 				return false;
 			}
 
 			offset = offset - DISK_MEM_BUF;
+			buffer[offset] = val;
 			return true;
 	}
-	
-
-		return 0;
 }
 
 	void *
