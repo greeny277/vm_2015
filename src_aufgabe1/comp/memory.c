@@ -19,11 +19,11 @@ ram_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 	struct cpssp* cpssp = (struct cpssp*) _cpssp;
 	uint32_t offset = addr - RAM_MEM_BASE;
 
-	if(offset > (RAM_MEM_BASE + RAM_SIZE)){
+	if(offset >= RAM_SIZE){
 		return false;
 	}
 
-	*valp = cpssp->ram[addr];
+	*valp = cpssp->ram[offset];
 
 	return true;
 }
@@ -33,11 +33,11 @@ ram_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 	struct cpssp* cpssp = (struct cpssp*) _cpssp;
 	uint32_t offset = addr - RAM_MEM_BASE;
 
-	if(offset > (RAM_MEM_BASE + RAM_SIZE)){
+	if(offset >= RAM_SIZE){
 		return false;
 	}
 
-	cpssp->ram[addr] = val;
+	cpssp->ram[offset] = val;
 	return true;
 }
 

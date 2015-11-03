@@ -17,17 +17,36 @@ struct cpssp {
 	struct sig_host_bus *port_host;
 
 	/** state */
-	int bios_size;
 	char rom[ROM_SIZE];
 };
 
 static bool
 rom_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
-	return false;
+
+	struct cpssp* cpssp = (struct cpssp*) _cpssp;
+	uint32_t offset = addr - ROM_MEM_BASE;
+
+	if(offset >= ROM_SIZE){
+		return false;
+	}
+
+	*valp = cpssp->rom[offset];
+
+	return true;
 }
 
 static bool
 rom_writeb(void *_cpssp, uint32_t addr, uint8_t val){
+	struct cpssp* cpssp = (struct cpssp*) _cpssp;
+	uint32_t offset = addr - RAM_MEM_BASE;
+
+	if(offset >= ROM_SIZE){
+		return false;
+	}
+
+	cpssp->rom[offset] = val;
+	return true;
+
 	return false;
 }
 
@@ -48,10 +67,10 @@ bios_rom_create(struct sig_host_bus *port_host, const char *rf)
 	/* Get size of BIOS file */
 	struct stat s;
 	assert(0 == stat(rf, &s));
-	cpssp->bios_size = s.st_size;
+	off_t bios_size = s.st_size;
 
 	/* Check if BIOS file fits into ROM */
-	assert(cpssp->bios_size <= ROM_SIZE);
+	assert(bios_size <= ROM_SIZE);
 
 	/* Open bios file */
 	FILE *f = fopen(rf, "r");

@@ -43,7 +43,7 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 	 */
 	uint32_t offset = addr - DISK_MEM_BASE;
 
-	if(offset > DISK_MEM_BORDER){
+	if(offset >= DISK_MEM_BORDER){
 		return false;
 	}
 
@@ -123,7 +123,7 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 	struct cpssp* cpssp = (struct cpssp*) _cpssp;
 	uint32_t offset = addr - DISK_MEM_BASE;
 
-	if(offset > DISK_MEM_BORDER){
+	if(offset >= DISK_MEM_BORDER){
 		return false;
 	}
 	
