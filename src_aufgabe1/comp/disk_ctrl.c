@@ -157,7 +157,7 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 				}
 				return true;
 
-			} else if(read_write == 1)	{
+			} else if(read_write == 1) {
 				if(!write_to_disk()){
 					err_reg = 1;
 					return false;
