@@ -96,7 +96,7 @@ read_from_disk(void *_cpssp){
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fread(cpssp->buffer, BUF_SIZE, sizeof(char), cpssp->f));
+		return (BUF_SIZE == fread(cpssp->buffer, sizeof(char), BUF_SIZE, cpssp->f));
 
 }
 
@@ -115,7 +115,7 @@ write_to_disk(void *_cpssp){
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fwrite(cpssp->buffer, BUF_SIZE, sizeof(char), cpssp->f));
+		return (BUF_SIZE == fwrite(cpssp->buffer, sizeof(char), BUF_SIZE, cpssp->f));
 }
 
 static bool

@@ -72,7 +72,7 @@ bios_rom_create(struct sig_host_bus *port_host, const char *rf)
 	memset(cpssp->rom, 0, ROM_SIZE);
 
 	/* Read BIOS file in rom buffer */
-	assert(ROM_SIZE == fread(cpssp->rom, ROM_SIZE, sizeof(char), f));
+	assert(bios_size == fread(cpssp->rom, sizeof(char), bios_size, f));
 
 	/* Close filepointer */
 	fclose(f);
