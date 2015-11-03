@@ -37,15 +37,10 @@ rom_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 
 static bool
 rom_writeb(void *_cpssp, uint32_t addr, uint8_t val){
-	struct cpssp* cpssp = (struct cpssp*) _cpssp;
-	uint32_t offset = addr - ROM_MEM_BASE;
+	/* We dont write into ROM */
 
-	if(offset >= ROM_SIZE){
-		return false;
-	}
-
-	cpssp->rom[offset] = val;
-	return true;
+	/* Ignoring */
+	return false;
 }
 
 void *
