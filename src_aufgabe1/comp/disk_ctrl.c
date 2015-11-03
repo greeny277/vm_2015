@@ -130,18 +130,18 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 	switch (offset) {
 		case DISK_BNR:
 			bnr = bnr & 0x00;
-			bnr = bnr | val;
+			bnr = val | bnr;
 			return true;
 		case DISK_BNR_1:
 			bnr = bnr & 0x00FF;
 			bnr = (val << 8) | bnr;
 			return true;
 		case DISK_BNR_2:
-			bnr = bnr & 0x00FF;
+			bnr = bnr & 0x00FFFF;
 			bnr = (val << 16) | bnr;
 			return true;
 		case DISK_BNR_3:
-			bnr = bnr & 0x00FF;
+			bnr = bnr & 0x00FFFFFF;
 			bnr = (val << 24) | bnr;
 			return true;
 		case DISK_ERR_REG:
