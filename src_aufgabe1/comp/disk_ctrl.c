@@ -127,8 +127,6 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 	
 	/* Adress is in range [0xD000; 0xD400] */
 
-	/* TODO: check address in BNR? */
-
 	switch (offset) {
 		case DISK_BNR:
 			bnr = bnr & 0x00;
@@ -151,7 +149,7 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 			return true;
 		case DISK_READ_WRITE:
 			/* XXX: clear the err_reg?? */
-			err_reg = 0;
+			// err_reg = 0;
 			read_write = val;
 			if(read_write == 0) {
 				if(!read_from_disk()){
