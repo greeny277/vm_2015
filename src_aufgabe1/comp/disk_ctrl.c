@@ -206,4 +206,5 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 disk_ctrl_destroy(void *_cpssp)
 {
 	fclose(f);
+	free(_cpssp);
 }
