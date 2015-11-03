@@ -18,25 +18,23 @@
 #define DISK_SIZE		5*1024*1024
 #define BUF_SIZE		512
 
-
-static uint8_t err_reg;
-/* Big endian representation */
-static uint32_t bnr;
-static uint8_t read_write;
-static FILE *f;
-
-static char buffer[BUF_SIZE];
-
 struct cpssp {
 	/** ports */
 	struct sig_host_bus *port_host;
 
 	/** state */
-};
+	uint8_t err_reg;
+	/* Big endian representation */
+	uint32_t bnr;
+	uint8_t read_write;
+	FILE *f;
 
+	char buffer[BUF_SIZE];
+};
 
 static bool
 disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
+	struct cpssp* cpssp = (struct cpssp*) _cpssp;
 	/*
 	 * This works because addr is an unsigned int.
 	 * Case: 0 < addr < 0xD offset is bigger than 0x0400 because
@@ -55,22 +53,22 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 
 	switch (offset) {
 		case DISK_BNR:
-			*valp = bnr & 0xFF;
+			*valp = cpssp->bnr & 0xFF;
 			return true;
 		case DISK_BNR_1:
-			*valp = 8 >> (bnr & 0xFF00);
+			*valp = 8 >> (cpssp->bnr & 0xFF00);
 			return true;
 		case DISK_BNR_2:
-			*valp = 16 >> (bnr & 0xFF0000);
+			*valp = 16 >> (cpssp->bnr & 0xFF0000);
 			return true;
 		case DISK_BNR_3:
-			*valp = 24 >> (bnr & 0xFF000000);
+			*valp = 24 >> (cpssp->bnr & 0xFF000000);
 			return true;
 		case DISK_ERR_REG:
-			*valp = err_reg;
+			*valp = cpssp->err_reg;
 			return true;
 		case DISK_READ_WRITE:
-			*valp = read_write;
+			*valp = cpssp->read_write;
 			return true;
 		default:
 			/* Check if adress is in range [0xD200, 0xD400] */
@@ -79,47 +77,50 @@ disk_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp){
 			}
 
 			offset = offset - DISK_MEM_BUF;
-			*valp = buffer[offset];
+			*valp = cpssp->buffer[offset];
 			return true;
 	}
 }
 
 static bool
-read_from_disk(){
-		int disk_addr = BUF_SIZE * bnr;
+read_from_disk(void *_cpssp){
+		struct cpssp* cpssp = (struct cpssp*) _cpssp;
+		int disk_addr = BUF_SIZE * cpssp->bnr;
 		
 		if(disk_addr + BUF_SIZE > DISK_SIZE){
 				return false;
 		}
 		/* Set filepointer to disk_addr */
-		if(0 != fseek(f, disk_addr, SEEK_SET)){
+		if(0 != fseek(cpssp->f, disk_addr, SEEK_SET)){
 			return false;
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fread(buffer, BUF_SIZE, sizeof(char), f));
+		return (BUF_SIZE == fread(cpssp->buffer, BUF_SIZE, sizeof(char), cpssp->f));
 
 }
 
 static bool
-write_to_disk(){
-		int disk_addr = BUF_SIZE * bnr;
+write_to_disk(void *_cpssp){
+		struct cpssp* cpssp = (struct cpssp*) _cpssp;
+		int disk_addr = BUF_SIZE * cpssp->bnr;
 		
 		if(disk_addr + BUF_SIZE > DISK_SIZE){
 				return false;
 		}
 		
 		/* Set filepointer to dis_addr */
-		if(0 != fseek(f, disk_addr, SEEK_SET)){
+		if(0 != fseek(cpssp->f, disk_addr, SEEK_SET)){
 			return false;
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fwrite(buffer, BUF_SIZE, sizeof(char),f));
+		return (BUF_SIZE == fwrite(cpssp->buffer, BUF_SIZE, sizeof(char), cpssp->f));
 }
 
 static bool
 disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
+	struct cpssp* cpssp = (struct cpssp*) _cpssp;
 	uint32_t offset = addr - DISK_MEM_BASE;
 
 	if(offset > DISK_MEM_BORDER){
@@ -130,36 +131,36 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 
 	switch (offset) {
 		case DISK_BNR:
-			bnr &= ~0xFF;
-			bnr |= val;
+			cpssp->bnr &= ~0xFF;
+			cpssp->bnr |= val;
 			return true;
 		case DISK_BNR_1:
-			bnr &= ~0xFF00;
-			bnr |= (val << 8);
+			cpssp->bnr &= ~0xFF00;
+			cpssp->bnr |= (val << 8);
 			return true;
 		case DISK_BNR_2:
-			bnr &= ~0xFF0000;
-			bnr |= (val << 16);
+			cpssp->bnr &= ~0xFF0000;
+			cpssp->bnr |= (val << 16);
 			return true;
 		case DISK_BNR_3:
-			bnr &= ~0xFF000000;
-			bnr |= (val << 24);
+			cpssp->bnr &= ~0xFF000000;
+			cpssp->bnr |= (val << 24);
 			return true;
 		case DISK_ERR_REG:
-			err_reg = val;
+			cpssp->err_reg = val;
 			return true;
 		case DISK_READ_WRITE:
-			read_write = val;
-			if(read_write == 0) {
-				if(!read_from_disk()){
-					err_reg = 1;
+			cpssp->read_write = val;
+			if(val == 0) {
+				if(!read_from_disk(_cpssp)){
+					cpssp->err_reg = 1;
 					return false;
 				}
 				return true;
 
-			} else if(read_write == 1) {
-				if(!write_to_disk()){
-					err_reg = 1;
+			} else if(val == 1) {
+				if(!write_to_disk(_cpssp)){
+					cpssp->err_reg = 1;
 					return false;
 				}
 				return true;
@@ -173,7 +174,7 @@ disk_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val){
 			}
 
 			offset = offset - DISK_MEM_BUF;
-			buffer[offset] = val;
+			cpssp->buffer[offset] = val;
 			return true;
 	}
 }
@@ -191,10 +192,10 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 	assert(cpssp != NULL);
 	cpssp->port_host = port_host;
 
-	f = fopen(fn, "w+");
-	assert(f != NULL);
+	cpssp->f = fopen(fn, "w+");
+	assert(cpssp->f != NULL);
 
-	int ret = fseek(f, DISK_SIZE, SEEK_SET);
+	int ret = fseek(cpssp->f, DISK_SIZE, SEEK_SET);
 	assert(ret == 0);
 
 	sig_host_bus_connect(port_host, cpssp, &hf);
@@ -205,6 +206,7 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 	void
 disk_ctrl_destroy(void *_cpssp)
 {
-	fclose(f);
+	struct cpssp* cpssp = (struct cpssp*) _cpssp;
+	fclose(cpssp->f);
 	free(_cpssp);
 }

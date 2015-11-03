@@ -6,7 +6,7 @@
 #include "sig_host_bus.h"
 
 /** create a memory instance 
-  * @param port_host port to thost bus.
+  * @param port_host port to host bus.
   * @return memory instance.
   */
 extern void *
