@@ -91,13 +91,13 @@ read_from_disk(){
 		if(disk_addr + BUF_SIZE > DISK_SIZE){
 				return false;
 		}
-		/* Set filepointer to dis_addr */
-		if(0 != fseek(f,disk_addr,SEEK_SET)){
+		/* Set filepointer to disk_addr */
+		if(0 != fseek(f, disk_addr, SEEK_SET)){
 			return false;
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fread(buffer,BUF_SIZE, sizeof(char),f));
+		return (BUF_SIZE == fread(buffer, BUF_SIZE, sizeof(char), f));
 
 }
 
@@ -110,12 +110,12 @@ write_to_disk(){
 		}
 		
 		/* Set filepointer to dis_addr */
-		if(0 != fseek(f,disk_addr,SEEK_SET)){
+		if(0 != fseek(f, disk_addr, SEEK_SET)){
 			return false;
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fwrite(buffer,BUF_SIZE, sizeof(char),f));
+		return (BUF_SIZE == fwrite(buffer, BUF_SIZE, sizeof(char),f));
 }
 
 static bool
