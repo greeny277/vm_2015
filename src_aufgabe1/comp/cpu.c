@@ -62,11 +62,12 @@ typedef struct modsib {
 } modsib;
 
 typedef struct op_addr {
-	uint32_t *op1_addr;
-	uint32_t *op2_addr;
+	uint32_t *op1_reg;
+	uint32_t *op2_reg;
+	uint32_t op2_mem;
 } op_addr;
 
-static void computeAddress(cpssp *, uint8_t, uint32_t *, uint32_t *);
+static void computeAddress(cpssp *, uint8_t, uint32_t *, op_addr *);
 static uint8_t cpu_get_byte_inc(cpssp *);
 
 /* @brief Write back address of CPU own register
@@ -195,7 +196,7 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		return false;
 	}
 	
-	addr->op1_addr = s_modrm.op1;
+	addr->op1_reg = s_modrm.op1;
 
 	/* Check for SIB Byte */
 	if(s_modrm.op2_name == ESP && s_modrm.addr_or_scale_mode != REGISTER){
@@ -215,7 +216,7 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		// TODO read out immidiate
 	} else {
 		// TODO read out immidiate
-		computeAddress(cpssp, s_modrm.addr_or_scale_mode, s_modrm.op2, addr->op2_addr);
+		computeAddress(cpssp, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
 	}
 
 	return true;
@@ -236,20 +237,20 @@ cpu_get_byte_inc(cpssp *cpssp)
  *		This method is always called for operand2.
  */
 static void
-computeAddress(cpssp *cpssp, uint8_t mode, uint32_t *addr, uint32_t *new_addr){
+computeAddress(cpssp *cpssp, uint8_t mode, uint32_t *addr, op_addr *op){
 	uint8_t displ1, displ2, displ3, displ4;
 	uint32_t displacement_complete;
 	switch(mode){
 		case NO_DISPLACEMENT:
 			/* Indirection with no displacement */
-			*new_addr = sig_host_bus_readb(cpssp->port_host, (void *)cpssp, ((*addr)));
+			op->op2_mem = sig_host_bus_readb(cpssp->port_host, (void *)cpssp, ((*addr)));
 			return;
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
 			displ1 = cpu_get_byte_inc(cpssp);
 			/* Indirection with 8 bit displacement */
-			*new_addr = displ1 + (*addr);
+			op->op2_mem = displ1 + (*addr);
 			return;
 
 		case DISPLACEMENT_32:
@@ -266,10 +267,10 @@ computeAddress(cpssp *cpssp, uint8_t mode, uint32_t *addr, uint32_t *new_addr){
 			displacement_complete |= (displ3 << 16);
 			displacement_complete |= (displ4 << 24);
 
-			*new_addr = displacement_complete + (*addr);
+			op->op2_mem = displacement_complete + (*addr);
 			return;
 		case REGISTER:
-			*new_addr = *addr;
+			op->op2_reg = addr;
 			return;
 	}
 	return;
