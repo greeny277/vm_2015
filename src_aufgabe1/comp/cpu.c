@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
+#include <string.h>
 
 #include "cpu.h"
 
@@ -16,6 +17,16 @@
 #define EBP 5
 #define ESI 6
 #define EDI 7
+
+
+#define AH 8
+#define AL 9
+#define BH 10
+#define BL 11
+#define CH 12
+#define CL 13
+#define DH 14
+#define DL 15
 
 typedef struct cpssp {
 	/** ports */
@@ -40,6 +51,9 @@ typedef struct modRM {
 	uint8_t addr_mode;
 	/* Indicates if a SIB byte follows (set to 1) or not */
 	bool sib_byte;
+	uint8_t src_reg;
+	uint8_t dest_reg;
+
 } modRM;
 
 /* @brief Write back address of CPU own register
@@ -55,57 +69,143 @@ typedef struct modRM {
  * @return True on success.
  *         False if pattern is greater than 7
  */
-static bool
-cpu_evalRegister(cpssp *cpssp, uint8_t reg, uint32_t **reg_addr){
+static uint8_t
+cpu_evalRegister(cpssp *cpssp, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
 	switch(reg){
 		case EAX:
 			*reg_addr = &(cpssp->eax);
-			return true;
+			if(is_8bit){
+					return AL;
+			} else {
+					return EAX;
+			}
 		case EBX:
 			*reg_addr = &(cpssp->ebx);
-			return true;
+			if(is_8bit){
+					return BL;
+			} else {
+					return EBX;
+			}
 		case ECX:
 			*reg_addr = &(cpssp->ecx);
-			return true;
+			if(is_8bit){
+					return CL;
+			} else {
+					return ECX;
+			}
 		case EDX:
 			*reg_addr = &(cpssp->edx);
-			return true;
+			if(is_8bit){
+					return DL;
+			} else {
+					return EDX;
+			}
 		case ESP:
-			*reg_addr = &(cpssp->esp);
-			return true;
+			if(is_8bit){
+					*reg_addr = &(cpssp->eax);
+					return AH;
+			} else {
+					*reg_addr = &(cpssp->esp);
+					return ESP;
+			}
 		case EBP:
-			*reg_addr = &(cpssp->ebp);
-			return true;
+			if(is_8bit){
+					*reg_addr = &(cpssp->ecx);
+					return CH;
+			} else {
+					*reg_addr = &(cpssp->ebp);
+					return EBP;
+			}
 		case ESI:
-			*reg_addr = &(cpssp->esi);
-			return true;
+			if(is_8bit){
+					*reg_addr = &(cpssp->edx);
+					return DH;
+			} else {
+					*reg_addr = &(cpssp->esi);
+					return ESI;
+			}
 		case EDI:
-			*reg_addr = &(cpssp->edi);
-			return true;
+			if(is_8bit){
+					*reg_addr = &(cpssp->ebx);
+					return BH;
+			} else {
+					*reg_addr = &(cpssp->edi);
+					return EDI;
+			}
 		default:
-			return false;
+			return -1;
 	}
 }
 
-static void
-cpu_modRM(cpssp *cpssp, modRM *mod, uint8_t modRM){
+static bool
+cpu_modRM(cpssp *cpssp, modRM *mod, uint8_t modRM, bool is_8bit){
 	uint32_t *src;
 	uint32_t *dest;
 	uint8_t mode;
 
-	cpu_evalRegister(cpssp, modRM & (0x7), &src);
-	cpu_evalRegister(cpssp, (modRM >> 3) & 0x7, &dest);
+
+	mod->src_reg = cpu_evalRegister(cpssp, modRM & (0x7), &src, is_8bit);
+	if( -1 == mod->src_reg) {
+		return false;
+	}
+
+	mod->dest_reg = cpu_evalRegister(cpssp, (modRM >> 3) & 0x7, &dest, is_8bit);
+	if( -1 == mod->dest_reg) {
+		return false;
+	}
 
 	mode = (modRM >> 6) & (0x7);
 
 	mod->addr_mode = mode;
 	mod->dest = dest;
 	mod->src = src;
+
+	return true;
+}
+
+static uint8_t
+cpu_get_byte_inc(cpssp *cpssp)
+{
+	uint8_t next_byte = sig_host_bus_readb(cpssp->port_host, (void *)cpssp, cpssp->eip);
+	cpssp->eip = cpssp->eip + 1;
+
+	return next_byte;
 }
 
 bool
 cpu_step(void *_cpssp)
 {
+
+	/* cast */
+	cpssp *cpssp = (struct cpssp *) _cpssp;
+
+	/* read the first byte from instruction pointer */
+
+	// FIXME: where to get the actual instruction, ROM or RAM??
+	
+	uint8_t op_code = cpu_get_byte_inc(cpssp);
+	
+	uint8_t mod_rm;
+	uint8_t sib;
+
+	modRM mod;
+	memset(&mod,0,sizeof(modRM));
+
+	switch(op_code) {
+			case 0x88:
+				/* MOV r8 to r/m8 */
+				mod_rm = cpu_get_byte_inc(cpssp);
+				if(!cpu_modRM(cpssp, &mod, mod_rm, true)){
+					return false;
+				}
+					
+			default:
+				/* FIXME: add something*/
+				return true;	
+	}
+
+
+
 	return false;
 }
 
