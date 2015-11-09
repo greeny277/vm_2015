@@ -28,6 +28,7 @@
 #define DH 14
 #define DL 15
 
+
 typedef struct cpssp {
 	/** ports */
 	struct sig_host_bus *port_host;
@@ -45,16 +46,28 @@ typedef struct cpssp {
 	uint32_t edi;
 } cpssp;
 
-typedef struct modRM {
-	uint32_t *src;
-	uint32_t *dest;
-	uint8_t addr_mode;
-	/* Indicates if a SIB byte follows (set to 1) or not */
-	bool sib_byte;
-	uint8_t src_reg;
-	uint8_t dest_reg;
+/*
+ * This struct works for SIB and ModRM Byte
+ */
+typedef struct modsib {
+	/* Operand 1 Reg: Can be used as SRC or DEST */
+	uint32_t *op1;
+	/* Operand 2 Reg/Mem: Can be used as SRC or DEST */
+	uint32_t *op2;
+	/* Defines address mode or scale mode */
+	uint8_t addr_or_scale_mode;
+	/* Save register name, valid or not */
+	uint8_t op1_name;
+	uint8_t op2_name;
+} modsib;
 
-} modRM;
+typedef struct op_addr {
+	uint32_t *op1_addr;
+	uint32_t *op2_addr;
+} op_addr;
+
+static void computeAddress(cpssp *, uint8_t, uint32_t *, uint32_t *);
+static uint8_t cpu_get_byte_inc(cpssp *);
 
 /* @brief Write back address of CPU own register
  * based on bit pattern.
@@ -138,27 +151,72 @@ cpu_evalRegister(cpssp *cpssp, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
 }
 
 static bool
-cpu_modRM(cpssp *cpssp, modRM *mod, uint8_t modRM, bool is_8bit){
-	uint32_t *src;
-	uint32_t *dest;
-	uint8_t mode;
+cpu_evalByte(cpssp *cpssp, modsib *mod, uint8_t byte, uint8_t is_8bit)
+{
+	uint32_t *op1;
+	uint32_t *op2;
 
-
-	mod->src_reg = cpu_evalRegister(cpssp, modRM & (0x7), &src, is_8bit);
-	if( -1 == mod->src_reg) {
+	mod->op1_name = cpu_evalRegister(cpssp, byte & (0x7), &op1, is_8bit);
+	if( -1 == mod->op1_name) {
 		return false;
 	}
 
-	mod->dest_reg = cpu_evalRegister(cpssp, (modRM >> 3) & 0x7, &dest, is_8bit);
-	if( -1 == mod->dest_reg) {
+	mod->op2_name = cpu_evalRegister(cpssp, (byte >> 3) & 0x7, &op2, is_8bit);
+	if( -1 == mod->op2_name) {
 		return false;
 	}
 
-	mode = (modRM >> 6) & (0x7);
+	mod->addr_or_scale_mode = (byte >> 6) & (0x7);
+	mod->op1 = op1;
+	mod->op2 = op2;
 
-	mod->addr_mode = mode;
-	mod->dest = dest;
-	mod->src = src;
+	return true;
+}
+
+/*
+ * @brief This method reads out each byte to determine
+ * the complete address of operand 1 and 2.
+ */
+static bool
+cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
+{
+	uint8_t mod_rm = 0;
+	uint8_t sib = 0;
+	uint32_t *base = 0;
+	uint32_t *index = 0;
+	uint8_t scale = 0;
+
+	/* Eval MOD_RM Byte */
+	mod_rm = cpu_get_byte_inc(cpssp);
+	modsib s_modrm;
+	memset(&mod_rm, 0, sizeof(modsib));
+
+	if(false == cpu_evalByte(cpssp, &s_modrm, mod_rm, is_8bit)){
+		return false;
+	}
+	
+	addr->op1_addr = s_modrm.op1;
+
+	/* Check for SIB Byte */
+	if(s_modrm.op2_name == ESP && s_modrm.addr_or_scale_mode != REGISTER){
+		sib = cpu_get_byte_inc(cpssp);
+		modsib s_sib;
+		memset(&s_sib,0,sizeof(modsib));
+
+		if(false == cpu_evalByte(cpssp, &s_sib, sib, is_8bit)){
+				return false;
+		}
+
+		scale = s_sib.addr_or_scale_mode;
+		scale = 1 << scale;
+		base = s_sib.op2;
+		index = s_sib.op1;
+		// TODO Interpret SIB Byte
+		// TODO read out immidiate
+	} else {
+		// TODO read out immidiate
+		computeAddress(cpssp, s_modrm.addr_or_scale_mode, s_modrm.op2, addr->op2_addr);
+	}
 
 	return true;
 }
@@ -172,33 +230,72 @@ cpu_get_byte_inc(cpssp *cpssp)
 	return next_byte;
 }
 
+
+/*
+ * @brief Depending on mode return address.
+ *		This method is always called for operand2.
+ */
+static void
+computeAddress(cpssp *cpssp, uint8_t mode, uint32_t *addr, uint32_t *new_addr){
+	uint8_t displ1, displ2, displ3, displ4;
+	uint32_t displacement_complete;
+	switch(mode){
+		case NO_DISPLACEMENT:
+			/* Indirection with no displacement */
+			*new_addr = sig_host_bus_readb(cpssp->port_host, (void *)cpssp, ((*addr)));
+			return;
+
+		case DISPLACEMENT_8:
+			/* Read one extra byte from bus */
+			displ1 = cpu_get_byte_inc(cpssp);
+			/* Indirection with 8 bit displacement */
+			*new_addr = displ1 + (*addr);
+			return;
+
+		case DISPLACEMENT_32:
+			/* Indirection with 32 bit displacement */
+
+			/* Read lowest byte first */
+			displ1 = cpu_get_byte_inc(cpssp);
+			displ2 = cpu_get_byte_inc(cpssp);
+			displ3 = cpu_get_byte_inc(cpssp);
+			displ4 = cpu_get_byte_inc(cpssp);
+
+			displacement_complete = displ1;
+			displacement_complete |= (displ2 << 8);
+			displacement_complete |= (displ3 << 16);
+			displacement_complete |= (displ4 << 24);
+
+			*new_addr = displacement_complete + (*addr);
+			return;
+		case REGISTER:
+			*new_addr = *addr;
+			return;
+	}
+	return;
+}
+
 bool
 cpu_step(void *_cpssp)
 {
-
 	/* cast */
 	cpssp *cpssp = (struct cpssp *) _cpssp;
 
+	uint8_t op_code;
+
 	/* read the first byte from instruction pointer */
-
-	// FIXME: where to get the actual instruction, ROM or RAM??
+	op_code = cpu_get_byte_inc(cpssp);
 	
-	uint8_t op_code = cpu_get_byte_inc(cpssp);
-	
-	uint8_t mod_rm;
-	uint8_t sib;
-
-	modRM mod;
-	memset(&mod,0,sizeof(modRM));
+	op_addr s_op;
+	memset(&s_op, 0, sizeof(op_addr));
 
 	switch(op_code) {
 			case 0x88:
 				/* MOV r8 to r/m8 */
-				mod_rm = cpu_get_byte_inc(cpssp);
-				if(!cpu_modRM(cpssp, &mod, mod_rm, true)){
+				if(!cpu_decodeOperands(cpssp, &s_op, true)){
 					return false;
 				}
-					
+				
 			default:
 				/* FIXME: add something*/
 				return true;	
@@ -247,7 +344,7 @@ cpu_create(struct sig_host_bus *port_host)
 }
 
 void
-cpu_destroy(void *_cpssp)
+cpudestroy(void *_cpssp)
 {
 	free(_cpssp);
 }
