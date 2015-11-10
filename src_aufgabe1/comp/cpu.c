@@ -47,7 +47,7 @@ typedef struct cpssp {
 } cpssp;
 
 /*
- * This struct works for SIB and ModRM Byte
+ * This struct can be used for decoding SIB and ModRM byte
  */
 typedef struct modsib {
 	/* Operand 1 Reg: Can be used as SRC or DEST */
@@ -62,11 +62,15 @@ typedef struct modsib {
 } modsib;
 
 typedef struct op_addr {
+	/* Contains pointer to register except for immidiate values */
 	uint32_t *op1_reg;
+	/* Contains pointer to register in case of REGISTER addressment */
 	uint32_t *op2_reg;
+	/* Contains address in case of memory addressment */
 	uint32_t op2_mem;
 } op_addr;
 
+/* Method declarations */
 static void computeAddress(cpssp *, uint8_t, uint32_t *, op_addr *);
 static uint8_t cpu_get_byte_inc(cpssp *);
 
@@ -85,6 +89,7 @@ static uint8_t cpu_get_byte_inc(cpssp *);
  */
 static uint8_t
 cpu_evalRegister(cpssp *cpssp, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
+	/* FIXME Is it really necessary to return register name? */
 	switch(reg){
 		case EAX:
 			*reg_addr = &(cpssp->eax);
@@ -151,6 +156,20 @@ cpu_evalRegister(cpssp *cpssp, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
 	}
 }
 
+/*
+ * @brief  Interpret byte by it different parts
+ * Bits 7..6  Scale or Addressing Mode
+ * Bits 5..3  Register of first operand
+ * Bits 2..0  Register of second operand
+ *
+ * @param cpssp  CPU instance
+ * @param mod   Pointer to structure where results will be saved in
+ * @param byte  byte that will be analysed
+ * @param is_8bit  Is it an 8 bit instruction
+ *
+ * @return  Always true. When false is returned a huge programming
+ *      mistake was made.
+ */
 static bool
 cpu_evalByte(cpssp *cpssp, modsib *mod, uint8_t byte, uint8_t is_8bit)
 {
@@ -182,10 +201,6 @@ static bool
 cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 {
 	uint8_t mod_rm = 0;
-	uint8_t sib = 0;
-	uint32_t *base = 0;
-	uint32_t *index = 0;
-	uint8_t scale = 0;
 
 	/* Eval MOD_RM Byte */
 	mod_rm = cpu_get_byte_inc(cpssp);
@@ -196,10 +211,19 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		return false;
 	}
 	
+	/* Set address of op1 */
 	addr->op1_reg = s_modrm.op1;
 
-	/* Check for SIB Byte */
+	/* Check if SIB byte follows */
 	if(s_modrm.op2_name == ESP && s_modrm.addr_or_scale_mode != REGISTER){
+		/* Define variables for SIB byte */
+		uint32_t *base;
+		uint32_t *index;
+
+		uint8_t sib = 0;
+		uint8_t scale = 0;
+
+		/* Read next byte increment eip */
 		sib = cpu_get_byte_inc(cpssp);
 		modsib s_sib;
 		memset(&s_sib,0,sizeof(modsib));
@@ -212,7 +236,8 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		scale = 1 << scale;
 		base = s_sib.op2;
 		index = s_sib.op1;
-		// TODO Interpret SIB Byte
+
+		addr->op2_mem = *base + (*index * scale);
 		// TODO read out immidiate
 	} else {
 		// TODO read out immidiate
@@ -284,7 +309,8 @@ cpu_step(void *_cpssp)
 
 	uint8_t op_code;
 
-	/* read the first byte from instruction pointer */
+	/* read the first byte from instruction pointer and increment ip
+	 * afterards */
 	op_code = cpu_get_byte_inc(cpssp);
 	
 	op_addr s_op;
@@ -301,9 +327,6 @@ cpu_step(void *_cpssp)
 				/* FIXME: add something*/
 				return true;	
 	}
-
-
-
 	return false;
 }
 
@@ -345,7 +368,7 @@ cpu_create(struct sig_host_bus *port_host)
 }
 
 void
-cpudestroy(void *_cpssp)
+cpu_destroy(void *_cpssp)
 {
 	free(_cpssp);
 }
