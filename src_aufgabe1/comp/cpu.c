@@ -251,11 +251,15 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		index = s_sib.op1;
 
 		addr->op2_mem = *base + (*index * scale);
-		// TODO read out immidiate
+	} else if(s_modrm.op2_name == EBP && s_modrm.addr_or_scale_mode == NO_DISPLACEMENT){
+		/* Special case: Reject op2 and read in a 32 Bit displacement instead. */
+		uint32_t base_0 = 0;
+		computeAddress(cpssp, DISPLACEMENT_32, &base_0, addr);
 	} else {
-		// TODO read out immidiate
+		/* Compute address of op2 */
 		computeAddress(cpssp, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
 	}
+	// TODO read out immidiate
 
 	return true;
 }
@@ -271,8 +275,14 @@ cpu_get_byte_inc(cpssp *cpssp)
 
 
 /*
- * @brief Depending on mode return address.
- *		This method is always called for operand2.
+ * @brief          Compute address of operand 2 subjected to the addressing mode
+ *
+ * @param cpssp    CPU instance
+ *
+ * @param mode     Contains addressing mode
+ *
+ * @param addr     Pointer that contains the base address. Usually
+ *                 a pointer to CPU own register.
  */
 static void
 computeAddress(cpssp *cpssp, uint8_t mode, uint32_t *addr, op_addr *op){
