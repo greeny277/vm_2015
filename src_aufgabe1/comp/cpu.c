@@ -281,16 +281,16 @@ computeAddress(cpssp *cpssp, uint8_t mode, uint32_t *addr, op_addr *op){
 		case DISPLACEMENT_32:
 			/* Indirection with 32 bit displacement */
 
-			/* Read lowest byte first */
+			/* Attention: Lowest byte will be read first */
 			displ1 = cpu_get_byte_inc(cpssp);
 			displ2 = cpu_get_byte_inc(cpssp);
 			displ3 = cpu_get_byte_inc(cpssp);
 			displ4 = cpu_get_byte_inc(cpssp);
 
-			displacement_complete = displ1;
-			displacement_complete |= (displ2 << 8);
-			displacement_complete |= (displ3 << 16);
-			displacement_complete |= (displ4 << 24);
+			displacement_complete = displ4;
+			displacement_complete |= (displ3 << 8);
+			displacement_complete |= (displ2 << 16);
+			displacement_complete |= (displ1 << 24);
 
 			op->op2_mem = displacement_complete + (*addr);
 			return;
