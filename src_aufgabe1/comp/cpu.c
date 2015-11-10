@@ -68,6 +68,8 @@ typedef struct op_addr {
 	uint32_t *op2_reg;
 	/* Contains address in case of memory addressment */
 	uint32_t op2_mem;
+	/* High or Low Byte in case of 8 bit */
+	/* uint32_t is_high; */
 } op_addr;
 
 /* Method declarations */
@@ -236,6 +238,8 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		uint8_t sib = 0;
 		uint8_t scale = 0;
 
+		// TODO Special case SIB Byte
+
 		/* Read next byte increment eip */
 		sib = cpu_get_byte_inc(cpssp);
 		modsib s_sib;
@@ -251,6 +255,7 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		index = s_sib.op1;
 
 		addr->op2_mem = *base + (*index * scale);
+
 	} else if(s_modrm.op2_name == EBP && s_modrm.addr_or_scale_mode == NO_DISPLACEMENT){
 		/* Special case: Reject op2 and read in a 32 Bit displacement instead. */
 		uint32_t base_0 = 0;
@@ -259,7 +264,7 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		/* Compute address of op2 */
 		computeAddress(cpssp, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
 	}
-	// TODO read out immidiate
+	// TODO read out immidiate/constant value
 
 	return true;
 }
