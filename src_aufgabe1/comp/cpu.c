@@ -251,22 +251,23 @@ cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
 		scale = s_sib.addr_or_scale_mode;
 		scale = 1 << scale;
 		base = s_sib.op2;
-		
-		// TODO base reg is EBP and index reg is ESP!!!
+		index = s_sib.op1;
+	    
+		/* Compute base address for op2 */
+		uint32_t base_op2;
 		if(s_sib.op1_name == ESP) {
-			/* Index is ESP */
-			computeAddress(cpssp, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
+			/* Index is not used */
+			base_op2 = *base;
 		
 		} else if (s_sib.op2_name == EBP){
-			/* Base is EBP */
-			index = s_sib.op1;
 			/* Base is not used */
-			addr->op2_mem = *index * scale;
+			base_op2= *index * scale;
 				
 		} else {
-				index = s_sib.op1;
-				addr->op2_mem = *base + (*index * scale);
+		    base_op2 = *base + (*index * scale);
 		}
+		/* Remember: addressing mode is unequal to REGISTER! */
+		computeAddress(cpssp, s_modrm.addr_or_scale_mode, &base_op2, addr);
 
 	} else if(s_modrm.op2_name == EBP && s_modrm.addr_or_scale_mode == NO_DISPLACEMENT){
 		/* Special case: Reject op2 and read in a 32 Bit displacement instead. */
