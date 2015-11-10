@@ -162,13 +162,13 @@ cpu_evalRegister(cpssp *cpssp, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
  * Bits 5..3  Register of first operand
  * Bits 2..0  Register of second operand
  *
- * @param cpssp  CPU instance
- * @param mod   Pointer to structure where results will be saved in
- * @param byte  byte that will be analysed
+ * @param cpssp    CPU instance
+ * @param mod      Pointer to structure where results will be saved in
+ * @param byte     byte that will be analysed
  * @param is_8bit  Is it an 8 bit instruction
  *
- * @return  Always true. When false is returned a huge programming
- *      mistake was made.
+ * @return         True on success.
+ *                 False in case of a huge programming mistake.
  */
 static bool
 cpu_evalByte(cpssp *cpssp, modsib *mod, uint8_t byte, uint8_t is_8bit)
@@ -194,8 +194,21 @@ cpu_evalByte(cpssp *cpssp, modsib *mod, uint8_t byte, uint8_t is_8bit)
 }
 
 /*
- * @brief This method reads out each byte to determine
- * the complete address of operand 1 and 2.
+ * @brief This method reads and decodes the MOD_RM, SIB and
+ * DISPLACEMENT bytes. Furthermore it computes the addresses of
+ * operand 1 and 2. Either as pointer to a register or
+ * a virtual address for the RAM component
+ *
+ * @param cpssp    CPU instance
+ *
+ * @param addr     Pointer to structure where virtual address
+ *                 of memory or register addresses of the cpu
+ *                 instance will be saved in.
+ *
+ * @param is_8bit  Is it an 8 bit instruction
+ *
+ * @return         True when everything works fine.
+ *                 False when an error occured.
  */
 static bool
 cpu_decodeOperands(cpssp *cpssp, op_addr *addr, bool is_8bit)
