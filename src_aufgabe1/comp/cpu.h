@@ -86,15 +86,20 @@ typedef struct modsib {
 typedef struct op_addr {
 	/* Contains pointer to register except for immidiate values */
 	uint32_t *op1_reg;
+	/* For immidiate */
+	uint32_t op1_const;
+
+	 bool is_op1_high;
+
 	/* Contains pointer to register in case of REGISTER addressment */
 	uint32_t *op2_reg;
 	/* Contains address in case of memory addressment */
 	uint32_t op2_mem;
-	/* High or Low Byte in case of 8 bit */
-	/* uint32_t is_high; */
 
-	/* For immidiate */
-	uint32_t op1_const;
+	/* High or Low Byte in case of 8 bit */
+	//TODO
+	 bool is_op2_high;
+
 
 } op_addr;
 /* Method declarations */

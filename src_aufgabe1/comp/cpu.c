@@ -184,7 +184,7 @@ cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm)
 		scale = 1 << scale;
 		base = s_sib.op2;
 		index = s_sib.op1;
-	    
+
 		/* Compute base address for op2 */
 		uint32_t base_op2;
 		if(s_sib.op1_name == ESP) {
@@ -398,9 +398,32 @@ cpu_step(void *_cpssp_cpu)
 			case 0x88:
 				/* MOV r8 to r/m8 */
 				if(!cpu_decode_RM(cpssp_cpu, &s_op, true, false)){
-					return false;
+					uint8_t src = cpu_read_byte_from_register(s_op.is_op1_high, s_op.op1_reg);
+					if(s_op.op2_reg != 0){
+						/* Write in a register */
+						cpu_write_byte_in_reg(src, s_op.op2_reg, s_op.is_op2_high);
+					} else {
+						/* Write in memory */
+						cpu_write_byte_in_mem(cpssp_cpu, src, s_op.op2_mem);
+					}
+					return true;
 				}
-				
+				break;
+			case 0x89:
+				/* Mov r32 to r/m32 */
+				if(!cpu_decode_RM(cpssp_cpu, &s_op, true, false)){
+					uint32_t src = *(s_op.op2_reg);
+					if(s_op.op2_reg != 0){
+						/* Write in a register */
+						cpu_write_data_in_reg(src, s_op.op1_reg);
+					} else {
+						/* Write in memory */
+						cpu_write_data_in_mem(cpssp_cpu, src, s_op.op2_mem);
+					}
+					return true;
+				}
+				break;
+
 			default:
 				/* FIXME: add something*/
 				return true;	
