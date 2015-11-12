@@ -5,7 +5,7 @@ CFLAGS=\
 	-O2 \
 	\
 	-Wall \
-	-Werror \
+#	-Werror \
 
 CINCLUDE_FLAGS=\
 	-I bus \
