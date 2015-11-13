@@ -74,10 +74,13 @@ typedef struct cpu_state {
 typedef struct modsib {
 	/* Operand 1 Reg: Can be used as SRC or DEST */
 	uint32_t *op1;
+
 	/* Operand 2 Reg/Mem: Can be used as SRC or DEST */
 	uint32_t *op2;
+
 	/* Defines address mode or scale mode */
 	uint8_t addr_or_scale_mode;
+
 	/* Save register name, valid or not */
 	uint8_t op1_name;
 	uint8_t op2_name;
@@ -88,7 +91,7 @@ typedef struct op_addr {
 	uint32_t *op1_reg;
 	/* For immidiate */
 	uint32_t op1_const;
-	 bool is_op1_high;
+	bool is_op1_high;
 
 	/* Contains pointer to register in case of REGISTER addressment */
 	uint32_t *op2_reg;
@@ -97,19 +100,27 @@ typedef struct op_addr {
 
 	/* High or Low Byte in case of 8 bit */
 	//TODO
-	 bool is_op2_high;
+	bool is_op2_high;
 } op_addr;
+
 /* Method declarations */
-static uint8_t cpu_evalRegister(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit);
-static void computeOp2Address(cpu_state *, uint8_t, uint32_t *, op_addr *);
+static uint8_t cpu_eval_register(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit);
+static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
+static uint8_t cpu_get_byte_inc(cpu_state *);
+
+static void cpu_compute_op_to_address(cpu_state *, uint8_t, uint32_t *, op_addr *);
+
 static uint32_t cpu_read_32_bit_addr(cpu_state *cpu_state);
 static uint32_t cpu_read_data_from_mem(cpu_state *cpu_state, uint32_t ram_addr);
 static uint32_t cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr);
+
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
-static void cpu_write_data_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr);
 static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
+
+static void cpu_write_data_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr);
 static void cpu_write_data_in_reg(uint32_t data, uint32_t *reg_addr);
+
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
-static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
+
 #endif /* __CPU_H_INCLUDED */
