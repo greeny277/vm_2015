@@ -24,7 +24,6 @@ static uint8_t cpu_get_byte_inc(cpssp_cpu *);
  */
 static uint8_t
 cpu_evalRegister(cpssp_cpu *cpssp_cpu, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
-	/* FIXME Is it really necessary to return register name? */
 	switch(reg){
 		case EAX:
 			*reg_addr = &(cpssp_cpu->eax);
@@ -159,7 +158,22 @@ cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm)
 		return false;
 	}
 
-	/* TODO: interpret reg bits in case of immidiate */
+	/* Set high flag in 8bit mode */
+	if(is_8bit){
+		if(s_modrm.op1_name == AL || s_modrm.op1_name == BL ||
+				s_modrm.op1_name == CL || s_modrm.op1_name == DL){
+			addr->is_op1_high = false;
+		} else {
+			addr->is_op1_high = true;
+		}
+
+		if(s_modrm.op2_name == AL || s_modrm.op2_name == BL ||
+				s_modrm.op2_name == CL || s_modrm.op2_name == DL){
+			addr->is_op1_high = false;
+		} else {
+			addr->is_op1_high = true;
+		}
+	}
 
 	/* Check if SIB byte follows */
 	if(s_modrm.op2_name == ESP && s_modrm.addr_or_scale_mode != REGISTER){
