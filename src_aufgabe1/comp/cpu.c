@@ -18,69 +18,18 @@
  */
 static cpu_register
 cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit) {
-	switch(reg){
-		case EAX:
-			*reg_addr = &(cpu_state->eax);
-			if(is_8bit){
-				return AL;
-			} else {
-				return EAX;
-			}
-		case EBX:
-			*reg_addr = &(cpu_state->ebx);
-			if(is_8bit){
-				return BL;
-			} else {
-				return EBX;
-			}
-		case ECX:
-			*reg_addr = &(cpu_state->ecx);
-			if(is_8bit){
-				return CL;
-			} else {
-				return ECX;
-			}
-		case EDX:
-			*reg_addr = &(cpu_state->edx);
-			if(is_8bit){
-				return DL;
-			} else {
-				return EDX;
-			}
-		case ESP:
-			if(is_8bit){
-				*reg_addr = &(cpu_state->eax);
-				return AH;
-			} else {
-				*reg_addr = &(cpu_state->esp);
-				return ESP;
-			}
-		case EBP:
-			if(is_8bit){
-				*reg_addr = &(cpu_state->ecx);
-				return CH;
-			} else {
-				*reg_addr = &(cpu_state->ebp);
-				return EBP;
-			}
-		case ESI:
-			if(is_8bit){
-				*reg_addr = &(cpu_state->edx);
-				return DH;
-			} else {
-				*reg_addr = &(cpu_state->esi);
-				return ESI;
-			}
-		case EDI:
-			if(is_8bit){
-				*reg_addr = &(cpu_state->ebx);
-				return BH;
-			} else {
-				*reg_addr = &(cpu_state->edi);
-				return EDI;
-			}
-		default:
-			return 0xff;
+	if(reg > EDI)
+		return 0xff;
+
+	if(!is_8bit){
+		*reg_addr = &(cpu_state->eax)+reg;
+		return reg;
+	}else{
+		if(reg > 0b011)
+			*reg_addr = &(cpu_state->eax)+reg-4;
+		else
+			*reg_addr = &(cpu_state->eax)+reg;
+		return reg+8;
 	}
 }
 

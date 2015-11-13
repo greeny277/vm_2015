@@ -15,19 +15,21 @@ typedef enum cpu_register {
 	ECX,
 	EDX,
 	EBX,
+
 	ESP,
 	EBP,
 	ESI,
 	EDI,
 
-	AH,
 	AL,
-	BH,
-	BL,
-	CH,
 	CL,
+	DL,
+	BL,
+
+	AH,
+	CH,
 	DH,
-	DL
+	BH
 } cpu_register;
 
 
@@ -59,12 +61,14 @@ typedef struct cpu_state {
 	/** state */
 	/* Register beginning with letter 'e' have length of 32 bits */
 	uint32_t eip;
-	uint32_t ebp;
-	uint32_t esp;
+	/*registers must be in the same order as in `enum cpu_register`*/
 	uint32_t eax;
-	uint32_t ebx;
 	uint32_t ecx;
 	uint32_t edx;
+	uint32_t ebx;
+
+	uint32_t esp;
+	uint32_t ebp;
 	uint32_t esi;
 	uint32_t edi;
 } cpu_state;
