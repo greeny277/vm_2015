@@ -6,13 +6,13 @@
 
 
 /* Method declarations */
-static void computeOp2Address(cpssp_cpu *, uint8_t, uint32_t *, op_addr *);
-static uint8_t cpu_get_byte_inc(cpssp_cpu *);
+static void computeOp2Address(cpu_state *, uint8_t, uint32_t *, op_addr *);
+static uint8_t cpu_get_byte_inc(cpu_state *);
 
 /* @brief Write back address of CPU own register
  * based on bit pattern.
  *
- * @param cpssp_cpu  CPU instance
+ * @param cpu_state  CPU instance
  *
  * @param reg  Bit pattern for evaluation of register
  *
@@ -23,31 +23,31 @@ static uint8_t cpu_get_byte_inc(cpssp_cpu *);
  *         False if pattern is greater than 7
  */
 static uint8_t
-cpu_evalRegister(cpssp_cpu *cpssp_cpu, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
+cpu_evalRegister(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit){
 	switch(reg){
 		case EAX:
-			*reg_addr = &(cpssp_cpu->eax);
+			*reg_addr = &(cpu_state->eax);
 			if(is_8bit){
 					return AL;
 			} else {
 					return EAX;
 			}
 		case EBX:
-			*reg_addr = &(cpssp_cpu->ebx);
+			*reg_addr = &(cpu_state->ebx);
 			if(is_8bit){
 					return BL;
 			} else {
 					return EBX;
 			}
 		case ECX:
-			*reg_addr = &(cpssp_cpu->ecx);
+			*reg_addr = &(cpu_state->ecx);
 			if(is_8bit){
 					return CL;
 			} else {
 					return ECX;
 			}
 		case EDX:
-			*reg_addr = &(cpssp_cpu->edx);
+			*reg_addr = &(cpu_state->edx);
 			if(is_8bit){
 					return DL;
 			} else {
@@ -55,34 +55,34 @@ cpu_evalRegister(cpssp_cpu *cpssp_cpu, uint8_t reg, uint32_t **reg_addr, bool is
 			}
 		case ESP:
 			if(is_8bit){
-					*reg_addr = &(cpssp_cpu->eax);
+					*reg_addr = &(cpu_state->eax);
 					return AH;
 			} else {
-					*reg_addr = &(cpssp_cpu->esp);
+					*reg_addr = &(cpu_state->esp);
 					return ESP;
 			}
 		case EBP:
 			if(is_8bit){
-					*reg_addr = &(cpssp_cpu->ecx);
+					*reg_addr = &(cpu_state->ecx);
 					return CH;
 			} else {
-					*reg_addr = &(cpssp_cpu->ebp);
+					*reg_addr = &(cpu_state->ebp);
 					return EBP;
 			}
 		case ESI:
 			if(is_8bit){
-					*reg_addr = &(cpssp_cpu->edx);
+					*reg_addr = &(cpu_state->edx);
 					return DH;
 			} else {
-					*reg_addr = &(cpssp_cpu->esi);
+					*reg_addr = &(cpu_state->esi);
 					return ESI;
 			}
 		case EDI:
 			if(is_8bit){
-					*reg_addr = &(cpssp_cpu->ebx);
+					*reg_addr = &(cpu_state->ebx);
 					return BH;
 			} else {
-					*reg_addr = &(cpssp_cpu->edi);
+					*reg_addr = &(cpu_state->edi);
 					return EDI;
 			}
 		default:
@@ -96,7 +96,7 @@ cpu_evalRegister(cpssp_cpu *cpssp_cpu, uint8_t reg, uint32_t **reg_addr, bool is
  * Bits 5..3  Register of first operand
  * Bits 2..0  Register of second operand
  *
- * @param cpssp_cpu    CPU instance
+ * @param cpu_state    CPU instance
  * @param mod      Pointer to structure where results will be saved in
  * @param byte     byte that will be analysed
  * @param is_8bit  Is it an 8 bit instruction
@@ -105,17 +105,17 @@ cpu_evalRegister(cpssp_cpu *cpssp_cpu, uint8_t reg, uint32_t **reg_addr, bool is
  *                 False in case of a huge programming mistake.
  */
 static bool
-cpu_eval_byte(cpssp_cpu *cpssp_cpu, modsib *mod, uint8_t byte, uint8_t is_8bit)
+cpu_eval_byte(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 {
 	uint32_t *op1;
 	uint32_t *op2;
 
-	mod->op1_name = cpu_evalRegister(cpssp_cpu, byte & (0x7), &op1, is_8bit);
+	mod->op1_name = cpu_evalRegister(cpu_state, byte & (0x7), &op1, is_8bit);
 	if( -1 == mod->op1_name) {
 		return false;
 	}
 
-	mod->op2_name = cpu_evalRegister(cpssp_cpu, (byte >> 3) & 0x7, &op2, is_8bit);
+	mod->op2_name = cpu_evalRegister(cpu_state, (byte >> 3) & 0x7, &op2, is_8bit);
 	if( -1 == mod->op2_name) {
 		return false;
 	}
@@ -133,7 +133,7 @@ cpu_eval_byte(cpssp_cpu *cpssp_cpu, modsib *mod, uint8_t byte, uint8_t is_8bit)
  * operand 1 and 2. Either as pointer to a register or
  * a virtual address for the RAM component
  *
- * @param cpssp_cpu    CPU instance
+ * @param cpu_state    CPU instance
  *
  * @param addr     Pointer to structure where virtual address
  *                 of memory or register addresses of the cpu
@@ -145,16 +145,16 @@ cpu_eval_byte(cpssp_cpu *cpssp_cpu, modsib *mod, uint8_t byte, uint8_t is_8bit)
  *                 False when an error occured.
  */
 static bool
-cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm)
+cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm)
 {
 	uint8_t mod_rm = 0;
 
 	/* Eval MOD_RM Byte */
-	mod_rm = cpu_get_byte_inc(cpssp_cpu);
+	mod_rm = cpu_get_byte_inc(cpu_state);
 	modsib s_modrm;
 	memset(&mod_rm, 0, sizeof(modsib));
 
-	if(false == cpu_eval_byte(cpssp_cpu, &s_modrm, mod_rm, is_8bit)){
+	if(false == cpu_eval_byte(cpu_state, &s_modrm, mod_rm, is_8bit)){
 		return false;
 	}
 
@@ -186,11 +186,11 @@ cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm)
 
 
 		/* Read next byte increment eip */
-		sib = cpu_get_byte_inc(cpssp_cpu);
+		sib = cpu_get_byte_inc(cpu_state);
 		modsib s_sib;
 		memset(&s_sib,0,sizeof(modsib));
 
-		if(false == cpu_eval_byte(cpssp_cpu, &s_sib, sib, is_8bit)){
+		if(false == cpu_eval_byte(cpu_state, &s_sib, sib, is_8bit)){
 				return false;
 		}
 
@@ -213,22 +213,22 @@ cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm)
 		    base_op2 = *base + (*index * scale);
 		}
 		/* Remember: addressing mode is unequal to REGISTER! */
-		computeOp2Address(cpssp_cpu, s_modrm.addr_or_scale_mode, &base_op2, addr);
+		computeOp2Address(cpu_state, s_modrm.addr_or_scale_mode, &base_op2, addr);
 
 	} else if(s_modrm.op2_name == EBP && s_modrm.addr_or_scale_mode == NO_DISPLACEMENT){
 		/* Special case: Reject op2 and read in a 32 Bit displacement instead. */
 		uint32_t base_0 = 0;
-		computeOp2Address(cpssp_cpu, DISPLACEMENT_32, &base_0, addr);
+		computeOp2Address(cpu_state, DISPLACEMENT_32, &base_0, addr);
 	} else {
 		/* Compute address of op2 */
-		computeOp2Address(cpssp_cpu, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
+		computeOp2Address(cpu_state, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
 	}
 
 	/* Set op1 to reg address or as a constant value */
 	if(has_imm && is_8bit){
-			addr->op1_const = cpu_get_byte_inc(cpssp_cpu);
+			addr->op1_const = cpu_get_byte_inc(cpu_state);
 	} else if(has_imm){
-			addr->op1_const = cpu_read_32_bit_addr(cpssp_cpu);
+			addr->op1_const = cpu_read_32_bit_addr(cpu_state);
 	} else{
 			addr->op1_reg = s_modrm.op1;
 	}
@@ -238,14 +238,14 @@ cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm)
 
 
 static uint32_t
-cpu_read_32_bit_addr(cpssp_cpu *cpssp_cpu){
+cpu_read_32_bit_addr(cpu_state *cpu_state){
 		uint8_t displ1, displ2, displ3, displ4;
 		uint32_t displacement_complete;
 
-		displ1 = cpu_get_byte_inc(cpssp_cpu);
-		displ2 = cpu_get_byte_inc(cpssp_cpu);
-		displ3 = cpu_get_byte_inc(cpssp_cpu);
-		displ4 = cpu_get_byte_inc(cpssp_cpu);
+		displ1 = cpu_get_byte_inc(cpu_state);
+		displ2 = cpu_get_byte_inc(cpu_state);
+		displ3 = cpu_get_byte_inc(cpu_state);
+		displ4 = cpu_get_byte_inc(cpu_state);
 
 		displacement_complete = displ1;
 		displacement_complete |= (displ2 << 8);
@@ -257,10 +257,10 @@ cpu_read_32_bit_addr(cpssp_cpu *cpssp_cpu){
 
 
 static uint8_t
-cpu_get_byte_inc(cpssp_cpu *cpssp_cpu)
+cpu_get_byte_inc(cpu_state *cpu_state)
 {
-	uint8_t next_byte = sig_host_bus_readb(cpssp_cpu->port_host, (void *)cpssp_cpu, cpssp_cpu->eip);
-	cpssp_cpu->eip = cpssp_cpu->eip + 1;
+	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
+	cpu_state->eip = cpu_state->eip + 1;
 
 	return next_byte;
 }
@@ -269,7 +269,7 @@ cpu_get_byte_inc(cpssp_cpu *cpssp_cpu)
 /*
  * @brief          Compute address of operand 2 subjected to the addressing mode
  *
- * @param cpssp_cpu    CPU instance
+ * @param cpu_state    CPU instance
  *
  * @param mode     Contains addressing mode
  *
@@ -277,7 +277,7 @@ cpu_get_byte_inc(cpssp_cpu *cpssp_cpu)
  *                 a pointer to CPU own register.
  */
 static void
-computeOp2Address(cpssp_cpu *cpssp_cpu, uint8_t mode, uint32_t *addr, op_addr *op){
+computeOp2Address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op){
 	uint8_t displ1;
 	uint32_t displacement_complete;
 	switch(mode){
@@ -288,7 +288,7 @@ computeOp2Address(cpssp_cpu *cpssp_cpu, uint8_t mode, uint32_t *addr, op_addr *o
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
-			displ1 = cpu_get_byte_inc(cpssp_cpu);
+			displ1 = cpu_get_byte_inc(cpu_state);
 			/* Indirection with 8 bit displacement */
 			op->op2_mem = displ1 + (*addr);
 			return;
@@ -297,7 +297,7 @@ computeOp2Address(cpssp_cpu *cpssp_cpu, uint8_t mode, uint32_t *addr, op_addr *o
 			/* Indirection with 32 bit displacement */
 
 			/* Attention: Lowest byte will be read first */
-			displacement_complete = cpu_read_32_bit_addr(cpssp_cpu);
+			displacement_complete = cpu_read_32_bit_addr(cpu_state);
 			op->op2_mem = displacement_complete + (*addr);
 			return;
 		case REGISTER:
@@ -308,27 +308,27 @@ computeOp2Address(cpssp_cpu *cpssp_cpu, uint8_t mode, uint32_t *addr, op_addr *o
 }
 
 static uint8_t
-cpu_read_byte_from_mem(cpssp_cpu *cpssp_cpu, uint32_t ram_addr)
+cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t ram_addr)
 {
-	return sig_host_bus_readb(cpssp_cpu->port_host, cpssp_cpu, ram_addr);	
+	return sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 }
 
 static uint32_t
-cpu_read_data_from_mem(cpssp_cpu *cpssp_cpu, uint32_t ram_addr)
+cpu_read_data_from_mem(cpu_state *cpu_state, uint32_t ram_addr)
 {
 
 	uint32_t data;
 		uint8_t byte1, byte2, byte3, byte4;
-		byte1 = sig_host_bus_readb(cpssp_cpu->port_host, cpssp_cpu, ram_addr);
+		byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 		ram_addr++;
 		
-		byte2 = sig_host_bus_readb(cpssp_cpu->port_host, cpssp_cpu, ram_addr);
+		byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 		ram_addr++;
 		
-		byte3 = sig_host_bus_readb(cpssp_cpu->port_host, cpssp_cpu, ram_addr);
+		byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 		ram_addr++;
 		
-		byte4 = sig_host_bus_readb(cpssp_cpu->port_host, cpssp_cpu, ram_addr);
+		byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 		
 		data = byte1;
 		data |= (byte2 << 8);
@@ -348,29 +348,29 @@ cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr)
 	return *reg_addr & 0xff;
 } 
 static void
-cpu_write_byte_in_mem(cpssp_cpu *cpssp_cpu, uint8_t byte, uint32_t ram_addr)
+cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr)
 {
-	sig_host_bus_writeb(cpssp_cpu->port_host, cpssp_cpu, ram_addr, byte);	
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
 }
 
 static void
-cpu_write_data_in_mem(cpssp_cpu *cpssp_cpu, uint32_t data, uint32_t ram_addr)
+cpu_write_data_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr)
 {
 	uint8_t byte = data & 0xff; 
 
-	sig_host_bus_writeb(cpssp_cpu->port_host, cpssp_cpu, ram_addr, byte);	
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
 	byte = (data >> 8) & 0xff;
 	ram_addr++;
 
-	sig_host_bus_writeb(cpssp_cpu->port_host, cpssp_cpu, ram_addr, byte);	
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
 	byte = (data >> 16) & 0xff;
 	ram_addr++;
 	
-	sig_host_bus_writeb(cpssp_cpu->port_host, cpssp_cpu, ram_addr, byte);	
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
 	byte = (data >> 24) & 0xff;
 	ram_addr++;
 	
-	sig_host_bus_writeb(cpssp_cpu->port_host, cpssp_cpu, ram_addr, byte);	
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
 }
 
 
@@ -394,16 +394,16 @@ cpu_write_data_in_reg(uint32_t data, uint32_t *reg_addr)
 }
 
 bool
-cpu_step(void *_cpssp_cpu)
+cpu_step(void *_cpu_state)
 {
 	/* cast */
-	cpssp_cpu *cpssp_cpu = (struct cpssp_cpu *) _cpssp_cpu;
+	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
 
 	uint8_t op_code;
 
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
-	op_code = cpu_get_byte_inc(cpssp_cpu);
+	op_code = cpu_get_byte_inc(cpu_state);
 	
 	op_addr s_op;
 	memset(&s_op, 0, sizeof(op_addr));
@@ -411,28 +411,28 @@ cpu_step(void *_cpssp_cpu)
 	switch(op_code) {
 			case 0x88:
 				/* MOV r8 to r/m8 */
-				if(!cpu_decode_RM(cpssp_cpu, &s_op, true, false)){
+				if(!cpu_decode_RM(cpu_state, &s_op, true, false)){
 					uint8_t src = cpu_read_byte_from_register(s_op.is_op1_high, s_op.op1_reg);
 					if(s_op.op2_reg != 0){
 						/* Write in a register */
 						cpu_write_byte_in_reg(src, s_op.op2_reg, s_op.is_op2_high);
 					} else {
 						/* Write in memory */
-						cpu_write_byte_in_mem(cpssp_cpu, src, s_op.op2_mem);
+						cpu_write_byte_in_mem(cpu_state, src, s_op.op2_mem);
 					}
 					return true;
 				}
 				break;
 			case 0x89:
 				/* Mov r32 to r/m32 */
-				if(!cpu_decode_RM(cpssp_cpu, &s_op, true, false)){
+				if(!cpu_decode_RM(cpu_state, &s_op, true, false)){
 					uint32_t src = *(s_op.op2_reg);
 					if(s_op.op2_reg != 0){
 						/* Write in a register */
 						cpu_write_data_in_reg(src, s_op.op1_reg);
 					} else {
 						/* Write in memory */
-						cpu_write_data_in_mem(cpssp_cpu, src, s_op.op2_mem);
+						cpu_write_data_in_mem(cpu_state, src, s_op.op2_mem);
 					}
 					return true;
 				}
@@ -446,14 +446,14 @@ cpu_step(void *_cpssp_cpu)
 }
 
 static bool
-cpu_readb(void *_cpssp_cpu, uint32_t addr, uint8_t *valp){
+cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp){
 	/* We dont read from CPU */
 
 	return false;
 }
 
 static bool
-cpu_writeb(void *_cpssp_cpu, uint32_t addr, uint8_t val){
+cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val){
 	/* We dont write into CPU */
 
 	return false;
@@ -463,27 +463,27 @@ cpu_writeb(void *_cpssp_cpu, uint32_t addr, uint8_t val){
 void *
 cpu_create(struct sig_host_bus *port_host)
 {
-	struct cpssp_cpu *cpssp_cpu;
+	struct cpu_state *cpu_state;
 	static const struct sig_host_bus_funcs hf = {
 		.readb = cpu_readb,
 		.writeb = cpu_writeb
 	};
 
-	cpssp_cpu = malloc(sizeof(struct cpssp_cpu));
-	assert(cpssp_cpu != NULL);
+	cpu_state = malloc(sizeof(struct cpu_state));
+	assert(cpu_state != NULL);
 
-	cpssp_cpu->port_host = port_host;
+	cpu_state->port_host = port_host;
 	/* Set base pointer to start address of ROM.
 	 * The address is hardcoded, like in real hardware.
 	 */
-	cpssp_cpu->eip = 0xE000;
+	cpu_state->eip = 0xE000;
 
-	sig_host_bus_connect(port_host, cpssp_cpu, &hf);
-	return cpssp_cpu;
+	sig_host_bus_connect(port_host, cpu_state, &hf);
+	return cpu_state;
 }
 
 void
-cpu_destroy(void *_cpssp_cpu)
+cpu_destroy(void *_cpu_state)
 {
-	free(_cpssp_cpu);
+	free(_cpu_state);
 }

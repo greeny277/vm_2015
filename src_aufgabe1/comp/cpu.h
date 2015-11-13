@@ -51,7 +51,7 @@ cpu_create(struct sig_host_bus *port_host);
 extern void
 cpu_destroy(void *s);
 
-typedef struct cpssp_cpu {
+typedef struct cpu_state {
 	/** ports */
 	struct sig_host_bus *port_host;
 
@@ -66,7 +66,7 @@ typedef struct cpssp_cpu {
 	uint32_t edx;
 	uint32_t esi;
 	uint32_t edi;
-} cpssp_cpu;
+} cpu_state;
 
 /*
  * This struct can be used for decoding SIB and ModRM byte
@@ -88,7 +88,6 @@ typedef struct op_addr {
 	uint32_t *op1_reg;
 	/* For immidiate */
 	uint32_t op1_const;
-
 	 bool is_op1_high;
 
 	/* Contains pointer to register in case of REGISTER addressment */
@@ -99,20 +98,18 @@ typedef struct op_addr {
 	/* High or Low Byte in case of 8 bit */
 	//TODO
 	 bool is_op2_high;
-
-
 } op_addr;
 /* Method declarations */
-static uint8_t cpu_evalRegister(cpssp_cpu *cpssp_cpu, uint8_t reg, uint32_t **reg_addr, bool is_8bit);
-static void computeOp2Address(cpssp_cpu *, uint8_t, uint32_t *, op_addr *);
-static uint32_t cpu_read_32_bit_addr(cpssp_cpu *cpssp_cpu);
-static uint32_t cpu_read_data_from_mem(cpssp_cpu *cpssp_cpu, uint32_t ram_addr);
+static uint8_t cpu_evalRegister(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit);
+static void computeOp2Address(cpu_state *, uint8_t, uint32_t *, op_addr *);
+static uint32_t cpu_read_32_bit_addr(cpu_state *cpu_state);
+static uint32_t cpu_read_data_from_mem(cpu_state *cpu_state, uint32_t ram_addr);
 static uint32_t cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr);
-static void cpu_write_byte_in_mem(cpssp_cpu *cpssp_cpu, uint8_t byte, uint32_t ram_addr);
-static void cpu_write_data_in_mem(cpssp_cpu *cpssp_cpu, uint32_t data, uint32_t ram_addr);
+static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
+static void cpu_write_data_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr);
 static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
 static void cpu_write_data_in_reg(uint32_t data, uint32_t *reg_addr);
-static bool cpu_readb(void *_cpssp_cpu, uint32_t addr, uint8_t *valp);
-static bool cpu_writeb(void *_cpssp_cpu, uint32_t addr, uint8_t val);
-static bool cpu_decode_RM(cpssp_cpu *cpssp_cpu, op_addr *addr, bool is_8bit, bool has_imm);
+static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
+static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
+static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
 #endif /* __CPU_H_INCLUDED */
