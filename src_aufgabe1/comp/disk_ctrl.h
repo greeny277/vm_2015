@@ -20,3 +20,4 @@ extern void
 disk_ctrl_destroy(void *s);
 
 #endif /* __DISK_CTRL_H_INCLUDED */
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

@@ -67,3 +67,4 @@ memory_destroy(void *_cpssp)
 {
 	free(_cpssp);
 }
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

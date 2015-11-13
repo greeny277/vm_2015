@@ -133,3 +133,4 @@ static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
 
 #endif /* __CPU_H_INCLUDED */
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

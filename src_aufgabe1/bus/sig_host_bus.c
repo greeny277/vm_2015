@@ -111,3 +111,4 @@ sig_host_bus_readb(
 
 	return ret;
 }
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

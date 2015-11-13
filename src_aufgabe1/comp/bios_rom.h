@@ -21,3 +21,4 @@ extern void
 bios_rom_destroy(void *s);
 
 #endif /* __BIOS_ROM_H_INCLUDED */
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

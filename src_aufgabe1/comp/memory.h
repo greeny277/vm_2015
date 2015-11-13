@@ -19,3 +19,4 @@ extern void
 memory_destroy(void *s);
 
 #endif /* __MEMORY_H_INCLUDED */
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

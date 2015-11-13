@@ -87,3 +87,4 @@ sig_host_bus_readb(const struct sig_host_bus *bus, void *s, uint32_t addr);
 
 
 #endif /* __SIG_HOST_BUS_H_INCLUDED */
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

@@ -19,3 +19,4 @@ extern void
 serial_ctrl_destroy(void *s);
 
 #endif /* __SERIAL_CTRL_H_INCLUDED */
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

@@ -423,3 +423,4 @@ void
 cpu_destroy(void *_cpu_state) {
 	free(_cpu_state);
 }
+/* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
