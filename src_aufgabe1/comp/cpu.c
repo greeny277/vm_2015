@@ -14,8 +14,8 @@
  * @param reg_addr  Pointer that holds the register
  *     address when bit pattern was valid
  *
- * @return True on success.
- *         False if pattern is greater than 7
+ * @return The register which was read on success
+ *         0xff in case of an error
  */
 static uint8_t
 cpu_eval_register(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit) {
@@ -81,7 +81,7 @@ cpu_eval_register(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool i
 					return EDI;
 			}
 		default:
-			return -1;
+			return 0xff;
 	}
 }
 
