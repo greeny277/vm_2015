@@ -305,27 +305,27 @@ cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t ram_addr) {
 }
 
 static uint32_t
-cpu_read_data_from_mem(cpu_state *cpu_state, uint32_t ram_addr) {
+cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t ram_addr) {
 
 	uint32_t data;
-		uint8_t byte1, byte2, byte3, byte4;
-		byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
-		ram_addr++;
+	uint8_t byte1, byte2, byte3, byte4;
+	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
+	ram_addr++;
 
-		byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
-		ram_addr++;
+	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
+	ram_addr++;
 
-		byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
-		ram_addr++;
+	byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
+	ram_addr++;
 
-		byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
+	byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 
-		data = byte1;
-		data |= (byte2 << 8);
-		data |= (byte3 << 16);
-		data |= (byte4 << 24);
+	data = byte1;
+	data |= (byte2 << 8);
+	data |= (byte3 << 16);
+	data |= (byte4 << 24);
 
-		return data;
+	return data;
 }
 
 static uint32_t

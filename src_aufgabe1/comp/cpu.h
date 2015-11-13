@@ -116,7 +116,7 @@ static uint8_t cpu_get_byte_inc(cpu_state *);
 static void cpu_compute_op_to_address(cpu_state *, uint8_t, uint32_t *, op_addr *);
 
 static uint32_t cpu_read_32_bit_addr(cpu_state *cpu_state);
-static uint32_t cpu_read_data_from_mem(cpu_state *cpu_state, uint32_t ram_addr);
+static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t ram_addr);
 static uint32_t cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr);
 
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
