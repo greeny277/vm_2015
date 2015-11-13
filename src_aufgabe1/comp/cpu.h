@@ -117,8 +117,8 @@ static uint32_t cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr);
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
 static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
 
-static void cpu_write_data_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr);
-static void cpu_write_data_in_reg(uint32_t data, uint32_t *reg_addr);
+static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr);
+static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
 
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);

@@ -339,7 +339,7 @@ cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr) {
 }
 
 static void
-cpu_write_data_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr) {
+cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr) {
 	uint8_t byte = data & 0xff;
 
 	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
@@ -371,7 +371,7 @@ cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
 }
 
 static void
-cpu_write_data_in_reg(uint32_t data, uint32_t *reg_addr) {
+cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr) {
 	*reg_addr = data;
 }
 
@@ -410,10 +410,10 @@ cpu_step(void *_cpu_state) {
 					uint32_t src = *(s_op.op2_reg);
 					if(s_op.op2_reg != 0){
 						/* Write in a register */
-						cpu_write_data_in_reg(src, s_op.op1_reg);
+						cpu_write_word_in_reg(src, s_op.op1_reg);
 					} else {
 						/* Write in memory */
-						cpu_write_data_in_mem(cpu_state, src, s_op.op2_mem);
+						cpu_write_word_in_mem(cpu_state, src, s_op.op2_mem);
 					}
 					return true;
 				}
