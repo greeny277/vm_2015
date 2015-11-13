@@ -104,8 +104,12 @@ typedef struct op_addr {
 	bool is_op2_high;
 } op_addr;
 
-/* Method declarations */
-static uint8_t cpu_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
+/* Method declarations
+ * include static functions for documentation purposes!
+ */
+static cpu_register cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
+static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit);
+
 static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
 static uint8_t cpu_get_byte_inc(cpu_state *);
 

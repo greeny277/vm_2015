@@ -4,7 +4,7 @@
 
 #include "cpu.h"
 
-/* @brief Write back address of CPU own register
+/* @brief Interpret the reg bits of the mod-reg-r/m byte
  *
  * @param cpu_state  CPU instance
  *
@@ -17,7 +17,7 @@
  *         0xff in case of an error
  */
 static cpu_register
-cpu_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit) {
+cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit) {
 	switch(reg){
 		case EAX:
 			*reg_addr = &(cpu_state->eax);
@@ -84,7 +84,7 @@ cpu_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, b
 	}
 }
 
-/* @brief  Interpret byte by it different parts
+/* @brief  Interpret the mod-reg-r/m byte
  * Bits 7..6  Scale or Addressing Mode
  * Bits 5..3  Register of first operand
  * Bits 2..0  Register of second operand
@@ -98,16 +98,16 @@ cpu_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, b
  *                 False in case of a huge programming mistake.
  */
 static bool
-cpu_eval_byte(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit) {
+cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit) {
 	uint32_t *op1;
 	uint32_t *op2;
 
-	mod->op1_name = cpu_eval_register(cpu_state, byte & (0x7), &op1, is_8bit);
+	mod->op1_name = cpu_modrm_eval_register(cpu_state, byte & (0x7), &op1, is_8bit);
 	if( -1 == mod->op1_name) {
 		return false;
 	}
 
-	mod->op2_name = cpu_eval_register(cpu_state, (byte >> 3) & 0x7, &op2, is_8bit);
+	mod->op2_name = cpu_modrm_eval_register(cpu_state, (byte >> 3) & 0x7, &op2, is_8bit);
 	if( -1 == mod->op2_name) {
 		return false;
 	}
@@ -143,7 +143,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
 	modsib s_modrm;
 	memset(&mod_rm, 0, sizeof(modsib));
 
-	if(false == cpu_eval_byte(cpu_state, &s_modrm, mod_rm, is_8bit)){
+	if(false == cpu_modrm_eval(cpu_state, &s_modrm, mod_rm, is_8bit)){
 		return false;
 	}
 
@@ -179,7 +179,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
 		modsib s_sib;
 		memset(&s_sib,0,sizeof(modsib));
 
-		if(false == cpu_eval_byte(cpu_state, &s_sib, sib, is_8bit)){
+		if(false == cpu_modrm_eval(cpu_state, &s_sib, sib, is_8bit)){
 				return false;
 		}
 
