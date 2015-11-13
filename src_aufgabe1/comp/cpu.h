@@ -10,24 +10,25 @@
 #define DISPLACEMENT_32 2
 #define REGISTER        3
 
-#define EAX 0
-#define ECX 1
-#define EDX 2
-#define EBX 3
-#define ESP 4
-#define EBP 5
-#define ESI 6
-#define EDI 7
+typedef enum cpu_register {
+	EAX,
+	ECX,
+	EDX,
+	EBX,
+	ESP,
+	EBP,
+	ESI,
+	EDI,
 
-
-#define AH 8
-#define AL 9
-#define BH 10
-#define BL 11
-#define CH 12
-#define CL 13
-#define DH 14
-#define DL 15
+	AH,
+	AL,
+	BH,
+	BL,
+	CH,
+	CL,
+	DH,
+	DL
+} cpu_register;
 
 
 /** evaluate one instruction
@@ -104,7 +105,7 @@ typedef struct op_addr {
 } op_addr;
 
 /* Method declarations */
-static uint8_t cpu_eval_register(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit);
+static uint8_t cpu_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
 static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
 static uint8_t cpu_get_byte_inc(cpu_state *);
 

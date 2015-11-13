@@ -5,20 +5,19 @@
 #include "cpu.h"
 
 /* @brief Write back address of CPU own register
- * based on bit pattern.
  *
  * @param cpu_state  CPU instance
  *
- * @param reg  Bit pattern for evaluation of register
+ * @param cpu_register  The register to address
  *
  * @param reg_addr  Pointer that holds the register
- *     address when bit pattern was valid
+ *     address when register was valid
  *
  * @return The register which was read on success
  *         0xff in case of an error
  */
-static uint8_t
-cpu_eval_register(cpu_state *cpu_state, uint8_t reg, uint32_t **reg_addr, bool is_8bit) {
+static cpu_register
+cpu_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit) {
 	switch(reg){
 		case EAX:
 			*reg_addr = &(cpu_state->eax);
