@@ -243,7 +243,12 @@ cpu_read_32_bit_addr(cpu_state *cpu_state) {
 		return displacement_complete;
 }
 
-
+/* @brief read byte at the instruction pointer's address from RAM and increment IP
+ *
+ * @param cpu_state CPU instance
+ *
+ * @return the byte read
+*/
 static uint8_t
 cpu_get_byte_inc(cpu_state *cpu_state) {
 	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
