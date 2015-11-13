@@ -4,6 +4,9 @@
 
 #include "cpu.h"
 
+#define likely(x)       __builtin_expect((x),1)
+#define unlikely(x)     __builtin_expect((x),0)
+
 /* @brief Interpret the reg bits of the mod-reg-r/m byte
  *
  * @param cpu_state  CPU instance
@@ -18,7 +21,8 @@
  */
 static cpu_register
 cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit) {
-	if(reg > EDI)
+	//unlikely: gcc macro specifying that the 'then' path is unlikely
+	if(unlikely(reg > EDI))
 		return 0xff;
 
 	if(!is_8bit){
