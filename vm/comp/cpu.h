@@ -75,7 +75,16 @@ typedef struct cpu_state {
 	/** Segment registers */
 	uint16_t cs, ds, es, fs, gs, ss;
 
-	/** EFLAG register */
+	/**
+	 * EFLAGS register
+	 * Bit Number   Meaning                 Shortcut
+	 * 11           Overflow Flag             OF
+	 *  7           Sign Flag                 SF
+	 *  6           Zero Flag                 ZF
+	 *  4           Auxiliary Carry Flag      AF
+	 *  2           Parity Flag               PF
+	 *  0           Carry Flag                CF
+	 */
 	uint32_t eflags;
 } cpu_state;
 
