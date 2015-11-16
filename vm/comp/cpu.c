@@ -40,6 +40,9 @@ static void cpu_write_word_in_ram(cpu_state *cpu_state, uint32_t word, uint32_t 
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
 
+static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t, uint32_t);
+static void cpu_set_overflow_sub(void *_cpu_state, uint32_t op1, uint32_t op2);
+
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -74,6 +77,18 @@ cpu_destroy(void *_cpu_state) {
 	free(_cpu_state);
 }
 
+/** @brief Set carry bit in eflag for subtraction
+ *
+ *  @param minuend the first operand of the subtraction
+ *  @param subtrahend the second operand of the subtraction
+ */
+static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend){
+	if(minuend < subtrahend){
+		cpu_state->eflags |= 0x01;
+	} else {
+		cpu_state->eflags &= ~0x01;
+	}
+}
 /** @brief Interpret the reg bits of the mod-reg-r/m byte
  *
  * @param cpu_state  CPU instance
