@@ -13,6 +13,8 @@
 #define EIGHT_BIT true
 #define IMMEDIATE true
 
+#define HIGH_BYTE true
+
 void *cpu_create(struct sig_host_bus *port_host);
 void  cpu_destroy(void *_cpu_state);
 
@@ -169,16 +171,16 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
 	if(is_8bit){
 		if(s_modrm.op1_name == AL || s_modrm.op1_name == BL ||
 				s_modrm.op1_name == CL || s_modrm.op1_name == DL){
-			addr->is_op1_high = false;
+			addr->is_op1_high = !HIGH_BYTE;
 		} else {
-			addr->is_op1_high = true;
+			addr->is_op1_high = HIGH_BYTE;
 		}
 
 		if(s_modrm.op2_name == AL || s_modrm.op2_name == BL ||
 				s_modrm.op2_name == CL || s_modrm.op2_name == DL){
-			addr->is_op1_high = false;
+			addr->is_op1_high = !HIGH_BYTE;
 		} else {
-			addr->is_op1_high = true;
+			addr->is_op1_high = HIGH_BYTE;
 		}
 	}
 
@@ -472,6 +474,9 @@ cpu_step(void *_cpu_state) {
 
 	uint8_t op_code;
 
+	uint8_t eight_bit_src;
+	uint32_t four_byte_src;
+
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
 	op_code = cpu_read_byte_from_ram(cpu_state);
@@ -559,6 +564,107 @@ cpu_step(void *_cpu_state) {
 			case 0xA3:
 			 /* Copy EAX to (seg:offset) */
 				fprintf(stderr, "0xA3 is not implemented yet\n");
+				break;
+
+			case 0xB0:
+				/* Copy imm8 to AL */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->eax), !HIGH_BYTE);
+				return true;
+
+			case 0xB1:
+				/* Copy imm8 to CL */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ecx), !HIGH_BYTE);
+				return true;
+
+			case 0xB2:
+				/* Copy imm8 to DL */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->edx), !HIGH_BYTE);
+				return true;
+
+			case 0xB3:
+				/* Copy imm8 to BL */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ebx), !HIGH_BYTE);
+				return true;
+
+			case 0xB4:
+				/* Copy imm8 to AH */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->eax), HIGH_BYTE);
+				return true;
+
+			case 0xB5:
+				/* Copy imm8 to CH */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ecx), HIGH_BYTE);
+				return true;
+
+			case 0xB6:
+				/* Copy imm8 to DH */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->edx), HIGH_BYTE);
+				return true;
+
+			case 0xB7:
+				/* Copy imm8 to BH */
+				eight_bit_src = cpu_read_byte_from_ram(cpu_state);
+				cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ebx), HIGH_BYTE);
+				return true;
+
+			case 0xB8:
+				/* Copy imm32 to EAX */
+				four_byte_src = cpu_read_word_from_ram(cpu_state);
+				cpu_write_word_in_reg(four_byte_src, &(cpu_state->eax));
+				return true;
+
+			case 0xB9:
+				/* Copy imm32 to ECX */
+				four_byte_src = cpu_read_word_from_ram(cpu_state);
+				cpu_write_word_in_reg(four_byte_src, &(cpu_state->ecx));
+				return true;
+
+			case 0xBA:
+				/* Copy imm32 to EDX */
+				four_byte_src = cpu_read_word_from_ram(cpu_state);
+				cpu_write_word_in_reg(four_byte_src, &(cpu_state->edx));
+				return true;
+
+			case 0xBB:
+				/* Copy imm32 to EBX */
+				four_byte_src = cpu_read_word_from_ram(cpu_state);
+				cpu_write_word_in_reg(four_byte_src, &(cpu_state->ebx));
+				return true;
+
+			case 0xC6:
+				/* Copy imm8 to r/m8. */
+				if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT, IMMEDIATE)){
+					uint8_t src = s_op.op1_const;
+					if(s_op.op2_reg != 0){
+						/* Write in a register */
+						cpu_write_byte_in_reg(src, s_op.op2_reg, s_op.is_op2_high);
+					} else {
+						/* Write in memory */
+						cpu_write_byte_in_ram(cpu_state, src, s_op.op2_mem);
+					}
+					return true;
+				}
+				break;
+			case 0xC7:
+				/* Copy imm32 to r/m32. */
+				if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT, IMMEDIATE)){
+					uint32_t src = s_op.op1_const;
+					if(s_op.op2_reg != 0){
+						/* Write in a register */
+						cpu_write_word_in_reg(src, s_op.op2_reg);
+					} else {
+						/* Write in memory */
+						cpu_write_word_in_ram(cpu_state, src, s_op.op2_mem);
+					}
+					return true;
+				}
 				break;
 
 			default:
