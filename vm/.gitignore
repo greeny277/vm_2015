@@ -1,3 +1,6 @@
 *.o
 *.*.swp
+*.bin
 vm_test
+comp/roms
+comp/test
