@@ -59,9 +59,9 @@ typedef struct cpu_state {
 	struct sig_host_bus *port_host;
 
 	/** state */
-	/* Register beginning with letter 'e' have length of 32 bits */
+	/** Register beginning with letter 'e' have length of 32 bits */
 	uint32_t eip;
-	/*registers must be in the same order as in `enum cpu_register`*/
+	/** registers must be in the same order as in `enum cpu_register`*/
 	uint32_t eax;
 	uint32_t ecx;
 	uint32_t edx;
@@ -71,6 +71,12 @@ typedef struct cpu_state {
 	uint32_t ebp;
 	uint32_t esi;
 	uint32_t edi;
+
+	/** Segment registers */
+	uint16_t cs, ds, es, fs, gs, ss;
+
+	/** EFLAG register */
+	uint32_t eflags;
 } cpu_state;
 
 /*
@@ -104,7 +110,6 @@ typedef struct op_addr {
 	uint32_t op2_mem;
 
 	/* High or Low Byte in case of 8 bit */
-	//TODO
 	bool is_op2_high;
 } op_addr;
 

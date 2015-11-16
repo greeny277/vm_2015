@@ -2,10 +2,16 @@
 #include <assert.h>
 #include <string.h>
 
+/* DEBUG LIB */
+#include <stdio.h>
+
 #include "cpu.h"
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
+
+#define EIGHT_BIT true
+#define IMMEDIATE true
 
 void *cpu_create(struct sig_host_bus *port_host);
 void  cpu_destroy(void *_cpu_state);
@@ -475,8 +481,8 @@ cpu_step(void *_cpu_state) {
 
 	switch(op_code) {
 			case 0x88:
-				/* MOV r8 to r/m8 */
-				if(!cpu_decode_RM(cpu_state, &s_op, true, false)){
+				/* Copy r8 to r/m8 */
+				if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT, !IMMEDIATE)){
 					uint8_t src = cpu_read_byte_from_reg(s_op.op1_reg, s_op.is_op1_high);
 					if(s_op.op2_reg != 0){
 						/* Write in a register */
@@ -489,12 +495,12 @@ cpu_step(void *_cpu_state) {
 				}
 				break;
 			case 0x89:
-				/* Mov r32 to r/m32 */
-				if(!cpu_decode_RM(cpu_state, &s_op, true, false)){
-					uint32_t src = *(s_op.op2_reg);
+				/* Copy r32 to r/m32 */
+				if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT, !IMMEDIATE)){
+					uint32_t src = *(s_op.op1_reg);
 					if(s_op.op2_reg != 0){
 						/* Write in a register */
-						cpu_write_word_in_reg(src, s_op.op1_reg);
+						cpu_write_word_in_reg(src, s_op.op2_reg);
 					} else {
 						/* Write in memory */
 						cpu_write_word_in_ram(cpu_state, src, s_op.op2_mem);
@@ -503,9 +509,60 @@ cpu_step(void *_cpu_state) {
 				}
 				break;
 
+			case 0x8A:
+				/* Copy r/m8 to r8. */
+				if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT, !IMMEDIATE)){
+					uint8_t src;
+					if(s_op.op2_reg != 0){
+						/* Write in a register */
+						src = cpu_read_byte_from_reg(s_op.op2_reg, s_op.is_op2_high);
+					} else {
+						/* Write in memory */
+						src = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
+					}
+					cpu_write_byte_in_reg(src, s_op.op1_reg, s_op.is_op1_high);
+					return true;
+				}
+				break;
+
+			case 0x8B:
+				/* Copy r/m32 to r32. */
+				if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT, !IMMEDIATE)){
+					uint32_t src;
+					if(s_op.op2_reg != 0){
+						/* Write in a register */
+						src = cpu_read_word_from_reg(s_op.op2_reg);
+					} else {
+						/* Write in memory */
+						src = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
+					}
+					cpu_write_word_in_reg(src, s_op.op1_reg);
+					return true;
+				}
+				break;
+
+			case 0xA0:
+			 /* Copy byte at (seg:offset) to AL */
+				fprintf(stderr, "0xA0 is not implemented yet\n");
+				break;
+
+			case 0xA1:
+			 /* Copy doubleword at (seg:offset) to EAX */
+				fprintf(stderr, "0xA1 is not implemented yet\n");
+				break;
+
+			case 0xA2:
+			 /* Copy AL to (seg:offset) */
+				fprintf(stderr, "0xA2 is not implemented yet\n");
+				break;
+
+			case 0xA3:
+			 /* Copy EAX to (seg:offset) */
+				fprintf(stderr, "0xA3 is not implemented yet\n");
+				break;
+
 			default:
-				/* FIXME: add something*/
-				return true;
+				break;
 	}
 	return false;
 }
