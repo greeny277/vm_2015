@@ -7,7 +7,66 @@
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
-/* @brief Interpret the reg bits of the mod-reg-r/m byte
+void *cpu_create(struct sig_host_bus *port_host);
+void  cpu_destroy(void *_cpu_state);
+
+static cpu_register cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
+static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit);
+
+static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
+static void cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
+
+static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
+static uint8_t  cpu_read_word_from_reg(uint32_t *reg_addr);
+static uint8_t  cpu_read_byte_from_ram(cpu_state *cpu_state);
+static uint32_t cpu_read_word_from_ram(cpu_state *cpu_state);
+
+static uint8_t  cpu_peek_byte_from_ram(cpu_state *cpu_state, uint32_t ram_addr);
+static uint32_t cpu_peek_word_from_ram(cpu_state *cpu_state, uint32_t ram_addr);
+
+static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
+static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
+static void cpu_write_byte_in_ram(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
+static void cpu_write_word_in_ram(cpu_state *cpu_state, uint32_t word, uint32_t ram_addr);
+
+static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
+static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
+
+/** @brief "constructor" of the cpu
+ *
+ *  @param port_host  the port the cpu is connected to
+ */
+void *
+cpu_create(struct sig_host_bus *port_host) {
+	struct cpu_state *cpu_state;
+	static const struct sig_host_bus_funcs hf = {
+		.readb = cpu_readb,
+		.writeb = cpu_writeb
+	};
+
+	cpu_state = malloc(sizeof(struct cpu_state));
+	assert(cpu_state != NULL);
+
+	cpu_state->port_host = port_host;
+	/* Set base pointer to start address of ROM.
+	 * The address is hardcoded, like in real hardware.
+	 */
+	cpu_state->eip = 0xE000;
+
+	sig_host_bus_connect(port_host, cpu_state, &hf);
+	return cpu_state;
+}
+
+/** @brief "destructor" of the cpu
+ *
+ *  @param _cpu_state  the cpu instance
+ */
+void
+cpu_destroy(void *_cpu_state) {
+	free(_cpu_state);
+}
+
+/** @brief Interpret the reg bits of the mod-reg-r/m byte
  *
  * @param cpu_state  CPU instance
  *
@@ -37,7 +96,7 @@ cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_a
 	}
 }
 
-/* @brief  Interpret the mod-reg-r/m byte
+/** @brief  Interpret the mod-reg-r/m byte
  * Bits 7..6  Scale or Addressing Mode
  * Bits 5..3  Register of first operand
  * Bits 2..0  Register of second operand
@@ -72,7 +131,7 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 	return true;
 }
 
-/* @brief Read and interpret MOD_RM, SIB and DISPLACEMENT bytes
+/** @brief Read and interpret MOD_RM, SIB and DISPLACEMENT bytes
  * Furthermore compute the addresses of operand 1 and 2. Either
  * as pointer to a register or virtual address for the RAM component
  *
@@ -92,7 +151,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
 	uint8_t mod_rm = 0;
 
 	/* Eval MOD_RM Byte */
-	mod_rm = cpu_get_byte_inc(cpu_state);
+	mod_rm = cpu_read_byte_from_ram(cpu_state);
 	modsib s_modrm;
 	memset(&mod_rm, 0, sizeof(modsib));
 
@@ -128,7 +187,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
 
 
 		/* Read next byte increment eip */
-		sib = cpu_get_byte_inc(cpu_state);
+		sib = cpu_read_byte_from_ram(cpu_state);
 		modsib s_sib;
 		memset(&s_sib,0,sizeof(modsib));
 
@@ -168,58 +227,23 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
 
 	/* Set op1 to reg address or as a constant value */
 	if(has_imm && is_8bit){
-			addr->op1_const = cpu_get_byte_inc(cpu_state);
+			addr->op1_const = cpu_read_byte_from_ram(cpu_state);
 	} else if(has_imm){
-			addr->op1_const = cpu_read_32_bit_addr(cpu_state);
+			addr->op1_const = cpu_read_word_from_ram(cpu_state);
 	} else{
 			addr->op1_reg = s_modrm.op1;
 	}
 	return true;
 }
 
-
-static uint32_t
-cpu_read_32_bit_addr(cpu_state *cpu_state) {
-		uint8_t displ1, displ2, displ3, displ4;
-		uint32_t displacement_complete;
-
-		displ1 = cpu_get_byte_inc(cpu_state);
-		displ2 = cpu_get_byte_inc(cpu_state);
-		displ3 = cpu_get_byte_inc(cpu_state);
-		displ4 = cpu_get_byte_inc(cpu_state);
-
-		displacement_complete = displ1;
-		displacement_complete |= (displ2 << 8);
-		displacement_complete |= (displ3 << 16);
-		displacement_complete |= (displ4 << 24);
-
-		return displacement_complete;
-}
-
-/* @brief read byte at the instruction pointer's address from RAM and increment IP
+/** @brief          Compute address of operand 2 subjected to the addressing mode
  *
  * @param cpu_state CPU instance
  *
- * @return the byte read
-*/
-static uint8_t
-cpu_get_byte_inc(cpu_state *cpu_state) {
-	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
-	cpu_state->eip = cpu_state->eip + 1;
-
-	return next_byte;
-}
-
-
-/*
- * @brief          Compute address of operand 2 subjected to the addressing mode
+ * @param mode      Contains addressing mode
  *
- * @param cpu_state    CPU instance
- *
- * @param mode     Contains addressing mode
- *
- * @param addr     Pointer that contains the base address. Usually
- *                 a pointer to CPU own register.
+ * @param addr      Pointer that contains the base address. Usually
+ *                  a pointer to CPU own register.
  */
 static void
 cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op) {
@@ -233,7 +257,7 @@ cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
-			displ1 = cpu_get_byte_inc(cpu_state);
+			displ1 = cpu_read_byte_from_ram(cpu_state);
 			/* Indirection with 8 bit displacement */
 			op->op2_mem = displ1 + (*addr);
 			return;
@@ -242,7 +266,7 @@ cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op
 			/* Indirection with 32 bit displacement */
 
 			/* Attention: Lowest byte will be read first */
-			displacement_complete = cpu_read_32_bit_addr(cpu_state);
+			displacement_complete = cpu_read_word_from_ram(cpu_state);
 			op->op2_mem = displacement_complete + (*addr);
 			return;
 		case REGISTER:
@@ -252,13 +276,96 @@ cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op
 	return;
 }
 
+/*
+ *  Reading and peeking functions
+ */
+/** @brief read a register and return the high or low byte
+ *
+ * @param reg_addr  the address of the register to read
+ * @param is_high   whether to return the high byte
+ *
+ * @return the byte read
+ */
 static uint8_t
-cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t ram_addr) {
+cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high) {
+	if(is_high) {
+		return (*reg_addr >> 8) & 0xff;
+	}
+
+	return *reg_addr & 0xff;
+}
+
+/** @brief read a register and return the word
+ *
+ * @param reg_addr  the address of the register to read
+ *
+ * @return the byte read
+ */
+static uint8_t
+cpu_read_word_from_reg(uint32_t *reg_addr) {
+	return *reg_addr;
+}
+
+/** @brief read byte at the instruction pointer's address from RAM and increment IP
+ *
+ * @param cpu_state CPU instance
+ *
+ * @return the byte read
+ */
+static uint8_t
+cpu_read_byte_from_ram(cpu_state *cpu_state) {
+	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
+	cpu_state->eip = cpu_state->eip + 1;
+
+	return next_byte;
+}
+
+/** @brief read a word (4 byte) at the instruction pointer's address from RAM
+ *         and increment IP by 4
+ *
+ * @param cpu_state CPU instance
+ *
+ * @return the word read
+*/
+static uint32_t
+cpu_read_word_from_ram(cpu_state *cpu_state) {
+		uint8_t displ1, displ2, displ3, displ4;
+		uint32_t displacement_complete;
+
+		displ1 = cpu_read_byte_from_ram(cpu_state);
+		displ2 = cpu_read_byte_from_ram(cpu_state);
+		displ3 = cpu_read_byte_from_ram(cpu_state);
+		displ4 = cpu_read_byte_from_ram(cpu_state);
+
+		displacement_complete = displ1;
+		displacement_complete |= (displ2 << 8);
+		displacement_complete |= (displ3 << 16);
+		displacement_complete |= (displ4 << 24);
+
+		return displacement_complete;
+}
+
+/** @brief read byte at given address from RAM. keeps IP untouched.
+ *
+ * @param cpu_state CPU instance
+ * @param ram_addr  the address to read at
+ *
+ * @return the byte read
+ */
+static uint8_t
+cpu_peek_byte_from_ram(cpu_state *cpu_state, uint32_t ram_addr) {
 	return sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
 }
 
+/** @brief read a word (4 byte) at given address from RAM. keeps IP untouched.
+ *
+ * @param cpu_state CPU instance
+ * @param ram_addr  the address to read at
+ *
+ * @return the word read
+ */
 static uint32_t
-cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t ram_addr) {
+cpu_peek_word_from_ram(cpu_state *cpu_state, uint32_t ram_addr) {
 
 	uint32_t data;
 	uint8_t byte1, byte2, byte3, byte4;
@@ -281,40 +388,17 @@ cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t ram_addr) {
 	return data;
 }
 
-static uint32_t
-cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr) {
-	if(is_high) {
-		return (*reg_addr >> 8) & 0xff;
-	}
 
-	return *reg_addr & 0xff;
-}
+/*
+ *  Writing functions
+ */
 
-static void
-cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr) {
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
-}
-
-static void
-cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr) {
-	uint8_t byte = data & 0xff;
-
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
-	byte = (data >> 8) & 0xff;
-	ram_addr++;
-
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
-	byte = (data >> 16) & 0xff;
-	ram_addr++;
-
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
-	byte = (data >> 24) & 0xff;
-	ram_addr++;
-
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
-}
-
-
+/** @brief write a byte to a register's high or low byte
+ *
+ * @param byte      the byte to write
+ * @param reg_addr  the address of the register to read
+ * @param is_high   whether to write the high byte
+ */
 static void
 cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
 	if(!is_high) {
@@ -327,10 +411,53 @@ cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
 	}
 }
 
+/** @brief write a word (4 byte) to a register
+ *
+ * @param byte      the byte to write
+ * @param reg_addr  the address of the register to read
+ */
 static void
 cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr) {
 	*reg_addr = data;
 }
+
+/** @brief write a byte to the ram
+ *
+ * @param cpu_state  the cpu instance
+ * @param byte       the byte to write
+ * @param ram_addr   the address in the ram to write to
+ */
+static void
+cpu_write_byte_in_ram(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr) {
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+}
+
+/** @brief write a word (4 byte) to the ram
+ *
+ * @param cpu_state  the cpu instance
+ * @param word       the word to write
+ * @param ram_addr   the address in the ram to write to
+ */
+static void
+cpu_write_word_in_ram(cpu_state *cpu_state, uint32_t word, uint32_t ram_addr) {
+	uint8_t byte = word & 0xff;
+
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	byte = (word >> 8) & 0xff;
+	ram_addr++;
+
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	byte = (word >> 16) & 0xff;
+	ram_addr++;
+
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	byte = (word >> 24) & 0xff;
+	ram_addr++;
+
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+}
+
+
 
 bool
 cpu_step(void *_cpu_state) {
@@ -341,7 +468,7 @@ cpu_step(void *_cpu_state) {
 
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
-	op_code = cpu_get_byte_inc(cpu_state);
+	op_code = cpu_read_byte_from_ram(cpu_state);
 
 	op_addr s_op;
 	memset(&s_op, 0, sizeof(op_addr));
@@ -350,13 +477,13 @@ cpu_step(void *_cpu_state) {
 			case 0x88:
 				/* MOV r8 to r/m8 */
 				if(!cpu_decode_RM(cpu_state, &s_op, true, false)){
-					uint8_t src = cpu_read_byte_from_register(s_op.is_op1_high, s_op.op1_reg);
+					uint8_t src = cpu_read_byte_from_reg(s_op.op1_reg, s_op.is_op1_high);
 					if(s_op.op2_reg != 0){
 						/* Write in a register */
 						cpu_write_byte_in_reg(src, s_op.op2_reg, s_op.is_op2_high);
 					} else {
 						/* Write in memory */
-						cpu_write_byte_in_mem(cpu_state, src, s_op.op2_mem);
+						cpu_write_byte_in_ram(cpu_state, src, s_op.op2_mem);
 					}
 					return true;
 				}
@@ -370,7 +497,7 @@ cpu_step(void *_cpu_state) {
 						cpu_write_word_in_reg(src, s_op.op1_reg);
 					} else {
 						/* Write in memory */
-						cpu_write_word_in_mem(cpu_state, src, s_op.op2_mem);
+						cpu_write_word_in_ram(cpu_state, src, s_op.op2_mem);
 					}
 					return true;
 				}
@@ -383,6 +510,8 @@ cpu_step(void *_cpu_state) {
 	return false;
 }
 
+/** @brief nop - cpu does not support reading via bus
+ */
 static bool
 cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp) {
 	/* We dont read from CPU */
@@ -390,37 +519,12 @@ cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp) {
 	return false;
 }
 
+/** @brief nop - cpu does not support writing via bus
+ */
 static bool
 cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val) {
 	/* We dont write into CPU */
 
 	return false;
-}
-
-
-void *
-cpu_create(struct sig_host_bus *port_host) {
-	struct cpu_state *cpu_state;
-	static const struct sig_host_bus_funcs hf = {
-		.readb = cpu_readb,
-		.writeb = cpu_writeb
-	};
-
-	cpu_state = malloc(sizeof(struct cpu_state));
-	assert(cpu_state != NULL);
-
-	cpu_state->port_host = port_host;
-	/* Set base pointer to start address of ROM.
-	 * The address is hardcoded, like in real hardware.
-	 */
-	cpu_state->eip = 0xE000;
-
-	sig_host_bus_connect(port_host, cpu_state, &hf);
-	return cpu_state;
-}
-
-void
-cpu_destroy(void *_cpu_state) {
-	free(_cpu_state);
 }
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

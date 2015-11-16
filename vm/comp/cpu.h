@@ -108,29 +108,5 @@ typedef struct op_addr {
 	bool is_op2_high;
 } op_addr;
 
-/* Method declarations
- * include static functions for documentation purposes!
- */
-static cpu_register cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
-static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit);
-
-static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
-static uint8_t cpu_get_byte_inc(cpu_state *);
-
-static void cpu_compute_op_to_address(cpu_state *, uint8_t, uint32_t *, op_addr *);
-
-static uint32_t cpu_read_32_bit_addr(cpu_state *cpu_state);
-static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t ram_addr);
-static uint32_t cpu_read_byte_from_register(bool is_high, uint32_t *reg_addr);
-
-static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
-static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
-
-static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t data, uint32_t ram_addr);
-static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
-
-static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
-static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
-
 #endif /* __CPU_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
