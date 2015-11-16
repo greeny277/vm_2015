@@ -41,8 +41,8 @@ static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
 
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t, uint32_t);
-static void cpu_set_overflow_sub(void *_cpu_state, uint32_t op1, uint32_t op2);
 
+static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t second_summand);
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -77,6 +77,18 @@ cpu_destroy(void *_cpu_state) {
 	free(_cpu_state);
 }
 
+/** @brief Set carry bit in eflag for addition
+ *
+ *  @param first_summand the first operand of the additon
+ *  @param second_summand the second operand of the additon
+ */
+static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t second_summand){
+	if(first_summand + second_summand < first_summand){
+		cpu_state->eflags |= 0x01;
+	} else {
+		cpu_state->eflags &= ~0x01;
+	}
+}
 /** @brief Set carry bit in eflag for subtraction
  *
  *  @param minuend the first operand of the subtraction
