@@ -111,8 +111,8 @@ typedef struct modsib {
 	modrm_mod_bits addr_or_scale_mode;
 
 	/* Save register name, valid or not */
-	uint8_t op1_name;
-	uint8_t op2_name;
+	cpu_register op1_name;
+	cpu_register op2_name;
 } modsib;
 
 typedef enum addr_type {
@@ -127,6 +127,9 @@ typedef struct op_addr {
 	uint32_t* reg;
 	uint32_t* regmem_reg;
 	uint32_t  regmem_mem;
+
+	/*Value of reg bits for determining opcode */
+	uint8_t reg_value;
 
 	/*type of the reg and r/m bits' decoded values*/
 	addr_type reg_type;
