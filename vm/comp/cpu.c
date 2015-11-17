@@ -101,11 +101,8 @@ static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bi
  *  @param result  result of addition
  */
 static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t result){
-	if(result < summand_fst){
-		cpu_state->eflags |= 0x01;
-	} else {
-		cpu_state->eflags &= ~0x01;
-	}
+	cpu_state->eflags &= ~0x01;
+	cpu_state->eflags |= (result < summand_fst);
 }
 
 /** @brief Set carry bit in eflag for subtraction
@@ -114,11 +111,8 @@ static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32
  *  @param subtrahend the second operand of the subtraction
  */
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend){
-	if(minuend < subtrahend){
-		cpu_state->eflags |= 0x01;
-	} else {
-		cpu_state->eflags &= ~0x01;
-	}
+	cpu_state->eflags &= ~0x01;
+	cpu_state->eflags |= (minuend < subtrahend);
 }
 
 /** @brief Set overflow bit in eflag for addition
