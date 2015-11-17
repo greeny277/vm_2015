@@ -29,16 +29,16 @@ static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *
 /*FIXME Rename read methods on a register to peek */
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
 static uint8_t  cpu_read_word_from_reg(uint32_t *reg_addr);
-static uint8_t  cpu_read_byte_from_ram(cpu_state *cpu_state);
-static uint32_t cpu_read_word_from_ram(cpu_state *cpu_state);
+static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state);
+static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state);
 
-static uint8_t  cpu_peek_byte_from_ram(cpu_state *cpu_state, uint32_t ram_addr);
-static uint32_t cpu_peek_word_from_ram(cpu_state *cpu_state, uint32_t ram_addr);
+static uint8_t  cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint32_t cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 
 static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
 static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
-static void cpu_write_byte_in_ram(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr);
-static void cpu_write_word_in_ram(cpu_state *cpu_state, uint32_t word, uint32_t ram_addr);
+static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr);
+static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
 
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
@@ -87,7 +87,7 @@ cpu_create(struct sig_host_bus *port_host) {
 /** @brief Set instruction pointer
  *
  *  @param cpu_state is the cpu instance
- *  @param new_addr is the new RAM address where the
+ *  @param new_addr is the new memory address where the
  *                  next instruction will be loaded from
  */
 static void cpu_set_eip(cpu_state *cpu_state, uint32_t new_addr){
@@ -319,7 +319,7 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 
 /** @brief Read and interpret MOD_RM, SIB and DISPLACEMENT bytes
  * Furthermore compute the addresses of operand 1 and 2. Either
- * as pointer to a register or virtual address for the RAM component
+ * as pointer to a register or virtual address for the memory component
  *
  * @param cpu_state    CPU instance
  *
@@ -337,7 +337,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	uint8_t mod_rm = 0;
 
 	/* Eval MOD_RM Byte */
-	mod_rm = cpu_read_byte_from_ram(cpu_state);
+	mod_rm = cpu_read_byte_from_mem(cpu_state);
 	modsib s_modrm;
 	memset(&mod_rm, 0, sizeof(modsib));
 	// memset(addr, 0, sizeof(op_addr));
@@ -387,7 +387,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 			uint8_t scale = 0;
 
 			/* Read next byte increment eip */
-			sib = cpu_read_byte_from_ram(cpu_state);
+			sib = cpu_read_byte_from_mem(cpu_state);
 			modsib s_sib;
 			memset(&s_sib,0,sizeof(modsib));
 
@@ -451,7 +451,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
-			displ1 = cpu_read_byte_from_ram(cpu_state);
+			displ1 = cpu_read_byte_from_mem(cpu_state);
 			/* Indirection with 8 bit displacement */
 			op->regmem_mem = displ1 + (*base_addr);
 			return;
@@ -460,7 +460,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 			/* Indirection with 32 bit displacement */
 
 			/* Attention: Lowest byte will be read first */
-			displacement_complete = cpu_read_word_from_ram(cpu_state);
+			displacement_complete = cpu_read_word_from_mem(cpu_state);
 			op->regmem_mem = displacement_complete + (*base_addr);
 			return;
 		case REGISTER:
@@ -500,21 +500,21 @@ cpu_read_word_from_reg(uint32_t *reg_addr) {
 	return *reg_addr;
 }
 
-/** @brief read byte at the instruction pointer's address from RAM and increment IP
+/** @brief read byte at the instruction pointer's address from memory and increment IP
  *
  * @param cpu_state CPU instance
  *
  * @return the byte read
  */
 static uint8_t
-cpu_read_byte_from_ram(cpu_state *cpu_state) {
+cpu_read_byte_from_mem(cpu_state *cpu_state) {
 	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
 	cpu_state->eip = cpu_state->eip + 1;
 
 	return next_byte;
 }
 
-/** @brief read a word (4 byte) at the instruction pointer's address from RAM
+/** @brief read a word (4 byte) at the instruction pointer's address from memory
  *         and increment IP by 4
  *
  * @param cpu_state CPU instance
@@ -522,14 +522,14 @@ cpu_read_byte_from_ram(cpu_state *cpu_state) {
  * @return the word read
  */
 static uint32_t
-cpu_read_word_from_ram(cpu_state *cpu_state) {
+cpu_read_word_from_mem(cpu_state *cpu_state) {
 	uint8_t displ1, displ2, displ3, displ4;
 	uint32_t displacement_complete;
 
-	displ1 = cpu_read_byte_from_ram(cpu_state);
-	displ2 = cpu_read_byte_from_ram(cpu_state);
-	displ3 = cpu_read_byte_from_ram(cpu_state);
-	displ4 = cpu_read_byte_from_ram(cpu_state);
+	displ1 = cpu_read_byte_from_mem(cpu_state);
+	displ2 = cpu_read_byte_from_mem(cpu_state);
+	displ3 = cpu_read_byte_from_mem(cpu_state);
+	displ4 = cpu_read_byte_from_mem(cpu_state);
 
 	displacement_complete = displ1;
 	displacement_complete |= (displ2 << 8);
@@ -539,40 +539,40 @@ cpu_read_word_from_ram(cpu_state *cpu_state) {
 	return displacement_complete;
 }
 
-/** @brief read byte at given address from RAM. keeps IP untouched.
+/** @brief read byte at given address from memory. keeps IP untouched.
  *
  * @param cpu_state CPU instance
- * @param ram_addr  the address to read at
+ * @param mem_addr  the address to read at
  *
  * @return the byte read
  */
 static uint8_t
-cpu_peek_byte_from_ram(cpu_state *cpu_state, uint32_t ram_addr) {
-	return sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
+cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+	return sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 }
 
-/** @brief read a word (4 byte) at given address from RAM. keeps IP untouched.
+/** @brief read a word (4 byte) at given address from memory. keeps IP untouched.
  *
  * @param cpu_state CPU instance
- * @param ram_addr  the address to read at
+ * @param mem_addr  the address to read at
  *
  * @return the word read
  */
 static uint32_t
-cpu_peek_word_from_ram(cpu_state *cpu_state, uint32_t ram_addr) {
+cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
 	uint32_t data;
 	uint8_t byte1, byte2, byte3, byte4;
-	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
-	ram_addr++;
+	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	mem_addr++;
 
-	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
-	ram_addr++;
+	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	mem_addr++;
 
-	byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
-	ram_addr++;
+	byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	mem_addr++;
 
-	byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, ram_addr);
+	byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 
 	data = byte1;
 	data |= (byte2 << 8);
@@ -615,40 +615,40 @@ cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr) {
 	*reg_addr = data;
 }
 
-/** @brief write a byte to the ram
+/** @brief write a byte to the memory
  *
  * @param cpu_state  the cpu instance
  * @param byte       the byte to write
- * @param ram_addr   the address in the ram to write to
+ * @param mem_addr   the address in the mem to write to
  */
 static void
-cpu_write_byte_in_ram(cpu_state *cpu_state, uint8_t byte, uint32_t ram_addr) {
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr) {
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 }
 
-/** @brief write a word (4 byte) to the ram
+/** @brief write a word (4 byte) to the memory
  *
  * @param cpu_state  the cpu instance
  * @param word       the word to write
- * @param ram_addr   the address in the ram to write to
+ * @param mem_addr   the address in memory to write to
  */
 static void
-cpu_write_word_in_ram(cpu_state *cpu_state, uint32_t word, uint32_t ram_addr) {
+cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
 	uint8_t byte = word & 0xff;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 	byte = (word >> 8) & 0xff;
-	ram_addr++;
+	mem_addr++;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 	byte = (word >> 16) & 0xff;
-	ram_addr++;
+	mem_addr++;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 	byte = (word >> 24) & 0xff;
-	ram_addr++;
+	mem_addr++;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, ram_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 }
 
 
@@ -665,7 +665,7 @@ cpu_step(void *_cpu_state) {
 
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
-	op_code = cpu_read_byte_from_ram(cpu_state);
+	op_code = cpu_read_byte_from_mem(cpu_state);
 
 	op_addr s_op;
 	memset(&s_op, 0, sizeof(op_addr));
@@ -680,7 +680,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0x0f: {
 			/* The opcode is two bytes long */
-			uint8_t op_code_2 = cpu_read_byte_from_ram(cpu_state);
+			uint8_t op_code_2 = cpu_read_byte_from_mem(cpu_state);
 			switch(op_code_2){
 				#include "cpu_extInst.c"
 			}
