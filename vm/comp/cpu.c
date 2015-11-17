@@ -53,7 +53,9 @@ static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bi
 
 static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result);
 
-static void set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction);
+static void cpu_set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction);
+
+static void cpu_set_eip(cpu_state *cpu_state, uint32_t new_addr);
 
 /** @brief "constructor" of the cpu
  *
@@ -80,6 +82,16 @@ cpu_create(struct sig_host_bus *port_host) {
 	return cpu_state;
 }
 
+/** @brief Set instruction pointer
+ *
+ *  @param cpu_state is the cpu instance
+ *  @param new_addr is the new RAM address where the
+ *                  next instruction will be loaded from
+ */
+static void cpu_set_eip(cpu_state *cpu_state, uint32_t new_addr){
+	cpu_state->eip = new_addr;
+}
+
 /** @brief "destructor" of the cpu
  *
  *  @param _cpu_state  the cpu instance
@@ -99,7 +111,7 @@ cpu_destroy(void *_cpu_state) {
  *  @param is_subtraction indicates if a subtraction was performed
  */
 static void
-set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction){
+cpu_set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction){
 	if(is_subtraction){
 		cpu_set_carry_sub(cpu_state, op1, op2);
 		cpu_set_overflow_sub(cpu_state, op1, op2, result, is_8bit);
@@ -616,6 +628,15 @@ cpu_step(void *_cpu_state) {
 		
 		#include "cpu_cmpInst.c"
 
+		case 0x72: {
+			/* JB rel8
+			 * Jump short if below (CF=1).
+			 */
+			int8_t offset = cpu_read_byte_from_ram(cpu_state);
+			cpu_set_eip(cpu_state, cpu_state->eip + offset);
+
+			return true;
+		}
 		default:
 			break;
 	}

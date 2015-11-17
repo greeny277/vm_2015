@@ -4,7 +4,7 @@ case 0x3C:{
 	uint8_t minuend = (uint8_t)(cpu_state->eax);
 	uint8_t result = minuend - subtrahend;
 
-	set_eflag_arith(cpu_state, minuend, subtrahend, result,
+	cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 			EIGHT_BIT,SUBTRACTION);
 	return true;
 }
@@ -14,7 +14,7 @@ case 0x3D: {
 	uint32_t minuend = cpu_state->eax;
 	uint32_t result = minuend - subtrahend;
 
-	set_eflag_arith(cpu_state, minuend, subtrahend, result,
+	cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 			!EIGHT_BIT,SUBTRACTION);
 
 	return true;
@@ -30,7 +30,7 @@ case 0x80: {
 			minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
 		uint8_t result = minuend-subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				EIGHT_BIT,SUBTRACTION);
 
 		return true;
@@ -48,7 +48,7 @@ case 0x81: {
 			minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
 		uint32_t result = minuend-subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				!EIGHT_BIT,SUBTRACTION);
 
 		return true;
@@ -67,7 +67,7 @@ case 0x83: {
 			minuend = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
 		uint32_t result = minuend-subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				!EIGHT_BIT,SUBTRACTION);
 
 		return true;
@@ -86,7 +86,7 @@ case 0x38: {
 			minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
 		uint8_t result = minuend - subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				EIGHT_BIT,SUBTRACTION);
 		return true;
 	}
@@ -104,7 +104,7 @@ case 0x39: {
 			minuend = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
 		uint32_t result = minuend - subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				!EIGHT_BIT,SUBTRACTION);
 		return true;
 	}
@@ -122,7 +122,7 @@ case 0x3A: {
 			subtrahend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
 		uint8_t result = minuend - subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				EIGHT_BIT,SUBTRACTION);
 		return true;
 	}
@@ -141,7 +141,7 @@ case 0x3B: {
 			subtrahend = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
 		uint32_t result = minuend - subtrahend;
 
-		set_eflag_arith(cpu_state, minuend, subtrahend, result,
+		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				!EIGHT_BIT,SUBTRACTION);
 		return true;
 	}
