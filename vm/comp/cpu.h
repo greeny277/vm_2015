@@ -5,10 +5,12 @@
 
 #include "sig_host_bus.h"
 
-#define NO_DISPLACEMENT 0
-#define DISPLACEMENT_8  1
-#define DISPLACEMENT_32 2
-#define REGISTER        3
+typedef enum modrm_mod_bits {
+	NO_DISPLACEMENT,
+	DISPLACEMENT_8,
+	DISPLACEMENT_32,
+	REGISTER
+} modrm_mod_bits;
 
 typedef enum cpu_register {
 	EAX,
@@ -106,28 +108,32 @@ typedef struct modsib {
 	uint32_t *op2;
 
 	/* Defines address mode or scale mode */
-	uint8_t addr_or_scale_mode;
+	modrm_mod_bits addr_or_scale_mode;
 
 	/* Save register name, valid or not */
 	uint8_t op1_name;
 	uint8_t op2_name;
 } modsib;
 
+typedef enum addr_type {
+	REGISTER_WORD,
+	REGISTER_HIGH,
+	REGISTER_LOW,
+	MEMORY
+} addr_type;
+
 typedef struct op_addr {
-	/* Contains pointer to register except for immidiate values */
-	uint32_t *op1_reg;
-	/* For immidiate */
-	uint32_t op1_const;
-	bool is_op1_high;
+	/*decoded value of the reg and r/m bits*/
+	uint32_t* reg;
+	uint32_t* regmem_reg;
+	uint32_t  regmem_mem;
 
-	/* Contains pointer to register in case of REGISTER addressment */
-	uint32_t *op2_reg;
-	/* Contains address in case of memory addressment */
-	uint32_t op2_mem;
-
-	/* High or Low Byte in case of 8 bit */
-	bool is_op2_high;
+	/*type of the reg and r/m bits' decoded values*/
+	addr_type reg_type;
+	addr_type regmem_type;
 } op_addr;
+
+
 
 #endif /* __CPU_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
