@@ -23,8 +23,8 @@ void  cpu_destroy(void *_cpu_state);
 static cpu_register cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
 static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit);
 
-static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
-static void cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
+static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit);
+static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
 
 /*FIXME Rename read methods on a register to peek */
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
@@ -333,91 +333,97 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
  *                 False when an error occured.
  */
 static bool
-cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
+cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	uint8_t mod_rm = 0;
 
 	/* Eval MOD_RM Byte */
 	mod_rm = cpu_read_byte_from_ram(cpu_state);
 	modsib s_modrm;
 	memset(&mod_rm, 0, sizeof(modsib));
+	// memset(addr, 0, sizeof(op_addr));
 
 	if(false == cpu_modrm_eval(cpu_state, &s_modrm, mod_rm, is_8bit)){
 		return false;
 	}
 
-	/* Set high flag in 8bit mode */
-	if(is_8bit){
-		if(s_modrm.op1_name == AL || s_modrm.op1_name == BL ||
-				s_modrm.op1_name == CL || s_modrm.op1_name == DL){
-			addr->is_op1_high = !HIGH_BYTE;
+	/*
+	 * set reg part, this is straightforward
+	 */
+	if(!is_8bit){//TODO: Alle is_8bit dinge auf unlikely stellen?
+		addr->reg_type = REGISTER_WORD;
+	}else{
+		if(s_modrm.op1_name < AH){
+			addr->reg_type = REGISTER_LOW;
 		} else {
-			addr->is_op1_high = HIGH_BYTE;
-		}
-
-		if(s_modrm.op2_name == AL || s_modrm.op2_name == BL ||
-				s_modrm.op2_name == CL || s_modrm.op2_name == DL){
-			addr->is_op1_high = !HIGH_BYTE;
-		} else {
-			addr->is_op1_high = HIGH_BYTE;
+			addr->reg_type = REGISTER_HIGH;
 		}
 	}
+	addr->reg = s_modrm.op1;
 
-	/* Check if SIB byte follows */
-	if(s_modrm.op2_name == ESP && s_modrm.addr_or_scale_mode != REGISTER){
-		/* Define variables for SIB byte */
-		uint32_t *base;
-		uint32_t *index;
-
-		uint8_t sib = 0;
-		uint8_t scale = 0;
-
-
-		/* Read next byte increment eip */
-		sib = cpu_read_byte_from_ram(cpu_state);
-		modsib s_sib;
-		memset(&s_sib,0,sizeof(modsib));
-
-		if(false == cpu_modrm_eval(cpu_state, &s_sib, sib, is_8bit)){
-			return false;
+	/*
+	 * set regmem part, this the tricky part
+	 */
+	if(s_modrm.addr_or_scale_mode == REGISTER){
+		if(!is_8bit){
+			addr->reg_type = REGISTER_WORD;
+		}else{
+			if(s_modrm.op2_name < AH){
+				addr->regmem_type = REGISTER_LOW;
+			} else {
+				addr->regmem_type = REGISTER_HIGH;
+			}
 		}
 
-		scale = s_sib.addr_or_scale_mode;
-		scale = 1 << scale;
-		base = s_sib.op2;
-		index = s_sib.op1;
+		addr->regmem_reg = s_modrm.op2;
+	}else{
+		addr->regmem_type = MEMORY;
 
-		/* Compute base address for op2 */
-		uint32_t base_op2;
-		if(s_sib.op1_name == ESP) {
-			/* Index is not used */
-			base_op2 = *base;
+		if(s_modrm.op2_name == ESP){
+			/* We have a SIB byte following */
+			uint32_t *base;
+			uint32_t *index;
 
-		} else if (s_sib.op2_name == EBP){
-			/* Base is not used */
-			base_op2= *index * scale;
+			uint8_t sib = 0;
+			uint8_t scale = 0;
 
+			/* Read next byte increment eip */
+			sib = cpu_read_byte_from_ram(cpu_state);
+			modsib s_sib;
+			memset(&s_sib,0,sizeof(modsib));
+
+			if(false == cpu_modrm_eval(cpu_state, &s_sib, sib, is_8bit)){
+				return false;
+			}
+
+			scale = s_sib.addr_or_scale_mode;
+			scale = 1 << scale;
+			base = s_sib.op2;
+			index = s_sib.op1;
+
+			/* Compute base address for op2 */
+			uint32_t base_op2;
+			if(s_sib.op1_name == ESP) {
+				/* Index is not used */
+				base_op2 = *base;
+
+			} else if (s_sib.op2_name == EBP){
+				/* Base is not used */
+				base_op2= *index * scale;
+
+			} else {
+				base_op2 = *base + (*index * scale);
+			}
+			/* Remember: addressing mode is unequal to REGISTER! */
+			cpu_set_opaddr_regmem(cpu_state, s_modrm.addr_or_scale_mode, &base_op2, addr);
+
+		} else if(s_modrm.op2_name == EBP && s_modrm.addr_or_scale_mode == NO_DISPLACEMENT){
+			/* Special case: Reject op2 and read in a 32 Bit displacement instead. */
+			uint32_t base_0 = 0;
+			cpu_set_opaddr_regmem(cpu_state, DISPLACEMENT_32, &base_0, addr);
 		} else {
-			base_op2 = *base + (*index * scale);
+			/* Compute address of op2 */
+			cpu_set_opaddr_regmem(cpu_state, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
 		}
-		/* Remember: addressing mode is unequal to REGISTER! */
-		cpu_compute_op_to_address(cpu_state, s_modrm.addr_or_scale_mode, &base_op2, addr);
-
-	} else if(s_modrm.op2_name == EBP && s_modrm.addr_or_scale_mode == NO_DISPLACEMENT){
-		/* Special case: Reject op2 and read in a 32 Bit displacement instead. */
-		uint32_t base_0 = 0;
-		cpu_compute_op_to_address(cpu_state, DISPLACEMENT_32, &base_0, addr);
-	} else {
-		/* Compute address of op2 */
-		cpu_compute_op_to_address(cpu_state, s_modrm.addr_or_scale_mode, s_modrm.op2, addr);
-	}
-
-	/* Set op1 to reg address or as a constant value */
-	if(has_imm && is_8bit){
-		addr->op1_const = cpu_read_byte_from_ram(cpu_state);
-	} else if(has_imm){
-		addr->op1_const = cpu_read_word_from_ram(cpu_state);
-	} else{
-		addr->op1_reg = s_modrm.op1;
 	}
 	return true;
 }
@@ -428,24 +434,26 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm) {
  *
  * @param mode      Contains addressing mode
  *
- * @param addr      Pointer that contains the base address. Usually
+ * @param base_addr Pointer that contains the base address. Usually
  *                  a pointer to CPU own register.
+ *
+ * @param op        Pointer to the op_addr to write to
  */
 static void
-cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op) {
+cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, op_addr *op) {
 	uint8_t displ1;
 	uint32_t displacement_complete;
 	switch(mode){
 		case NO_DISPLACEMENT:
 			/* Indirection with no displacement */
-			op->op2_mem = *addr;
+			op->regmem_mem = *base_addr;
 			return;
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
 			displ1 = cpu_read_byte_from_ram(cpu_state);
 			/* Indirection with 8 bit displacement */
-			op->op2_mem = displ1 + (*addr);
+			op->regmem_mem = displ1 + (*base_addr);
 			return;
 
 		case DISPLACEMENT_32:
@@ -453,10 +461,10 @@ cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op
 
 			/* Attention: Lowest byte will be read first */
 			displacement_complete = cpu_read_word_from_ram(cpu_state);
-			op->op2_mem = displacement_complete + (*addr);
+			op->regmem_mem = displacement_complete + (*base_addr);
 			return;
 		case REGISTER:
-			op->op2_reg = addr;
+			op->regmem_reg = base_addr;
 			return;
 	}
 	return;
