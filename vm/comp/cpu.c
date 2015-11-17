@@ -663,9 +663,6 @@ cpu_step(void *_cpu_state) {
 	uint8_t eight_bit_src;
 	uint32_t four_byte_src;
 
-	/* Save old eip */
-	uint32_t eip_old = cpu_state->eip;
-
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
 	op_code = cpu_read_byte_from_ram(cpu_state);
@@ -678,13 +675,24 @@ cpu_step(void *_cpu_state) {
 		
 		#include "cpu_cmpInst.c"
 
-		#include "cpu_JbInst.c"
+		#include "cpu_JumpInst.c"
+
+
+		case 0x0f: {
+			/* The opcode is two bytes long */
+			uint8_t op_code_2 = cpu_read_byte_from_ram(cpu_state);
+			switch(op_code_2){
+				#include "cpu_extInst.c"
+			}
+		}
 
 		default:
 			break;
 	}
 	return false;
 }
+
+
 
 /** @brief nop - cpu does not support reading via bus
 */
