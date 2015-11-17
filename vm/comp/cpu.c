@@ -50,12 +50,14 @@ static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uin
 static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit);
 
 static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit);
-
 static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result);
-
 static void cpu_set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction);
-
 static void cpu_set_eip(cpu_state *cpu_state, uint32_t new_addr);
+
+static bool cpu_get_carry_flag(cpu_state *cpu_state);
+static bool cpu_get_overflow_flag(cpu_state *cpu_state);
+static bool cpu_get_sign_flag(cpu_state *cpu_state);
+static bool cpu_get_zero_flag(cpu_state *cpu_state);
 
 /** @brief "constructor" of the cpu
  *
@@ -134,6 +136,7 @@ static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bi
 	}
 	return;
 }
+
 /** @brief Set carry bit in eflag for addition
  *
  *  @param summand_fst the first operand of the additon
@@ -210,6 +213,42 @@ static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_
 static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result){
 	cpu_state->eflags &= ~(1 << ZERO_FLAG);
 	cpu_state->eflags |= (!result) << ZERO_FLAG;
+}
+
+/** @brief returns sign flag in EFLAG register
+ *
+ *  @return true when sign flag is set
+ *          false else
+ */
+static bool cpu_get_sign_flag(cpu_state *cpu_state){
+	return cpu_state->eflags & (1 << SIGN_FLAG);
+}
+
+/** @brief returns zero flag in EFLAG register
+ *
+ *  @return true when zero flag is set
+ *          false else
+ */
+static bool cpu_get_zero_flag(cpu_state *cpu_state){
+	return cpu_state->eflags & (1 << ZERO_FLAG);
+}
+
+/** @brief returns overflow flag in EFLAG register
+ *
+ *  @return true when overflow flag is set
+ *          false else
+ */
+static bool cpu_get_overflow_flag(cpu_state *cpu_state){
+	return cpu_state->eflags & (1 << OVERFLOW_FLAG);
+}
+
+/** @brief returns carry flag in EFLAG register
+ *
+ *  @return true when carry flag is set
+ *          false else
+ */
+static bool cpu_get_carry_flag(cpu_state *cpu_state){
+	return cpu_state->eflags & (1 << CARRY_FLAG);
 }
 
 
@@ -633,6 +672,8 @@ cpu_step(void *_cpu_state) {
 			 * Jump short if below (CF=1).
 			 */
 			int8_t offset = cpu_read_byte_from_ram(cpu_state);
+
+			/* TODO get CF */
 			cpu_set_eip(cpu_state, cpu_state->eip + offset);
 
 			return true;
