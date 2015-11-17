@@ -42,7 +42,7 @@ static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
 
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t, uint32_t);
 
-static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t second_summand);
+static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t second_summand, bool is_8bit);
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -79,16 +79,28 @@ cpu_destroy(void *_cpu_state) {
 
 /** @brief Set carry bit in eflag for addition
  *
- *  @param first_summand the first operand of the additon
- *  @param second_summand the second operand of the additon
+ *  @param summand_fst the first operand of the additon
+ *  @param summand_snd the second operand of the additon
  */
-static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t second_summand){
-	if(first_summand + second_summand < first_summand){
-		cpu_state->eflags |= 0x01;
+static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, bool is_8bit){
+	if(is_8bit){
+		uint8_t lim_summand_snd, lim_summand_fst;
+		lim_summand_fst = summand_fst;
+		lim_summand_snd = summand_snd;
+		if(lim_summand_fst + lim_summand_snd < lim_summand_fst){
+			cpu_state->eflags |= 0x01;
+		} else {
+			cpu_state->eflags &= ~0x01;
+		}
 	} else {
-		cpu_state->eflags &= ~0x01;
+		if(summand_fst + summand_snd < summand_fst){
+			cpu_state->eflags |= 0x01;
+		} else {
+			cpu_state->eflags &= ~0x01;
+		}
 	}
 }
+
 /** @brief Set carry bit in eflag for subtraction
  *
  *  @param minuend the first operand of the subtraction
