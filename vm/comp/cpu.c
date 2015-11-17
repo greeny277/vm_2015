@@ -13,6 +13,8 @@
 #define EIGHT_BIT true
 #define IMMEDIATE true
 
+#define SUBTRACTION true
+
 #define HIGH_BYTE true
 
 void *cpu_create(struct sig_host_bus *port_host);
@@ -51,6 +53,8 @@ static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bi
 
 static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result);
 
+static void set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction);
+
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -85,6 +89,27 @@ cpu_destroy(void *_cpu_state) {
 	free(_cpu_state);
 }
 
+/** @brief Set flags for addition or subtraction in eflag register
+ *
+ *  @param cpu_state is instance of the cpu
+ *  @param op1 is the first operand of the arithmetic operation
+ *  @param op2 is the second operand of the arithmetic operation
+ *  @param result is the result of the arithmetic operation
+ *  @param is_8bit indicates if 8bit modus is on or not
+ *  @param is_subtraction indicates if a subtraction was performed
+ */
+static void
+set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction){
+	if(is_subtraction){
+		cpu_set_carry_sub(cpu_state, op1, op2);
+		cpu_set_overflow_sub(cpu_state, op1, op2, result, is_8bit);
+	} else {
+		cpu_set_carry_add(cpu_state, op1, result);
+		cpu_set_overflow_add(cpu_state, op1, op2, result, is_8bit);
+	}
+	cpu_set_sign_flag(cpu_state, result, is_8bit);
+	cpu_set_zero_flag(cpu_state, result);
+}
 /** @brief Set sign bit in EFLAG register
  *
  */
@@ -592,22 +617,21 @@ cpu_step(void *_cpu_state) {
 		case 0x3C:{
 			/*Compare imm8 with AL*/
 			uint8_t subtrahend = cpu_read_byte_from_ram(cpu_state);
-			uint8_t result = (uint8_t)(cpu_state->eax)-subtrahend;
-			cpu_set_carry_sub(cpu_state, cpu_state->eax, subtrahend);
-			cpu_set_overflow_sub(cpu_state, cpu_state->eax, subtrahend, result, EIGHT_BIT);
-			cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
-			cpu_set_zero_flag(cpu_state, result);
+			uint8_t minuend = (uint8_t)(cpu_state->eax);
+			uint8_t result = minuend - subtrahend;
 
+			set_eflag_arith(cpu_state, minuend, subtrahend, result,
+					EIGHT_BIT,SUBTRACTION);
 			return true;
 		}
 		case 0x3D: {
 			/*Compare imm32 with AL*/
 			uint32_t subtrahend = cpu_read_word_from_ram(cpu_state);
-			uint32_t result = cpu_state->eax - subtrahend;
-			cpu_set_carry_sub(cpu_state, cpu_state->eax, subtrahend);
-			cpu_set_overflow_sub(cpu_state, cpu_state->eax, subtrahend, result, !EIGHT_BIT);
-			cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
-			cpu_set_zero_flag(cpu_state, result);
+			uint32_t minuend = cpu_state->eax;
+			uint32_t result = minuend - subtrahend;
+
+			set_eflag_arith(cpu_state, minuend, subtrahend, result,
+					!EIGHT_BIT,SUBTRACTION);
 
 			return true;
 		}
@@ -622,10 +646,8 @@ cpu_step(void *_cpu_state) {
 					minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
 				uint8_t result = minuend-subtrahend;
 
-				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
-				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, EIGHT_BIT);
-				cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
-				cpu_set_zero_flag(cpu_state, result);
+				set_eflag_arith(cpu_state, minuend, subtrahend, result,
+						EIGHT_BIT,SUBTRACTION);
 
 				return true;
 			}
@@ -642,10 +664,8 @@ cpu_step(void *_cpu_state) {
 					minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
 				uint32_t result = minuend-subtrahend;
 
-				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
-				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, !EIGHT_BIT);
-				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
-				cpu_set_zero_flag(cpu_state, result);
+				set_eflag_arith(cpu_state, minuend, subtrahend, result,
+						!EIGHT_BIT,SUBTRACTION);
 
 				return true;
 			}
@@ -663,10 +683,27 @@ cpu_step(void *_cpu_state) {
 					minuend = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
 				uint32_t result = minuend-subtrahend;
 
-				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
-				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, !EIGHT_BIT);
-				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
+				set_eflag_arith(cpu_state, minuend, subtrahend, result,
+						!EIGHT_BIT,SUBTRACTION);
 
+				return true;
+			}
+			break;
+		}
+		case 0x38: {
+			/*Compare r8 with r/m8. */
+			if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT, !IMMEDIATE)){
+				uint8_t minuend, subtrahend;
+
+				subtrahend = cpu_read_byte_from_reg(s_op.op1_reg, s_op.is_op1_high);
+				if(s_op.op2_reg != 0)
+					minuend = cpu_read_word_from_reg(s_op.op2_reg);
+				else
+					minuend = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
+				uint8_t result = minuend-subtrahend;
+
+				set_eflag_arith(cpu_state, minuend, subtrahend, result,
+						EIGHT_BIT,SUBTRACTION);
 				return true;
 			}
 			break;
