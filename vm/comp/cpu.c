@@ -86,12 +86,11 @@ cpu_destroy(void *_cpu_state) {
  *
  */
 static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit){
+	cpu_state->eflags &= ~(1 << SIGN_FLAG);
 	if(is_8bit){
-		cpu_state->eflags &= ~0x80;
-		cpu_state->eflags |= (result & 0x80);
+		cpu_state->eflags |= !!(result & 0x80) << SIGN_FLAG; //!! makes non-zero ints 1
 	} else {
-		cpu_state->eflags &= ~0x80000000;
-		cpu_state->eflags |= (result & 0x80000000);
+		cpu_state->eflags |= !!(result & 0x80000000) << SIGN_FLAG; //!! makes non-zero ints 1
 	}
 	return;
 }
@@ -101,8 +100,8 @@ static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bi
  *  @param result  result of addition
  */
 static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t result){
-	cpu_state->eflags &= ~0x01;
-	cpu_state->eflags |= (result < summand_fst);
+	cpu_state->eflags &= ~(1 << CARRY_FLAG);
+	cpu_state->eflags |= (result < summand_fst) << CARRY_FLAG;
 }
 
 /** @brief Set carry bit in eflag for subtraction
@@ -111,8 +110,8 @@ static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32
  *  @param subtrahend the second operand of the subtraction
  */
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend){
-	cpu_state->eflags &= ~0x01;
-	cpu_state->eflags |= (minuend < subtrahend);
+	cpu_state->eflags &= ~(1 << CARRY_FLAG);
+	cpu_state->eflags |= (minuend < subtrahend) << CARRY_FLAG;
 }
 
 /** @brief Set overflow bit in eflag for addition
@@ -126,15 +125,15 @@ static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t s
 static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit){
 	if(is_8bit){
 		if((!((summand_fst >> 7) ^ (summand_snd >> 7))) && ((summand_fst >> 7) ^ (result >> 7))){
-			cpu_state->eflags |= 0x0800;
+			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
 		} else {
-			cpu_state->eflags &= ~0x0800;
+			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
 		}
 	} else {
 		if((!((summand_fst >> 31) ^ (summand_snd >> 31))) && ((summand_fst >> 31) ^ (result >> 31))){
-			cpu_state->eflags |= 0x0800;
+			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
 		} else {
-			cpu_state->eflags &= ~0x0800;
+			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
 		}
 	}
 }
@@ -150,17 +149,27 @@ static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uin
 static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit){
 	if(is_8bit){
 		if(((minuend >> 7) ^ (subtrahend >> 7)) && ((minuend >> 7) ^ (result >> 7))){
-			cpu_state->eflags |= 0x0800;
+			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
 		} else {
-			cpu_state->eflags &= ~0x0800;
+			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
 		}
 	} else {
 		if(((minuend >> 31) ^ (subtrahend >> 31)) && ((minuend >> 31) ^ (result >> 31))){
-			cpu_state->eflags |= 0x0800;
+			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
 		} else {
-			cpu_state->eflags &= ~0x0800;
+			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
 		}
 	}
+}
+
+/** @brief Set zero bit in eflag
+ *
+ *  @param cpu_state the cpu instance
+ *  @param result the result of the operation
+ */
+static void cpu_set_zero_bit(cpu_state *cpu_state, uint32_t result){
+	cpu_state->eflags &= ~(1 << ZERO_FLAG);
+	cpu_state->eflags |= (!result) << ZERO_FLAG;
 }
 
 

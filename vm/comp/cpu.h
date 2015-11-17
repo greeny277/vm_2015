@@ -88,6 +88,13 @@ typedef struct cpu_state {
 	uint32_t eflags;
 } cpu_state;
 
+#define OVERFLOW_FLAG  11
+#define SIGN_FLAG      7
+#define ZERO_FLAG      6
+#define AUX_CARRY_FLAG 4
+#define PARITY_FLAG    2
+#define CARRY_FLAG     0
+
 /*
  * This struct can be used for decoding SIB and ModRM byte
  */
