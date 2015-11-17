@@ -48,6 +48,8 @@ static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_
 
 static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit);
 
+static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result);
+
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -167,7 +169,7 @@ static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_
  *  @param cpu_state the cpu instance
  *  @param result the result of the operation
  */
-static void cpu_set_zero_bit(cpu_state *cpu_state, uint32_t result){
+static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result){
 	cpu_state->eflags &= ~(1 << ZERO_FLAG);
 	cpu_state->eflags |= (!result) << ZERO_FLAG;
 }
