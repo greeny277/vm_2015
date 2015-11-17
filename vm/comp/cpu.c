@@ -24,6 +24,7 @@ static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t by
 static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit, bool has_imm);
 static void cpu_compute_op_to_address(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
 
+/*FIXME Rename read methods on a register to peek */
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
 static uint8_t  cpu_read_word_from_reg(uint32_t *reg_addr);
 static uint8_t  cpu_read_byte_from_ram(cpu_state *cpu_state);
@@ -643,6 +644,25 @@ cpu_step(void *_cpu_state) {
 				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
 				cpu_set_zero_flag(cpu_state, result);
 			}
+		}
+		case 0x83: {
+			/*Compare imm8 with r/m32. */
+			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT, !IMMEDIATE)){
+				uint32_t subtrahend = (int8_t) cpu_read_byte_from_ram(cpu_state);
+				
+				uint32_t minuend;
+				if(s_op.op2_reg != 0)
+					minuend = cpu_read_word_from_reg(s_op.op2_reg);
+				else
+					minuend = cpu_peek_word_from_ram(cpu_state, s_op.op2_mem);
+				uint32_t result = minuend-subtrahend;
+
+				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
+				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, !EIGHT_BIT);
+				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
+				return true;
+			}
+			break;
 		}
 		default:
 			break;
