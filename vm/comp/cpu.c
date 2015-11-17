@@ -721,6 +721,27 @@ cpu_step(void *_cpu_state) {
 			break;
 		}
 
+		case 0xC6: {
+			/* Special case: Specific instruction decoded in Mod/RM byte */
+			
+			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+				switch(s_op.reg_value){
+					#include "cpu_special0xC6.c"
+				}
+			}
+			break;
+		}
+
+		case 0xC7: {
+			/* Special case: Specific instruction decoded in Mod/RM byte */
+			
+			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+				switch(s_op.reg_value){
+					#include "cpu_special0xC7.c"
+				}
+			}
+			break;
+		}
 		default:
 			break;
 	}
