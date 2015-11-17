@@ -339,7 +339,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	/* Eval MOD_RM Byte */
 	mod_rm = cpu_read_byte_from_mem(cpu_state);
 	modsib s_modrm;
-	memset(&mod_rm, 0, sizeof(modsib));
+	memset(&s_modrm, 0, sizeof(modsib));
 	// memset(addr, 0, sizeof(op_addr));
 
 	if(false == cpu_modrm_eval(cpu_state, &s_modrm, mod_rm, is_8bit)){
