@@ -45,6 +45,9 @@ static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t s
 
 static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit);
 static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit);
+
+static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit);
+
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -79,6 +82,19 @@ cpu_destroy(void *_cpu_state) {
 	free(_cpu_state);
 }
 
+/** @brief Set sign bit in EFLAG register
+ *
+ */
+static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit){
+	if(is_8bit){
+		cpu_state->eflags &= ~0x80;
+		cpu_state->eflags |= (result & 0x80);
+	} else {
+		cpu_state->eflags &= ~0x80000000;
+		cpu_state->eflags |= (result & 0x80000000);
+	}
+	return;
+}
 /** @brief Set carry bit in eflag for addition
  *
  *  @param summand_fst the first operand of the additon
