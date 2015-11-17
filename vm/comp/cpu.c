@@ -739,6 +739,9 @@ cpu_step(void *_cpu_state) {
 	uint8_t eight_bit_src;
 	uint32_t four_byte_src;
 
+	/* Save old eip */
+	uint32_t eip_old = cpu_state->eip;
+
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
 	op_code = cpu_read_byte_from_mem(cpu_state);
@@ -748,8 +751,10 @@ cpu_step(void *_cpu_state) {
 
 	switch(op_code) {
 		#include "cpu_moveInst.c"
-		
+
 		#include "cpu_cmpInst.c"
+
+		#include "cpu_jmpInst.c"
 
 		#include "cpu_JumpInst.c"
 
@@ -765,7 +770,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0x80: {
 			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
+
 			if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0x80.c"
@@ -776,7 +781,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0x81: {
 			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
+
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0x81.c"
@@ -787,7 +792,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0x83: {
 			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
+
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0x83.c"
@@ -798,7 +803,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0xC6: {
 			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
+
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0xC6.c"
@@ -809,7 +814,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0xC7: {
 			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
+
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0xC7.c"
@@ -820,7 +825,7 @@ cpu_step(void *_cpu_state) {
 
 		case 0xFF: {
 			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
+
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0xFF.c"
