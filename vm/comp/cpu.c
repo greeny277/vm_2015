@@ -588,95 +588,62 @@ cpu_step(void *_cpu_state) {
 	switch(op_code) {
 		#include "cpu_moveInst.c"
 
-		case 0xB2:
-			/* Copy imm8 to DL */
-			eight_bit_src = cpu_read_byte_from_ram(cpu_state);
-			cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->edx), !HIGH_BYTE);
-			return true;
+		case 0x3C:{
+			/*Compare imm8 with AL*/
+			uint8_t subtrahend = cpu_read_byte_from_ram(cpu_state);
+			uint8_t result = (uint8_t)(cpu_state->eax)-subtrahend;
+			cpu_set_carry_sub(cpu_state, cpu_state->eax, subtrahend);
+			cpu_set_overflow_sub(cpu_state, cpu_state->eax, subtrahend, result, EIGHT_BIT);
+			cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
+			cpu_set_zero_flag(cpu_state, result);
 
-		case 0xB3:
-			/* Copy imm8 to BL */
-			eight_bit_src = cpu_read_byte_from_ram(cpu_state);
-			cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ebx), !HIGH_BYTE);
 			return true;
+		}
+		case 0x3D: {
+			/*Compare imm32 with AL*/
+			uint32_t subtrahend = cpu_read_word_from_ram(cpu_state);
+			uint32_t result = cpu_state->eax - subtrahend;
+			cpu_set_carry_sub(cpu_state, cpu_state->eax, subtrahend);
+			cpu_set_overflow_sub(cpu_state, cpu_state->eax, subtrahend, result, !EIGHT_BIT);
+			cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
+			cpu_set_zero_flag(cpu_state, result);
 
-		case 0xB4:
-			/* Copy imm8 to AH */
-			eight_bit_src = cpu_read_byte_from_ram(cpu_state);
-			cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->eax), HIGH_BYTE);
 			return true;
-
-		case 0xB5:
-			/* Copy imm8 to CH */
-			eight_bit_src = cpu_read_byte_from_ram(cpu_state);
-			cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ecx), HIGH_BYTE);
-			return true;
-
-		case 0xB6:
-			/* Copy imm8 to DH */
-			eight_bit_src = cpu_read_byte_from_ram(cpu_state);
-			cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->edx), HIGH_BYTE);
-			return true;
-
-		case 0xB7:
-			/* Copy imm8 to BH */
-			eight_bit_src = cpu_read_byte_from_ram(cpu_state);
-			cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ebx), HIGH_BYTE);
-			return true;
-
-		case 0xB8:
-			/* Copy imm32 to EAX */
-			four_byte_src = cpu_read_word_from_ram(cpu_state);
-			cpu_write_word_in_reg(four_byte_src, &(cpu_state->eax));
-			return true;
-
-		case 0xB9:
-			/* Copy imm32 to ECX */
-			four_byte_src = cpu_read_word_from_ram(cpu_state);
-			cpu_write_word_in_reg(four_byte_src, &(cpu_state->ecx));
-			return true;
-
-		case 0xBA:
-			/* Copy imm32 to EDX */
-			four_byte_src = cpu_read_word_from_ram(cpu_state);
-			cpu_write_word_in_reg(four_byte_src, &(cpu_state->edx));
-			return true;
-
-		case 0xBB:
-			/* Copy imm32 to EBX */
-			four_byte_src = cpu_read_word_from_ram(cpu_state);
-			cpu_write_word_in_reg(four_byte_src, &(cpu_state->ebx));
-			return true;
-
-		case 0xC6:
-			/* Copy imm8 to r/m8. */
+		}
+		case 0x80: {
+			/*Compare imm8 with r/m8. */
 			if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT, IMMEDIATE)){
-				uint8_t src = s_op.op1_const;
-				if(s_op.op2_reg != 0){
-					/* Write in a register */
-					cpu_write_byte_in_reg(src, s_op.op2_reg, s_op.is_op2_high);
-				} else {
-					/* Write in memory */
-					cpu_write_byte_in_ram(cpu_state, src, s_op.op2_mem);
-				}
-				return true;
-			}
-			break;
-		case 0xC7:
-			/* Copy imm32 to r/m32. */
-			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT, IMMEDIATE)){
-				uint32_t src = s_op.op1_const;
-				if(s_op.op2_reg != 0){
-					/* Write in a register */
-					cpu_write_word_in_reg(src, s_op.op2_reg);
-				} else {
-					/* Write in memory */
-					cpu_write_word_in_ram(cpu_state, src, s_op.op2_mem);
-				}
-				return true;
-			}
-			break;
+				uint8_t subtrahend = s_op.op1_const;
+				uint8_t minuend;
+				if(s_op.op2_reg != 0)
+					minuend = cpu_read_byte_from_reg(s_op.op2_reg, s_op.is_op2_high);
+				else
+					minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
+				uint8_t result = minuend-subtrahend;
 
+				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
+				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, EIGHT_BIT);
+				cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
+				cpu_set_zero_flag(cpu_state, result);
+			}
+		}
+		case 0x81: {
+			/*Compare imm32 with r/m32. */
+			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT, IMMEDIATE)){
+				uint32_t subtrahend = s_op.op1_const;
+				uint32_t minuend;
+				if(s_op.op2_reg != 0)
+					minuend = cpu_read_byte_from_reg(s_op.op2_reg, s_op.is_op2_high);
+				else
+					minuend = cpu_peek_byte_from_ram(cpu_state, s_op.op2_mem);
+				uint32_t result = minuend-subtrahend;
+
+				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
+				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, !EIGHT_BIT);
+				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
+				cpu_set_zero_flag(cpu_state, result);
+			}
+		}
 		default:
 			break;
 	}
