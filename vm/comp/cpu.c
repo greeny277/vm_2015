@@ -626,7 +626,10 @@ cpu_step(void *_cpu_state) {
 				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, EIGHT_BIT);
 				cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 				cpu_set_zero_flag(cpu_state, result);
+
+				return true;
 			}
+			break;
 		}
 		case 0x81: {
 			/*Compare imm32 with r/m32. */
@@ -643,7 +646,10 @@ cpu_step(void *_cpu_state) {
 				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, !EIGHT_BIT);
 				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
 				cpu_set_zero_flag(cpu_state, result);
+
+				return true;
 			}
+			break;
 		}
 		case 0x83: {
 			/*Compare imm8 with r/m32. */
@@ -660,6 +666,7 @@ cpu_step(void *_cpu_state) {
 				cpu_set_carry_sub(cpu_state, minuend, subtrahend);
 				cpu_set_overflow_sub(cpu_state, minuend, subtrahend, result, !EIGHT_BIT);
 				cpu_set_sign_flag(cpu_state, result, !EIGHT_BIT);
+
 				return true;
 			}
 			break;
