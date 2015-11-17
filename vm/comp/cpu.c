@@ -40,9 +40,11 @@ static void cpu_write_word_in_ram(cpu_state *cpu_state, uint32_t word, uint32_t 
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
 
-static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t, uint32_t);
+static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t result);
+static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend);
 
-static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t second_summand, bool is_8bit);
+static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit);
+static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit);
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -80,24 +82,13 @@ cpu_destroy(void *_cpu_state) {
 /** @brief Set carry bit in eflag for addition
  *
  *  @param summand_fst the first operand of the additon
- *  @param summand_snd the second operand of the additon
+ *  @param result  result of addition
  */
-static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, bool is_8bit){
-	if(is_8bit){
-		uint8_t lim_summand_snd, lim_summand_fst;
-		lim_summand_fst = summand_fst;
-		lim_summand_snd = summand_snd;
-		if(lim_summand_fst + lim_summand_snd < lim_summand_fst){
-			cpu_state->eflags |= 0x01;
-		} else {
-			cpu_state->eflags &= ~0x01;
-		}
+static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t result){
+	if(result < summand_fst){
+		cpu_state->eflags |= 0x01;
 	} else {
-		if(summand_fst + summand_snd < summand_fst){
-			cpu_state->eflags |= 0x01;
-		} else {
-			cpu_state->eflags &= ~0x01;
-		}
+		cpu_state->eflags &= ~0x01;
 	}
 }
 
@@ -113,6 +104,56 @@ static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t s
 		cpu_state->eflags &= ~0x01;
 	}
 }
+
+/** @brief Set overflow bit in eflag for addition
+ *
+ *  @param summand_fst the first operand of the additon
+ *  @param summand_snd the second operand of the additon
+ *  @param result the result of the addtion
+ *  @param is_8bit indicates 8bit operation. Whether sign bit
+ *                 is at positon 7 or 31.
+ */
+static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit){
+	if(is_8bit){
+		if((!((summand_fst >> 7) ^ (summand_snd >> 7))) && ((summand_fst >> 7) ^ (result >> 7))){
+			cpu_state->eflags |= 0x0800;
+		} else {
+			cpu_state->eflags &= ~0x0800;
+		}
+	} else {
+		if((!((summand_fst >> 31) ^ (summand_snd >> 31))) && ((summand_fst >> 31) ^ (result >> 31))){
+			cpu_state->eflags |= 0x0800;
+		} else {
+			cpu_state->eflags &= ~0x0800;
+		}
+	}
+}
+
+/** @brief Set overflow bit in eflag for subtraction
+ *
+ *  @param minuend the first operand of the subtraction
+ *  @param subtrahend the second operand of the subtraction
+ *  @param result the result of the subtraction
+ *  @param is_8bit indicates 8bit operation. Whether sign bit
+ *                 is at positon 7 or 31.
+ */
+static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit){
+	if(is_8bit){
+		if(((minuend >> 7) ^ (subtrahend >> 7)) && ((minuend >> 7) ^ (result >> 7))){
+			cpu_state->eflags |= 0x0800;
+		} else {
+			cpu_state->eflags &= ~0x0800;
+		}
+	} else {
+		if(((minuend >> 31) ^ (subtrahend >> 31)) && ((minuend >> 31) ^ (result >> 31))){
+			cpu_state->eflags |= 0x0800;
+		} else {
+			cpu_state->eflags &= ~0x0800;
+		}
+	}
+}
+
+
 /** @brief Interpret the reg bits of the mod-reg-r/m byte
  *
  * @param cpu_state  CPU instance
