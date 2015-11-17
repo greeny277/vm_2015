@@ -663,6 +663,9 @@ cpu_step(void *_cpu_state) {
 	uint8_t eight_bit_src;
 	uint32_t four_byte_src;
 
+	/* Save old eip */
+	uint32_t eip_old = cpu_state->eip;
+
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
 	op_code = cpu_read_byte_from_ram(cpu_state);
@@ -675,17 +678,8 @@ cpu_step(void *_cpu_state) {
 		
 		#include "cpu_cmpInst.c"
 
-		case 0x72: {
-			/* JB rel8
-			 * Jump short if below (CF=1).
-			 */
-			int8_t offset = cpu_read_byte_from_ram(cpu_state);
+		#include "cpu_JbInst.c"
 
-			/* TODO get CF */
-			cpu_set_eip(cpu_state, cpu_state->eip + offset);
-
-			return true;
-		}
 		default:
 			break;
 	}
