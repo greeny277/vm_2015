@@ -5,6 +5,17 @@
 
 #include "sig_host_bus.h"
 
+#define RAM_MEM_BASE 0x0000
+#define RAM_SIZE     32*1024
+
+typedef struct ram_state {
+	/** ports */
+	struct sig_host_bus *port_host;
+
+	/** state */
+	char ram[RAM_SIZE];
+} ram_state;
+
 /** create a memory instance 
   * @param port_host port to host bus.
   * @return memory instance.
