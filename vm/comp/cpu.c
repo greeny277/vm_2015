@@ -40,6 +40,11 @@ static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr);
 static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
 
+static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte);
+static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword);
+static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state);
+static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state);
+
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
 
@@ -653,7 +658,73 @@ cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
 	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 }
 
+/** @brief Save byte on stack and decrements stack pointer afterwards
+ *
+ *  @param cpu_state is the cpu instance
+ *  @param byte that get pushed on stack
+ */
+static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte){
+	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp);
+	cpu_state->esp--;
+}
 
+/** @brief Save doubleword on stack and decrements stack pointer
+ *         afterwards. The most significant byte
+ *         get pushed first (on the higher address).
+ *
+ *  @param cpu_state is the cpu instance
+ *  @param doubleword that get pushed on stack
+ */
+static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword){
+	uint8_t byte;
+	byte = (doubleword >> 24) & 0xff;
+	cpu_stack_push_byte(cpu_state, byte);
+
+	byte = (doubleword >> 16) & 0xff;
+	cpu_stack_push_byte(cpu_state, byte);
+
+	byte = (doubleword >> 8) & 0xff;
+	cpu_stack_push_byte(cpu_state, byte);
+
+	byte = doubleword & 0xff;
+	cpu_stack_push_byte(cpu_state, byte);
+}
+
+/** @brief Read byte from stack and increments stack pointer afterwards
+ *
+ *  @param cpu_state is the cpu instance
+ *
+ *  @return byte on stack
+ */
+static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state){
+	uint8_t byte = cpu_peek_byte_from_mem(cpu_state, cpu_state->esp);
+	cpu_state->esp++;
+	return byte;
+}
+
+/** @brief Read doubleword from stack and increments stack pointer afterwards.
+ *         Least significant byte is read first.
+ *
+ *  @param cpu_state is the cpu instance
+ *
+ *  @return doubleword on stack
+ */
+static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state){
+	uint32_t dw;
+	uint8_t byte0, byte1, byte2, byte3;
+
+	byte0 = cpu_stack_pop_byte(cpu_state);
+	byte1 = cpu_stack_pop_byte(cpu_state);
+	byte2 = cpu_stack_pop_byte(cpu_state);
+	byte3 = cpu_stack_pop_byte(cpu_state);
+
+	dw  = byte0;
+	dw |= (byte1 << 8);
+	dw |= (byte2 << 16);
+	dw |= (byte3 << 24);
+
+	return dw;
+}
 
 bool
 cpu_step(void *_cpu_state) {
