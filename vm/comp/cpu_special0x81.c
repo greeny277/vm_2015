@@ -1,4 +1,4 @@
-case 0x81: {
+case 7: {
 	/*Compare imm32 with r/m32. */
 	if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 		uint32_t subtrahend =cpu_read_word_from_reg(s_op.reg);
