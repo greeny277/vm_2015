@@ -786,6 +786,12 @@ cpu_step(void *_cpu_state) {
 			break;
 		}
 
+		case 0x40: {
+			/* Increment doubleword register eax by 1 */
+			uint32_t src = cpu_read_word_from_reg(&(cpu_state->eax));
+			src++;
+			cpu_write_word_in_reg(src, &(cpu_state->eax));
+		}
 		case 0x0f: {
 			/* The opcode is two bytes long */
 			uint8_t op_code_2 = cpu_read_byte_from_mem(cpu_state);
