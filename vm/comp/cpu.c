@@ -750,6 +750,7 @@ cpu_step(void *_cpu_state) {
 
 		#include "cpu_JumpInst.c"
 
+		#include "cpu_stackInst.c"
 
 		case 0x0f: {
 			/* The opcode is two bytes long */
@@ -809,6 +810,17 @@ cpu_step(void *_cpu_state) {
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				switch(s_op.reg_value){
 					#include "cpu_special0xC7.c"
+				}
+			}
+			break;
+		}
+
+		case 0xFF: {
+			/* Special case: Specific instruction decoded in Mod/RM byte */
+			
+			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+				switch(s_op.reg_value){
+					#include "cpu_special0xFF.c"
 				}
 			}
 			break;
