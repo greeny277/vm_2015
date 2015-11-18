@@ -664,8 +664,11 @@ cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
  *  @param byte that get pushed on stack
  */
 static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte){
-	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp);
+	/* Decrement first to assert that esp points
+	 * on the last pushed byte
+	 */
 	cpu_state->esp--;
+	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp);
 }
 
 /** @brief Save doubleword on stack and decrements stack pointer
