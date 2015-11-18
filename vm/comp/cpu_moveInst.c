@@ -51,25 +51,44 @@ case 0x8B:
 	}
 	break;
 
-case 0xA0:
+case 0xA0: {
 	/* Copy byte at (seg:offset) to AL */
-	fprintf(stderr, "0xA0 is not implemented yet\n");
-	break;
+	uint8_t src_addr = cpu_read_byte_from_mem(cpu_state);
+	uint8_t src_byte = cpu_peek_byte_from_mem(cpu_state, src_addr);
+	cpu_write_byte_in_reg(src_byte, &(cpu_state->eax), !HIGH_BYTE);
 
-case 0xA1:
+	return true;
+}
+
+case 0xA1: {
 	/* Copy doubleword at (seg:offset) to EAX */
-	fprintf(stderr, "0xA1 is not implemented yet\n");
-	break;
+	uint32_t src_addr = cpu_read_word_from_mem(cpu_state);
+	uint32_t src_doubleword = cpu_peek_word_from_mem(cpu_state, src_addr);
+	cpu_write_word_in_reg(src_doubleword, &(cpu_state->eax));
 
-case 0xA2:
+	return true;
+}
+
+case 0xA2: {
 	/* Copy AL to (seg:offset) */
-	fprintf(stderr, "0xA2 is not implemented yet\n");
-	break;
+	uint32_t dest_addr = cpu_read_byte_from_mem(cpu_state);
+	uint8_t src_byte = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 
-case 0xA3:
+	cpu_write_byte_in_mem(cpu_state, src_byte, dest_addr);
+
+	return true;
+}
+
+case 0xA3: {
 	/* Copy EAX to (seg:offset) */
-	fprintf(stderr, "0xA3 is not implemented yet\n");
-	break;
+
+	uint32_t dest_addr = cpu_read_word_from_mem(cpu_state);
+	uint32_t src_doubleword = cpu_read_word_from_reg(&(cpu_state->eax));
+
+	cpu_write_word_in_mem(cpu_state, src_doubleword, dest_addr);
+
+	return true;
+}
 
 case 0xB0:
 	/* Copy imm8 to AL */

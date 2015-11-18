@@ -28,7 +28,7 @@ static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *
 
 /*FIXME Rename read methods on a register to peek */
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
-static uint32_t  cpu_read_word_from_reg(uint32_t *reg_addr);
+static uint32_t cpu_read_word_from_reg(uint32_t *reg_addr);
 static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state);
 static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state);
 
