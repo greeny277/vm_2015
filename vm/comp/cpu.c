@@ -801,10 +801,17 @@ cpu_step(void *_cpu_state) {
 		}
 
 		case 0x42: {
-			/* Increment doubleword register ebx by 1 */
+			/* Increment doubleword register edx by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->edx));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->edx));
+		}
+
+		case 0x43: {
+			/* Increment doubleword register ebx by 1 */
+			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ebx));
+			src++;
+			cpu_write_word_in_reg(src, &(cpu_state->ebx));
 		}
 
 		case 0x0f: {
