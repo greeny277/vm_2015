@@ -769,6 +769,7 @@ cpu_step(void *_cpu_state) {
 		}
 
 		case 0xFF: {
+			/* Increment r/m word by 1 */
 			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 				uint32_t src;
 				if(s_op.regmem_type == MEMORY){
