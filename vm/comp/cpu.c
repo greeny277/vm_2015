@@ -791,6 +791,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->eax));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->eax));
+			return true;
 		}
 		
 		case 0x41: {
@@ -798,6 +799,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ecx));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->ecx));
+			return true;
 		}
 
 		case 0x42: {
@@ -805,6 +807,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->edx));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->edx));
+			return true;
 		}
 
 		case 0x43: {
@@ -812,6 +815,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ebx));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->ebx));
+			return true;
 		}
 
 		case 0x44: {
@@ -819,6 +823,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->esp));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->esp));
+			return true;
 		}
 
 		case 0x45: {
@@ -826,6 +831,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ebp));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->ebp));
+			return true;
 		}
 
 		case 0x46: {
@@ -833,6 +839,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->esi));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->esi));
+			return true;
 		}
 
 		case 0x47: {
@@ -840,6 +847,7 @@ cpu_step(void *_cpu_state) {
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->edi));
 			src++;
 			cpu_write_word_in_reg(src, &(cpu_state->edi));
+			return true;
 		}
 
 		case 0x0f: {
