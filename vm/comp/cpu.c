@@ -814,6 +814,13 @@ cpu_step(void *_cpu_state) {
 			cpu_write_word_in_reg(src, &(cpu_state->ebx));
 		}
 
+		case 0x44: {
+			/* Increment doubleword register esp by 1 */
+			uint32_t src = cpu_read_word_from_reg(&(cpu_state->esp));
+			src++;
+			cpu_write_word_in_reg(src, &(cpu_state->esp));
+		}
+
 		case 0x0f: {
 			/* The opcode is two bytes long */
 			uint8_t op_code_2 = cpu_read_byte_from_mem(cpu_state);
