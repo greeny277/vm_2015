@@ -5,7 +5,7 @@ case 0: {
 		if(s_op.regmem_type == MEMORY){
 			cpu_write_byte_in_mem(cpu_state, src, s_op.regmem_mem);
 		} else {
-			cpu_write_byte_in_reg(src, s_op.regmem_reg, s_op.regmem_type == REGISTER_HIGH);
+			cpu_write_byte_in_reg(src, s_op.regmem_reg, IS_HIGH(s_op.regmem));
 		}
 		return true;
 	}

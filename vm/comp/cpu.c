@@ -17,6 +17,8 @@
 
 #define HIGH_BYTE true
 
+#define IS_HIGH(x) (x ## _type == REGISTER_HIGH)
+
 void *cpu_create(struct sig_host_bus *port_host);
 void  cpu_destroy(void *_cpu_state);
 
