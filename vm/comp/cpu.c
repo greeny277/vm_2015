@@ -237,6 +237,21 @@ static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result){
 	cpu_set_flag(cpu_state, ZERO_FLAG, result==0);
 }
 
+/** @brief Set parity bit in eflag depending on result
+ *
+ *  @param cpu_state the cpu instance
+ *  @param result the result of the operation
+ */
+static void cpu_set_parity_flag(cpu_state *cpu_state, uint32_t result){
+	//x86 only looks at the least significant bit
+	bool raised =   ((result & 0x01) != 0) ^ ((result & 0x10) != 0) ^
+					((result & 0x02) != 0) ^ ((result & 0x20) != 0) ^
+					((result & 0x04) != 0) ^ ((result & 0x40) != 0) ^
+					((result & 0x08) != 0) ^ ((result & 0x80) != 0);
+
+	cpu_set_flag(cpu_state, PARITY_FLAG, raised);
+}
+
 /** @brief returns sign flag in EFLAG register
  *
  *  @return true when sign flag is set
