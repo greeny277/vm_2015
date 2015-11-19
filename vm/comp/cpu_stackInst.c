@@ -3,7 +3,7 @@ case 0xE8: {
 	int32_t rel32 = cpu_read_word_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 
-	cpu_write_word_in_reg(cpu_state->eip+rel32, &(cpu_state->eip));
+	cpu_write_word_in_reg(&(cpu_state->eip), cpu_state->eip+rel32);
 
 	return true;
 }
@@ -14,14 +14,14 @@ case 0x9A: {
 	 */
 	uint32_t abs = cpu_read_word_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
-	cpu_write_word_in_reg(abs, &(cpu_state->eip));
+	cpu_write_word_in_reg(&(cpu_state->eip), abs);
 
 	return true;
 }
 
 case 0xC3: {
 	/* Near return to calling procedure. */
-	cpu_write_word_in_reg(cpu_stack_pop_doubleword(cpu_state) , &(cpu_state->eip));
+	cpu_write_word_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
 
 	return true;
 }
@@ -31,7 +31,7 @@ case 0xCB:{
 	 * A return to a calling procedure located
 	 * in a different segment
 	 */
-	
+
 	/* No segments implemented yet */
 	fprintf(stderr, "No segments implemented yet\n");
 
@@ -40,11 +40,11 @@ case 0xCB:{
 
 case 0xC2: {
 	/* RET imm16 */
-	
+
 	/* Near return to calling procedure and pop
 	 * imm16 bytes from stack.
 	 */
-	cpu_write_word_in_reg(cpu_stack_pop_doubleword(cpu_state) , &(cpu_state->eip));
+	cpu_write_word_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
 
 	uint16_t imm16;
 
@@ -56,7 +56,7 @@ case 0xC2: {
 	imm16 = byte0;
 	imm16 |= (byte1 << 8);
 
-	cpu_write_word_in_reg(cpu_state->esp+imm16 , &(cpu_state->esp));
+	cpu_write_word_in_reg(&(cpu_state->esp), cpu_state->esp+imm16);
 
 	return true;
 }

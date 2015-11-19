@@ -12,7 +12,7 @@ case 6: {
 	if(s_op.regmem_type == MEMORY)
 		cpu_write_word_in_mem(cpu_state, result, s_op.regmem_mem);
 	else
-		cpu_write_word_in_reg(result, s_op.regmem_reg);
+		cpu_write_word_in_reg(s_op.regmem_reg, result);
 
 	cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 	cpu_clear_flag(cpu_state, CARRY_FLAG);

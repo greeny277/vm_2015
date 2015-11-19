@@ -5,7 +5,7 @@ case 0x88:
 		if(s_op.regmem_type == MEMORY){
 			cpu_write_byte_in_mem(cpu_state, src, s_op.regmem_mem);
 		} else {
-			cpu_write_byte_in_reg(src, s_op.regmem_reg, IS_HIGH(s_op.regmem));
+			cpu_write_byte_in_reg(s_op.regmem_reg, src, IS_HIGH(s_op.regmem));
 		}
 		return true;
 	}
@@ -17,7 +17,7 @@ case 0x89:
 		if(s_op.regmem_type == MEMORY){
 			cpu_write_word_in_mem(cpu_state, src, s_op.regmem_mem);
 		} else {
-			cpu_write_word_in_reg(src, s_op.regmem_reg);
+			cpu_write_word_in_reg(s_op.regmem_reg, src);
 		}
 		return true;
 	}
@@ -32,7 +32,7 @@ case 0x8A:
 		} else {
 			src = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 		}
-		cpu_write_byte_in_reg(src, s_op.reg, IS_HIGH(s_op.regmem));
+		cpu_write_byte_in_reg(s_op.reg, src, IS_HIGH(s_op.regmem));
 		return true;
 	}
 	break;
@@ -46,7 +46,7 @@ case 0x8B:
 		} else {
 			src = cpu_read_word_from_reg(s_op.regmem_reg);
 		}
-		cpu_write_word_in_reg(src, s_op.reg);
+		cpu_write_word_in_reg(s_op.reg, src);
 		return true;
 	}
 	break;
@@ -55,7 +55,7 @@ case 0xA0: {
 	/* Copy byte at (seg:offset) to AL */
 	uint8_t src_addr = cpu_read_byte_from_mem(cpu_state);
 	uint8_t src_byte = cpu_peek_byte_from_mem(cpu_state, src_addr);
-	cpu_write_byte_in_reg(src_byte, &(cpu_state->eax), !HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->eax), src_byte, !HIGH_BYTE);
 
 	return true;
 }
@@ -64,7 +64,7 @@ case 0xA1: {
 	/* Copy doubleword at (seg:offset) to EAX */
 	uint32_t src_addr = cpu_read_word_from_mem(cpu_state);
 	uint32_t src_doubleword = cpu_peek_word_from_mem(cpu_state, src_addr);
-	cpu_write_word_in_reg(src_doubleword, &(cpu_state->eax));
+	cpu_write_word_in_reg(&(cpu_state->eax), src_doubleword);
 
 	return true;
 }
@@ -93,73 +93,73 @@ case 0xA3: {
 case 0xB0:
 	/* Copy imm8 to AL */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->eax), !HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->eax), eight_bit_src, !HIGH_BYTE);
 	return true;
 
 case 0xB1:
 	/* Copy imm8 to CL */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ecx), !HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->ecx), eight_bit_src, !HIGH_BYTE);
 	return true;
 
 case 0xB2:
 	/* Copy imm8 to DL */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->edx), !HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->edx), eight_bit_src, !HIGH_BYTE);
 	return true;
 
 case 0xB3:
 	/* Copy imm8 to BL */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ebx), !HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->ebx), eight_bit_src, !HIGH_BYTE);
 	return true;
 
 case 0xB4:
 	/* Copy imm8 to AH */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->eax), HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->eax), eight_bit_src, HIGH_BYTE);
 	return true;
 
 case 0xB5:
 	/* Copy imm8 to CH */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ecx), HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->ecx), eight_bit_src, HIGH_BYTE);
 	return true;
 
 case 0xB6:
 	/* Copy imm8 to DH */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->edx), HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->edx), eight_bit_src, HIGH_BYTE);
 	return true;
 
 case 0xB7:
 	/* Copy imm8 to BH */
 	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(eight_bit_src, &(cpu_state->ebx), HIGH_BYTE);
+	cpu_write_byte_in_reg(&(cpu_state->ebx), eight_bit_src, HIGH_BYTE);
 	return true;
 
 case 0xB8:
 	/* Copy imm32 to EAX */
 	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(four_byte_src, &(cpu_state->eax));
+	cpu_write_word_in_reg(&(cpu_state->eax), four_byte_src);
 	return true;
 
 case 0xB9:
 	/* Copy imm32 to ECX */
 	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(four_byte_src, &(cpu_state->ecx));
+	cpu_write_word_in_reg(&(cpu_state->ecx), four_byte_src);
 	return true;
 
 case 0xBA:
 	/* Copy imm32 to EDX */
 	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(four_byte_src, &(cpu_state->edx));
+	cpu_write_word_in_reg(&(cpu_state->edx), four_byte_src);
 	return true;
 
 case 0xBB:
 	/* Copy imm32 to EBX */
 	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(four_byte_src, &(cpu_state->ebx));
+	cpu_write_word_in_reg(&(cpu_state->ebx), four_byte_src);
 	return true;
 
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

@@ -13,7 +13,7 @@ case 0x30:{
 		if(s_op.regmem_type == MEMORY)
 			cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem);
 		else
-			cpu_write_byte_in_reg(result, s_op.regmem_reg, IS_HIGH(s_op.regmem));
+			cpu_write_byte_in_reg(s_op.regmem_reg, result, IS_HIGH(s_op.regmem));
 
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 		cpu_clear_flag(cpu_state, CARRY_FLAG);
@@ -39,7 +39,7 @@ case 0x31:{
 		if(s_op.regmem_type == MEMORY)
 			cpu_write_word_in_mem(cpu_state, result, s_op.regmem_mem);
 		else
-			cpu_write_word_in_reg(result, s_op.regmem_reg);
+			cpu_write_word_in_reg(s_op.regmem_reg, result);
 
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 		cpu_clear_flag(cpu_state, CARRY_FLAG);
@@ -62,7 +62,7 @@ case 0x32:{
 
 		uint8_t result = op1 ^ op2;
 
-		cpu_write_byte_in_reg(result, s_op.reg, IS_HIGH(s_op.reg));
+		cpu_write_byte_in_reg(s_op.reg, result, IS_HIGH(s_op.reg));
 
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 		cpu_clear_flag(cpu_state, CARRY_FLAG);
@@ -85,7 +85,7 @@ case 0x33:{
 
 		uint32_t result = op1 ^ op2;
 
-		cpu_write_word_in_reg(result, s_op.reg);
+		cpu_write_word_in_reg(s_op.reg, result);
 
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 		cpu_clear_flag(cpu_state, CARRY_FLAG);
@@ -125,6 +125,7 @@ case 0x35:{
 	cpu_set_parity_flag(cpu_state, result);
 	return true;
 }
+
 
 //case 0x80 /6 is a special instruction, see cpu_special0x80.c
 //case 0x81 /6 is a special instruction, see cpu_special0x81.c

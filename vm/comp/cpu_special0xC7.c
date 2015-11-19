@@ -5,7 +5,7 @@ case 0: {
 		if(s_op.regmem_type == MEMORY){
 			cpu_write_word_in_mem(cpu_state, src, s_op.regmem_mem);
 		} else {
-			cpu_write_word_in_reg(src, s_op.regmem_reg);
+			cpu_write_word_in_reg(s_op.regmem_reg, src);
 		}
 		return true;
 	}

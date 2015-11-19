@@ -37,8 +37,8 @@ static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state);
 static uint8_t  cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 static uint32_t cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 
-static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
-static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
+static void cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high);
+static void cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word);
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr);
 static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
 
@@ -630,12 +630,12 @@ cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
 /** @brief write a byte to a register's high or low byte
  *
- * @param byte      the byte to write
  * @param reg_addr  the address of the register to read
+ * @param byte      the byte to write
  * @param is_high   whether to write the high byte
  */
 static void
-cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
+cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high) {
 	if(!is_high) {
 		*reg_addr &= ~0xff;
 		*reg_addr |= byte;
@@ -648,12 +648,12 @@ cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
 
 /** @brief write a word (4 byte) to a register
  *
- * @param byte      the byte to write
+ * @param word      the word to write
  * @param reg_addr  the address of the register to read
  */
 static void
-cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr) {
-	*reg_addr = data;
+cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word) {
+	*reg_addr = word;
 }
 
 /** @brief write a byte to the memory
