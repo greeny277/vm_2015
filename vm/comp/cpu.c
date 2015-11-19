@@ -790,6 +790,9 @@ cpu_step(void *_cpu_state) {
 		#include "cpu_stackInst.c"
 
 		#include "cpu_specialInst.c"
+
+		#include "cpu_xorInst.c"
+
 		default:
 			break;
 	}
