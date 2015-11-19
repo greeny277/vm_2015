@@ -12,7 +12,15 @@ case 0x72: {
 }
 
 case 0x74: {
+	/* JE rel8
+	 * Jump short if equal (ZF=1).
+	 */
+	int8_t offset = cpu_read_byte_from_mem(cpu_state);
 
+	if(cpu_get_zero_flag(cpu_state)){
+		cpu_set_eip(cpu_state, cpu_state->eip + offset);
+	}
+	return true;
 }
 
 
@@ -28,6 +36,8 @@ case 0x75: {
 	return true;
 }
 
+//case 0x0f 0x84 JE rel 32: This is a two-byte opcode, see cpu_extInst.c
+//case 0x0f 0x85 JNE rel 32: This is a two-byte opcode, see cpu_extInst.c
 
 /*
  * Unconditional jumps
