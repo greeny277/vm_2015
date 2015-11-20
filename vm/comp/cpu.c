@@ -770,9 +770,6 @@ cpu_step(void *_cpu_state) {
 
 	uint8_t op_code;
 
-	uint8_t eight_bit_src;
-	uint32_t four_byte_src;
-
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
 	op_code = cpu_read_byte_from_mem(cpu_state);

@@ -1,4 +1,4 @@
-case 0x88:
+case 0x88: {
 	/* Copy r8 to r/m8 */
 	if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t src = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
@@ -10,7 +10,8 @@ case 0x88:
 		return true;
 	}
 	break;
-case 0x89:
+}
+case 0x89: {
 	/* Copy r32 to r/m32 */
 	if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 		uint32_t src = cpu_read_word_from_reg(s_op.reg);
@@ -22,8 +23,9 @@ case 0x89:
 		return true;
 	}
 	break;
+}
 
-case 0x8A:
+case 0x8A: {
 	/* Copy r/m8 to r8. */
 	if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t src;
@@ -36,8 +38,9 @@ case 0x8A:
 		return true;
 	}
 	break;
+}
 
-case 0x8B:
+case 0x8B: {
 	/* Copy r/m32 to r32. */
 	if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 		uint32_t src;
@@ -50,6 +53,7 @@ case 0x8B:
 		return true;
 	}
 	break;
+}
 
 case 0xA0: {
 	/* Copy byte at (seg:offset) to AL */
@@ -90,76 +94,100 @@ case 0xA3: {
 	return true;
 }
 
-case 0xB0:
+case 0xB0: {
 	/* Copy imm8 to AL */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->eax), eight_bit_src, !HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->eax), src, !HIGH_BYTE);
 	return true;
+}
 
-case 0xB1:
+case 0xB1: {
 	/* Copy imm8 to CL */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->ecx), eight_bit_src, !HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->ecx), src, !HIGH_BYTE);
 	return true;
+}
 
-case 0xB2:
+case 0xB2: {
 	/* Copy imm8 to DL */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->edx), eight_bit_src, !HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->edx), src, !HIGH_BYTE);
 	return true;
+}
 
-case 0xB3:
+case 0xB3: {
 	/* Copy imm8 to BL */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->ebx), eight_bit_src, !HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->ebx), src, !HIGH_BYTE);
 	return true;
+}
 
-case 0xB4:
+case 0xB4: {
 	/* Copy imm8 to AH */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->eax), eight_bit_src, HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->eax), src, HIGH_BYTE);
 	return true;
+}
 
-case 0xB5:
+case 0xB5: {
 	/* Copy imm8 to CH */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->ecx), eight_bit_src, HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->ecx), src, HIGH_BYTE);
 	return true;
+}
 
-case 0xB6:
+case 0xB6: {
 	/* Copy imm8 to DH */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->edx), eight_bit_src, HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->edx), src, HIGH_BYTE);
 	return true;
+}
 
-case 0xB7:
+case 0xB7: {
 	/* Copy imm8 to BH */
-	eight_bit_src = cpu_read_byte_from_mem(cpu_state);
-	cpu_write_byte_in_reg(&(cpu_state->ebx), eight_bit_src, HIGH_BYTE);
+	uint8_t src;
+	src = cpu_read_byte_from_mem(cpu_state);
+	cpu_write_byte_in_reg(&(cpu_state->ebx), src, HIGH_BYTE);
 	return true;
+}
 
-case 0xB8:
+case 0xB8: {
 	/* Copy imm32 to EAX */
-	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->eax), four_byte_src);
+	uint32_t src;
+	src = cpu_read_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->eax), src);
 	return true;
+}
 
-case 0xB9:
+case 0xB9: {
 	/* Copy imm32 to ECX */
-	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->ecx), four_byte_src);
+	uint32_t src;
+	src = cpu_read_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->ecx), src);
 	return true;
+}
 
-case 0xBA:
+case 0xBA: {
 	/* Copy imm32 to EDX */
-	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->edx), four_byte_src);
+	uint32_t src;
+	src = cpu_read_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->edx), src);
 	return true;
+}
 
-case 0xBB:
+case 0xBB: {
 	/* Copy imm32 to EBX */
-	four_byte_src = cpu_read_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->ebx), four_byte_src);
+	uint32_t src;
+	src = cpu_read_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->ebx), src);
 	return true;
+}
 
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
