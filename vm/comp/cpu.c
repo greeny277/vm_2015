@@ -790,6 +790,8 @@ cpu_step(void *_cpu_state) {
 
 		#include "cpu_xorInst.c"
 
+		#include "cpu_addInst.c"
+
 		default:
 			break;
 	}
