@@ -1,6 +1,6 @@
 case 0xE8: {
 	/* CALL rel32 */
-	int32_t rel32 = cpu_read_word_from_mem(cpu_state);
+	int32_t rel32 = cpu_consume_word_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 
 	cpu_write_word_in_reg(&(cpu_state->eip), cpu_state->eip+rel32);
@@ -12,7 +12,7 @@ case 0x9A: {
 	/* CALL ptr32
 	 * Call far, absolute, address given in operand.
 	 */
-	uint32_t abs = cpu_read_word_from_mem(cpu_state);
+	uint32_t abs = cpu_consume_word_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 	cpu_write_word_in_reg(&(cpu_state->eip), abs);
 
@@ -50,8 +50,8 @@ case 0xC2: {
 
 	uint8_t byte0, byte1;
 
-	byte0 = cpu_read_byte_from_mem(cpu_state);
-	byte1 = cpu_read_byte_from_mem(cpu_state);
+	byte0 = cpu_consume_byte_from_mem(cpu_state);
+	byte1 = cpu_consume_byte_from_mem(cpu_state);
 
 	imm16 = byte0;
 	imm16 |= (byte1 << 8);

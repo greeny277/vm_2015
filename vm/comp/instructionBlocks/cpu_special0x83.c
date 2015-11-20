@@ -2,11 +2,11 @@ case 0: {
 	/*r/m32 XOR imm8.*/
 	uint8_t op1;
 	if(s_op.regmem_type == MEMORY)
-		op1 = cpu_peek_word_from_mem(cpu_state, s_op.regmem_mem);
+		op1 = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
 	else
 		op1 = cpu_read_word_from_reg(s_op.regmem_reg);
 
-	int32_t op2 = (int8_t) cpu_read_byte_from_mem(cpu_state);
+	int32_t op2 = (int8_t) cpu_consume_byte_from_mem(cpu_state);
 	uint32_t result = op1 + op2;
 
 	if(s_op.regmem_type == MEMORY)
@@ -27,11 +27,11 @@ case 6: {
 	/*r/m32 XOR imm8.*/
 	uint8_t op1;
 	if(s_op.regmem_type == MEMORY)
-		op1 = cpu_peek_word_from_mem(cpu_state, s_op.regmem_mem);
+		op1 = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
 	else
 		op1 = cpu_read_word_from_reg(s_op.regmem_reg);
 
-	int32_t op2 = (int8_t) cpu_read_byte_from_mem(cpu_state);
+	int32_t op2 = (int8_t) cpu_consume_byte_from_mem(cpu_state);
 	uint32_t result = op1 ^ op2;
 
 	if(s_op.regmem_type == MEMORY)
@@ -50,11 +50,11 @@ case 6: {
 
 case 7: {
 	/*Compare imm8 with r/m32. */
-	uint32_t subtrahend = (int8_t) cpu_read_byte_from_mem(cpu_state);
+	uint32_t subtrahend = (int8_t) cpu_consume_byte_from_mem(cpu_state);
 
 	uint32_t minuend;
 	if(s_op.regmem_type == MEMORY)
-		minuend = cpu_peek_word_from_mem(cpu_state, s_op.regmem_mem);
+		minuend = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
 	else
 		minuend = cpu_read_word_from_reg(s_op.regmem_reg);
 	uint32_t result = minuend-subtrahend;

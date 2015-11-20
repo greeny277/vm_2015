@@ -28,14 +28,13 @@ static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t by
 static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit);
 static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
 
-/*FIXME Rename read methods on a register to peek */
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
 static uint32_t cpu_read_word_from_reg(uint32_t *reg_addr);
-static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state);
-static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state);
+static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 
-static uint8_t  cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
-static uint32_t cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint8_t  cpu_consume_byte_from_mem(cpu_state *cpu_state);
+static uint32_t cpu_consume_word_from_mem(cpu_state *cpu_state);
 
 static void cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high);
 static void cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word);
@@ -376,7 +375,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	uint8_t mod_rm = 0;
 
 	/* Eval MOD_RM Byte */
-	mod_rm = cpu_read_byte_from_mem(cpu_state);
+	mod_rm = cpu_consume_byte_from_mem(cpu_state);
 	modsib s_modrm;
 	memset(&s_modrm, 0, sizeof(modsib));
 	// memset(addr, 0, sizeof(op_addr));
@@ -428,7 +427,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 			uint8_t scale = 0;
 
 			/* Read next byte increment eip */
-			sib = cpu_read_byte_from_mem(cpu_state);
+			sib = cpu_consume_byte_from_mem(cpu_state);
 			modsib s_sib;
 			memset(&s_sib,0,sizeof(modsib));
 
@@ -492,7 +491,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
-			displ1 = cpu_read_byte_from_mem(cpu_state);
+			displ1 = cpu_consume_byte_from_mem(cpu_state);
 			/* Indirection with 8 bit displacement */
 			op->regmem_mem = displ1 + (*base_addr);
 			return;
@@ -501,7 +500,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 			/* Indirection with 32 bit displacement */
 
 			/* Attention: Lowest byte will be read first */
-			displacement_complete = cpu_read_word_from_mem(cpu_state);
+			displacement_complete = cpu_consume_word_from_mem(cpu_state);
 			op->regmem_mem = displacement_complete + (*base_addr);
 			return;
 		case REGISTER:
@@ -548,7 +547,7 @@ cpu_read_word_from_reg(uint32_t *reg_addr) {
  * @return the byte read
  */
 static uint8_t
-cpu_read_byte_from_mem(cpu_state *cpu_state) {
+cpu_consume_byte_from_mem(cpu_state *cpu_state) {
 	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
 	cpu_state->eip = cpu_state->eip + 1;
 
@@ -563,14 +562,14 @@ cpu_read_byte_from_mem(cpu_state *cpu_state) {
  * @return the word read
  */
 static uint32_t
-cpu_read_word_from_mem(cpu_state *cpu_state) {
+cpu_consume_word_from_mem(cpu_state *cpu_state) {
 	uint8_t displ1, displ2, displ3, displ4;
 	uint32_t displacement_complete;
 
-	displ1 = cpu_read_byte_from_mem(cpu_state);
-	displ2 = cpu_read_byte_from_mem(cpu_state);
-	displ3 = cpu_read_byte_from_mem(cpu_state);
-	displ4 = cpu_read_byte_from_mem(cpu_state);
+	displ1 = cpu_consume_byte_from_mem(cpu_state);
+	displ2 = cpu_consume_byte_from_mem(cpu_state);
+	displ3 = cpu_consume_byte_from_mem(cpu_state);
+	displ4 = cpu_consume_byte_from_mem(cpu_state);
 
 	displacement_complete = displ1;
 	displacement_complete |= (displ2 << 8);
@@ -588,7 +587,7 @@ cpu_read_word_from_mem(cpu_state *cpu_state) {
  * @return the byte read
  */
 static uint8_t
-cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 	return sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 }
 
@@ -600,7 +599,7 @@ cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
  * @return the word read
  */
 static uint32_t
-cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
 	uint32_t data;
 	uint8_t byte1, byte2, byte3, byte4;
@@ -734,7 +733,7 @@ static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword)
  *  @return byte on stack
  */
 static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state){
-	uint8_t byte = cpu_peek_byte_from_mem(cpu_state, cpu_state->esp);
+	uint8_t byte = cpu_read_byte_from_mem(cpu_state, cpu_state->esp);
 	cpu_state->esp++;
 	return byte;
 }
@@ -772,7 +771,7 @@ cpu_step(void *_cpu_state) {
 
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
-	op_code = cpu_read_byte_from_mem(cpu_state);
+	op_code = cpu_consume_byte_from_mem(cpu_state);
 
 	op_addr s_op;
 	memset(&s_op, 0, sizeof(op_addr));
