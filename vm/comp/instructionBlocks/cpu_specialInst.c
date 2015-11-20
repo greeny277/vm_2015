@@ -2,7 +2,7 @@ case 0x0f: {
 	/* The opcode is two bytes long */
 	uint8_t op_code_2 = cpu_read_byte_from_mem(cpu_state);
 	switch(op_code_2){
-		#include "cpu_extInst.c"
+		#include "cpu_twoBytes_0x0f.c"
 	}
 }
 

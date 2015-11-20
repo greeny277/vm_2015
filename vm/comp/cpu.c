@@ -778,19 +778,20 @@ cpu_step(void *_cpu_state) {
 	memset(&s_op, 0, sizeof(op_addr));
 
 	switch(op_code) {
-		#include "cpu_moveInst.c"
+		#include "instructionBlocks/cpu_addInst.c"
 
-		#include "cpu_cmpInst.c"
+		#include "instructionBlocks/cpu_compareInst.c"
 
-		#include "cpu_JumpInst.c"
+		#include "instructionBlocks/cpu_jumpInst.c"
 
-		#include "cpu_stackInst.c"
+		#include "instructionBlocks/cpu_moveInst.c"
 
-		#include "cpu_specialInst.c"
+		#include "instructionBlocks/cpu_specialInst.c"
 
-		#include "cpu_xorInst.c"
+		#include "instructionBlocks/cpu_stackInst.c"
 
-		#include "cpu_addInst.c"
+		#include "instructionBlocks/cpu_xorInst.c"
+
 
 		default:
 			break;
