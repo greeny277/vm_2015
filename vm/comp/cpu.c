@@ -793,6 +793,8 @@ cpu_step(void *_cpu_state) {
 
 		#include "instructionBlocks/cpu_incInst.c"
 
+		#include "instructionBlocks/cpu_decInst.c"
+
 
 		default:
 			break;
