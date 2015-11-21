@@ -791,6 +791,8 @@ cpu_step(void *_cpu_state) {
 
 		#include "instructionBlocks/cpu_xorInst.c"
 
+		#include "instructionBlocks/cpu_incInst.c"
+
 
 		default:
 			break;
