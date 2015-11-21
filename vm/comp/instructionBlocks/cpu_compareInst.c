@@ -22,7 +22,7 @@ case 0x3D: {
 
 case 0x38: {
 	/*Compare r8 with r/m8. */
-	if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t minuend, subtrahend;
 
 		subtrahend = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
@@ -40,7 +40,7 @@ case 0x38: {
 }
 case 0x39: {
 	/*Compare r32 with r/m32. */
-	if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+	if(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 		uint32_t minuend, subtrahend;
 
 		subtrahend = cpu_read_word_from_reg(s_op.reg);
@@ -58,7 +58,7 @@ case 0x39: {
 }
 case 0x3A: {
 	/* Compare r/m8 with r8. */
-	if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t minuend, subtrahend;
 
 		minuend = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
@@ -77,7 +77,7 @@ case 0x3A: {
 
 case 0x3B: {
 	/* Compare r/m32 with r32. */
-	if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+	if(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
 		uint32_t minuend, subtrahend;
 
 		minuend = cpu_read_word_from_reg(s_op.reg);

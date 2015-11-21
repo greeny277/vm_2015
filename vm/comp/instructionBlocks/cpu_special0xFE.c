@@ -1,6 +1,6 @@
 case 0: {
 	/* Increment r/m byte by 1 */
-	if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t src;
 		if(s_op.regmem_type == MEMORY){
 			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
@@ -18,7 +18,7 @@ case 0: {
 
 case 1: {
 	/* Decrement r/m byte by 1 */
-	if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t src;
 		if(s_op.regmem_type == MEMORY){
 			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
