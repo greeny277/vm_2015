@@ -5,6 +5,17 @@
 
 #include "sig_host_bus.h"
 
+#define ROM_MEM_BASE 0xE000
+#define ROM_SIZE       4096
+
+typedef struct rom_state {
+	/** ports */
+	struct sig_host_bus *port_host;
+
+	/** state */
+	char rom[ROM_SIZE];
+} rom_state;
+
 /** create a bios rom instance
   * @param port_host port to host bus
   * @param rf filename of rom file 

@@ -17,6 +17,8 @@
 
 #define HIGH_BYTE true
 
+#define IS_HIGH(x) (x ## _type == REGISTER_HIGH)
+
 void *cpu_create(struct sig_host_bus *port_host);
 void  cpu_destroy(void *_cpu_state);
 
@@ -26,17 +28,16 @@ static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t by
 static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit);
 static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
 
-/*FIXME Rename read methods on a register to peek */
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
-static uint32_t  cpu_read_word_from_reg(uint32_t *reg_addr);
-static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state);
-static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state);
+static uint32_t cpu_read_word_from_reg(uint32_t *reg_addr);
+static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 
-static uint8_t  cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
-static uint32_t cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint8_t  cpu_consume_byte_from_mem(cpu_state *cpu_state);
+static uint32_t cpu_consume_word_from_mem(cpu_state *cpu_state);
 
-static void cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high);
-static void cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr);
+static void cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high);
+static void cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word);
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr);
 static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
 
@@ -47,6 +48,10 @@ static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state);
 
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
 static bool cpu_writeb(void *_cpu_state, uint32_t addr, uint8_t val);
+
+static void cpu_raise_flag(cpu_state *cpu_state, flag flag);
+static void cpu_clear_flag(cpu_state *cpu_state, flag flag);
+static void cpu_set_flag(cpu_state *cpu_state, flag flag, bool raised);
 
 static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t result);
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend);
@@ -108,6 +113,35 @@ cpu_destroy(void *_cpu_state) {
 	free(_cpu_state);
 }
 
+
+/** @brief sets a given flag to high (1)
+ *
+ *  @param cpu_state the instance of the cpu
+ *  @param flag      the flag to raise
+ */
+static void cpu_raise_flag(cpu_state *cpu_state, flag flag){
+	cpu_state->eflags |= (1 << flag);
+}
+
+/** @brief sets a given flag to low (0)
+ *
+ *  @param cpu_state the instance of the cpu
+ *  @param flag      the flag to clear
+ */
+static void cpu_clear_flag(cpu_state *cpu_state, flag flag){
+	cpu_state->eflags &= ~(1 << flag);
+}
+
+/** @brief sets a given flag to a given value (high or low)
+ *
+ *  @param cpu_state the instance of the cpu
+ *  @param flag      the flag to set
+ *  @param raised    whether the flag should be high (true) or low (false)
+ */
+static void cpu_set_flag(cpu_state *cpu_state, flag flag, bool raised){
+	cpu_state->eflags ^= (-raised ^ cpu_state->eflags) & (1 << flag);
+}
+
 /** @brief Set flags for addition or subtraction in eflag register
  *
  *  @param cpu_state is instance of the cpu
@@ -133,11 +167,10 @@ cpu_set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t r
  *
  */
 static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit){
-	cpu_state->eflags &= ~(1 << SIGN_FLAG);
 	if(is_8bit){
-		cpu_state->eflags |= !!(result & 0x80) << SIGN_FLAG; //!! makes non-zero ints 1
+		cpu_set_flag(cpu_state, SIGN_FLAG, (result & 0x80));
 	} else {
-		cpu_state->eflags |= !!(result & 0x80000000) << SIGN_FLAG; //!! makes non-zero ints 1
+		cpu_set_flag(cpu_state, SIGN_FLAG, (result & 0x80000000));
 	}
 	return;
 }
@@ -148,8 +181,7 @@ static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bi
  *  @param result  result of addition
  */
 static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t result){
-	cpu_state->eflags &= ~(1 << CARRY_FLAG);
-	cpu_state->eflags |= (result < summand_fst) << CARRY_FLAG;
+	cpu_set_flag(cpu_state, CARRY_FLAG, (result < summand_fst));
 }
 
 /** @brief Set carry bit in eflag for subtraction
@@ -158,8 +190,7 @@ static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t summand_fst, uint32
  *  @param subtrahend the second operand of the subtraction
  */
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend){
-	cpu_state->eflags &= ~(1 << CARRY_FLAG);
-	cpu_state->eflags |= (minuend < subtrahend) << CARRY_FLAG;
+	cpu_set_flag(cpu_state, CARRY_FLAG, (minuend < subtrahend));
 }
 
 /** @brief Set overflow bit in eflag for addition
@@ -172,17 +203,11 @@ static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t s
  */
 static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit){
 	if(is_8bit){
-		if((!((summand_fst >> 7) ^ (summand_snd >> 7))) && ((summand_fst >> 7) ^ (result >> 7))){
-			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
-		} else {
-			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
-		}
+		bool raised = (!((summand_fst >> 7) ^ (summand_snd >> 7))) && ((summand_fst >> 7) ^ (result >> 7));
+		cpu_set_flag(cpu_state, OVERFLOW_FLAG, raised);
 	} else {
-		if((!((summand_fst >> 31) ^ (summand_snd >> 31))) && ((summand_fst >> 31) ^ (result >> 31))){
-			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
-		} else {
-			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
-		}
+		bool raised = (!((summand_fst >> 31) ^ (summand_snd >> 31))) && ((summand_fst >> 31) ^ (result >> 31));
+		cpu_set_flag(cpu_state, OVERFLOW_FLAG, raised);
 	}
 }
 
@@ -196,17 +221,11 @@ static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uin
  */
 static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit){
 	if(is_8bit){
-		if(((minuend >> 7) ^ (subtrahend >> 7)) && ((minuend >> 7) ^ (result >> 7))){
-			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
-		} else {
-			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
-		}
+		bool raised = (((minuend >> 7) ^ (subtrahend >> 7)) && ((minuend >> 7) ^ (result >> 7)));
+		cpu_set_flag(cpu_state, OVERFLOW_FLAG, raised);
 	} else {
-		if(((minuend >> 31) ^ (subtrahend >> 31)) && ((minuend >> 31) ^ (result >> 31))){
-			cpu_state->eflags |= (1 << OVERFLOW_FLAG);
-		} else {
-			cpu_state->eflags &= ~(1 << OVERFLOW_FLAG);
-		}
+		bool raised = (((minuend >> 31) ^ (subtrahend >> 31)) && ((minuend >> 31) ^ (result >> 31)));
+		cpu_set_flag(cpu_state, OVERFLOW_FLAG, raised);
 	}
 }
 
@@ -216,8 +235,22 @@ static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_
  *  @param result the result of the operation
  */
 static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result){
-	cpu_state->eflags &= ~(1 << ZERO_FLAG);
-	cpu_state->eflags |= (!result) << ZERO_FLAG;
+	cpu_set_flag(cpu_state, ZERO_FLAG, result==0);
+}
+
+/** @brief Set parity bit in eflag depending on result
+ *
+ *  @param cpu_state the cpu instance
+ *  @param result the result of the operation
+ */
+static void cpu_set_parity_flag(cpu_state *cpu_state, uint32_t result){
+	//x86 only looks at the least significant bit
+	bool raised =   ((result & 0x01) != 0) ^ ((result & 0x10) != 0) ^
+					((result & 0x02) != 0) ^ ((result & 0x20) != 0) ^
+					((result & 0x04) != 0) ^ ((result & 0x40) != 0) ^
+					((result & 0x08) != 0) ^ ((result & 0x80) != 0);
+
+	cpu_set_flag(cpu_state, PARITY_FLAG, raised);
 }
 
 /** @brief returns sign flag in EFLAG register
@@ -342,7 +375,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	uint8_t mod_rm = 0;
 
 	/* Eval MOD_RM Byte */
-	mod_rm = cpu_read_byte_from_mem(cpu_state);
+	mod_rm = cpu_consume_byte_from_mem(cpu_state);
 	modsib s_modrm;
 	memset(&s_modrm, 0, sizeof(modsib));
 	// memset(addr, 0, sizeof(op_addr));
@@ -394,7 +427,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 			uint8_t scale = 0;
 
 			/* Read next byte increment eip */
-			sib = cpu_read_byte_from_mem(cpu_state);
+			sib = cpu_consume_byte_from_mem(cpu_state);
 			modsib s_sib;
 			memset(&s_sib,0,sizeof(modsib));
 
@@ -458,7 +491,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 
 		case DISPLACEMENT_8:
 			/* Read one extra byte from bus */
-			displ1 = cpu_read_byte_from_mem(cpu_state);
+			displ1 = cpu_consume_byte_from_mem(cpu_state);
 			/* Indirection with 8 bit displacement */
 			op->regmem_mem = displ1 + (*base_addr);
 			return;
@@ -467,7 +500,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 			/* Indirection with 32 bit displacement */
 
 			/* Attention: Lowest byte will be read first */
-			displacement_complete = cpu_read_word_from_mem(cpu_state);
+			displacement_complete = cpu_consume_word_from_mem(cpu_state);
 			op->regmem_mem = displacement_complete + (*base_addr);
 			return;
 		case REGISTER:
@@ -514,7 +547,7 @@ cpu_read_word_from_reg(uint32_t *reg_addr) {
  * @return the byte read
  */
 static uint8_t
-cpu_read_byte_from_mem(cpu_state *cpu_state) {
+cpu_consume_byte_from_mem(cpu_state *cpu_state) {
 	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
 	cpu_state->eip = cpu_state->eip + 1;
 
@@ -529,14 +562,14 @@ cpu_read_byte_from_mem(cpu_state *cpu_state) {
  * @return the word read
  */
 static uint32_t
-cpu_read_word_from_mem(cpu_state *cpu_state) {
+cpu_consume_word_from_mem(cpu_state *cpu_state) {
 	uint8_t displ1, displ2, displ3, displ4;
 	uint32_t displacement_complete;
 
-	displ1 = cpu_read_byte_from_mem(cpu_state);
-	displ2 = cpu_read_byte_from_mem(cpu_state);
-	displ3 = cpu_read_byte_from_mem(cpu_state);
-	displ4 = cpu_read_byte_from_mem(cpu_state);
+	displ1 = cpu_consume_byte_from_mem(cpu_state);
+	displ2 = cpu_consume_byte_from_mem(cpu_state);
+	displ3 = cpu_consume_byte_from_mem(cpu_state);
+	displ4 = cpu_consume_byte_from_mem(cpu_state);
 
 	displacement_complete = displ1;
 	displacement_complete |= (displ2 << 8);
@@ -554,7 +587,7 @@ cpu_read_word_from_mem(cpu_state *cpu_state) {
  * @return the byte read
  */
 static uint8_t
-cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 	return sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 }
 
@@ -566,7 +599,7 @@ cpu_peek_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
  * @return the word read
  */
 static uint32_t
-cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
 	uint32_t data;
 	uint8_t byte1, byte2, byte3, byte4;
@@ -596,12 +629,12 @@ cpu_peek_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
 /** @brief write a byte to a register's high or low byte
  *
- * @param byte      the byte to write
  * @param reg_addr  the address of the register to read
+ * @param byte      the byte to write
  * @param is_high   whether to write the high byte
  */
 static void
-cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
+cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high) {
 	if(!is_high) {
 		*reg_addr &= ~0xff;
 		*reg_addr |= byte;
@@ -614,12 +647,12 @@ cpu_write_byte_in_reg(uint8_t byte, uint32_t *reg_addr, bool is_high) {
 
 /** @brief write a word (4 byte) to a register
  *
- * @param byte      the byte to write
+ * @param word      the word to write
  * @param reg_addr  the address of the register to read
  */
 static void
-cpu_write_word_in_reg(uint32_t data, uint32_t *reg_addr) {
-	*reg_addr = data;
+cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word) {
+	*reg_addr = word;
 }
 
 /** @brief write a byte to the memory
@@ -664,8 +697,11 @@ cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
  *  @param byte that get pushed on stack
  */
 static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte){
-	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp);
+	/* Decrement first to assert that esp points
+	 * on the last pushed byte
+	 */
 	cpu_state->esp--;
+	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp);
 }
 
 /** @brief Save doubleword on stack and decrements stack pointer
@@ -697,7 +733,7 @@ static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword)
  *  @return byte on stack
  */
 static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state){
-	uint8_t byte = cpu_peek_byte_from_mem(cpu_state, cpu_state->esp);
+	uint8_t byte = cpu_read_byte_from_mem(cpu_state, cpu_state->esp);
 	cpu_state->esp++;
 	return byte;
 }
@@ -733,84 +769,29 @@ cpu_step(void *_cpu_state) {
 
 	uint8_t op_code;
 
-	uint8_t eight_bit_src;
-	uint32_t four_byte_src;
-
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
-	op_code = cpu_read_byte_from_mem(cpu_state);
+	op_code = cpu_consume_byte_from_mem(cpu_state);
 
 	op_addr s_op;
 	memset(&s_op, 0, sizeof(op_addr));
 
 	switch(op_code) {
-		#include "cpu_moveInst.c"
-		#include "cpu_cmpInst.c"
-		#include "cpu_JumpInst.c"
-		#include "cpu_incInst.c"
+		#include "instructionBlocks/cpu_addInst.c"
 
-		case 0x0f: {
-			/* The opcode is two bytes long */
-			uint8_t op_code_2 = cpu_read_byte_from_mem(cpu_state);
-			switch(op_code_2){
-				#include "cpu_extInst.c"
-			}
-		}
+		#include "instructionBlocks/cpu_compareInst.c"
 
-		case 0x80: {
-			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
-			if(!cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
-				switch(s_op.reg_value){
-					#include "cpu_special0x80.c"
-				}
-			}
-			break;
-		}
+		#include "instructionBlocks/cpu_jumpInst.c"
 
-		case 0x81: {
-			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
-			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
-				switch(s_op.reg_value){
-					#include "cpu_special0x81.c"
-				}
-			}
-			break;
-		}
+		#include "instructionBlocks/cpu_moveInst.c"
 
-		case 0x83: {
-			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
-			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
-				switch(s_op.reg_value){
-					#include "cpu_special0x83.c"
-				}
-			}
-			break;
-		}
+		#include "instructionBlocks/cpu_specialInst.c"
 
-		case 0xC6: {
-			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
-			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
-				switch(s_op.reg_value){
-					#include "cpu_special0xC6.c"
-				}
-			}
-			break;
-		}
+		#include "instructionBlocks/cpu_stackInst.c"
 
-		case 0xC7: {
-			/* Special case: Specific instruction decoded in Mod/RM byte */
-			
-			if(!cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
-				switch(s_op.reg_value){
-					#include "cpu_special0xC7.c"
-				}
-			}
-			break;
-		}
+		#include "instructionBlocks/cpu_xorInst.c"
+
+
 		default:
 			break;
 	}
