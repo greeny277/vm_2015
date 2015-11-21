@@ -327,7 +327,7 @@ cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_a
  *
  * @param cpu_state    CPU instance
  * @param mod      Pointer to structure where results will be saved in
- * @param byte     byte that will be analysed
+* @param byte     byte that will be analysed
  * @param is_8bit  Is it an 8 bit instruction
  *
  * @return         True on success.
@@ -794,6 +794,8 @@ cpu_step(void *_cpu_state) {
 		#include "instructionBlocks/cpu_incInst.c"
 
 		#include "instructionBlocks/cpu_decInst.c"
+
+		#include "instructionBlocks/cpu_hltInst.c"
 
 
 		default:
