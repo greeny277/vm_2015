@@ -57,7 +57,7 @@ case 0x8B: {
 
 case 0xA0: {
 	/* Copy byte at (seg:offset) to AL */
-	uint8_t src_addr = cpu_consume_byte_from_mem(cpu_state);
+	uint32_t src_addr = cpu_consume_word_from_mem(cpu_state);
 	uint8_t src_byte = cpu_read_byte_from_mem(cpu_state, src_addr);
 	cpu_write_byte_in_reg(&(cpu_state->eax), src_byte, !HIGH_BYTE);
 
