@@ -104,17 +104,17 @@ typedef enum flag {
  */
 typedef struct modsib {
 	/* Operand 1 Reg: Can be used as SRC or DEST */
-	uint32_t *op1;
+	uint32_t *mod_reg;
 
 	/* Operand 2 Reg/Mem: Can be used as SRC or DEST */
-	uint32_t *op2;
+	uint32_t *mod_rm;
 
 	/* Defines address mode or scale mode */
 	modrm_mod_bits addr_or_scale_mode;
 
 	/* Save register name, valid or not */
-	cpu_register op1_name;
-	cpu_register op2_name;
+	cpu_register mod_reg_name;
+	cpu_register mod_rm_name;
 } modsib;
 
 typedef enum addr_type {
