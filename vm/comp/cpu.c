@@ -345,7 +345,7 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 	}
 
 	/* Decode register/memory */
-	mod->op2_name = cpu_modrm_eval_register(cpu_state, byte & 0x7, &op2, is_8bit);
+	mod->op2_name = cpu_modrm_eval_register(cpu_state, byte & 0x7, &op2, !EIGHT_BIT);
 	if( -1 == mod->op2_name) {
 		return false;
 	}
