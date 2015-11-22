@@ -66,8 +66,15 @@ read_from_disk(void *_disk_state){
 		}
 
 		/* Read BUF_SIZE bytes in buffer */
-		return (BUF_SIZE == fread(disk_state->buffer, sizeof(char), BUF_SIZE, disk_state->f));
+        size_t byte_read = fread(disk_state->buffer, 1, BUF_SIZE, disk_state->f);
 
+		/* Check for error */
+		if(ferror(disk_state->f)){
+			fprintf(stderr, "An error occured in fread(3)\n");
+			return false;
+		} else {
+			return true;
+		}
 }
 
 static bool
@@ -162,7 +169,7 @@ disk_ctrl_create(struct sig_host_bus *port_host, const char *fn)
 	assert(disk_state != NULL);
 	disk_state->port_host = port_host;
 
-	disk_state->f = fopen(fn, "w+");
+	disk_state->f = fopen(fn, "r+");
 	assert(disk_state->f != NULL);
 
 	int ret = fseek(disk_state->f, DISK_SIZE, SEEK_SET);
