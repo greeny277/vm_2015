@@ -191,4 +191,34 @@ case 0xBB: {
 	return true;
 }
 
+case 0xBC: {
+	/* Copy imm32 to ESP */
+	uint32_t src;
+	src = cpu_consume_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->esp), src);
+	return true;
+}
+
+case 0xBD: {
+	/* Copy imm32 to EBP */
+	uint32_t src;
+	src = cpu_consume_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->ebp), src);
+	return true;
+}
+
+case 0xBE: {
+	/* Copy imm32 to ESI */
+	uint32_t src;
+	src = cpu_consume_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->esi), src);
+	return true;
+}
+case 0xBF: {
+	/* Copy imm32 to EDI */
+	uint32_t src;
+	src = cpu_consume_word_from_mem(cpu_state);
+	cpu_write_word_in_reg(&(cpu_state->edi), src);
+	return true;
+}
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
