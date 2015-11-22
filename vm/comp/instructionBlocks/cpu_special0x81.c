@@ -49,7 +49,7 @@ case 6: {
 }
 case 7: {
 	/*Compare imm32 with r/m32. */
-	uint32_t subtrahend =cpu_read_word_from_reg(s_op.reg);
+	uint32_t subtrahend = cpu_consume_word_from_mem(cpu_state);
 	uint32_t minuend;
 	if(s_op.regmem_type == MEMORY)
 		minuend = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);

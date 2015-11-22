@@ -49,7 +49,7 @@ case 6: {
 
 case 7: {
 	/*Compare imm8 with r/m8. */
-	uint8_t subtrahend = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
+	uint8_t subtrahend = cpu_consume_byte_from_mem(cpu_state);
 	uint8_t minuend;
 	if(s_op.regmem_type == MEMORY)
 		minuend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
