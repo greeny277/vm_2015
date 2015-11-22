@@ -76,6 +76,8 @@ case 0xA1: {
 case 0xA2: {
 	/* Copy AL to (seg:offset) */
 	uint32_t dest_addr = cpu_consume_byte_from_mem(cpu_state);
+	dest_addr |= (cpu_consume_byte_from_mem(cpu_state) << 8);
+
 	uint8_t src_byte = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 
 	cpu_write_byte_in_mem(cpu_state, src_byte, dest_addr);
