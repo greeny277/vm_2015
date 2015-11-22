@@ -44,12 +44,14 @@ case 0x75: {
  */
 case 0xEB: {
 	/* Jump short relative 8*/
-	cpu_set_eip(cpu_state, cpu_state->eip + (int8_t) cpu_consume_byte_from_mem(cpu_state));
+	int8_t rel8 = cpu_consume_byte_from_mem(cpu_state);
+	cpu_set_eip(cpu_state, cpu_state->eip + rel8);
 	return true;
 }
 case 0xE9: {
 	/* Jump near, relative 32*/
-	cpu_set_eip(cpu_state, cpu_state->eip + (int32_t) cpu_consume_word_from_mem(cpu_state));
+	int32_t rel32 = cpu_consume_word_from_mem(cpu_state);
+	cpu_set_eip(cpu_state, cpu_state->eip + rel32);
 	return true;
 }
 // case 0xFF: is a special case -> see cpu_special0xFF.c
