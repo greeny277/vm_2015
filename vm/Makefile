@@ -27,6 +27,7 @@ COMP_SRC=\
 
 ROMS_SRC=\
 	comp/roms/bios_boot.S\
+	comp/roms/bios_boot_each_length.S\
 	comp/roms/bios_print_simple.S \
 	comp/roms/bios_print.S
 
