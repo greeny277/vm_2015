@@ -406,16 +406,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	 * set regmem part, this the tricky part
 	 */
 	if(s_modrm.addr_or_scale_mode == REGISTER){
-		if(!is_8bit){
-			addr->reg_type = REGISTER_WORD;
-		}else{
-			if(s_modrm.mod_rm_name < AH){
-				addr->regmem_type = REGISTER_LOW;
-			} else {
-				addr->regmem_type = REGISTER_HIGH;
-			}
-		}
-
+		addr->regmem_type = REGISTER;
 		addr->regmem_reg = s_modrm.mod_rm;
 	}else{
 		addr->regmem_type = MEMORY;
