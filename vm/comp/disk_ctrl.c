@@ -23,16 +23,10 @@ disk_ctrl_readb(void *_disk_state, uint32_t addr, uint8_t *valp){
 
 	switch (offset) {
 		case DISK_BNR:
-			*valp = disk_state->bnr & 0xFF;
-			return true;
 		case DISK_BNR_1:
-			*valp = 8 >> (disk_state->bnr & 0xFF00);
-			return true;
 		case DISK_BNR_2:
-			*valp = 16 >> (disk_state->bnr & 0xFF0000);
-			return true;
 		case DISK_BNR_3:
-			*valp = 24 >> (disk_state->bnr & 0xFF000000);
+			*valp = ((uint8_t*) &disk_state->bnr)[offset];
 			return true;
 		case DISK_ERR_REG:
 			*valp = disk_state->err_reg;
@@ -108,20 +102,10 @@ disk_ctrl_writeb(void *_disk_state, uint32_t addr, uint8_t val){
 
 	switch (offset) {
 		case DISK_BNR:
-			disk_state->bnr &= ~0xFF;
-			disk_state->bnr |= val;
-			return true;
 		case DISK_BNR_1:
-			disk_state->bnr &= ~0xFF00;
-			disk_state->bnr |= (val << 8);
-			return true;
 		case DISK_BNR_2:
-			disk_state->bnr &= ~0xFF0000;
-			disk_state->bnr |= (val << 16);
-			return true;
 		case DISK_BNR_3:
-			disk_state->bnr &= ~0xFF000000;
-			disk_state->bnr |= (val << 24);
+			((uint8_t*) &disk_state->bnr)[offset] = val;
 			return true;
 		case DISK_ERR_REG:
 			disk_state->err_reg = val;
