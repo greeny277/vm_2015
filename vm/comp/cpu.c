@@ -59,6 +59,9 @@ static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t s
 static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit);
 static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit);
 
+static void cpu_set_aux_flag_add(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit);
+static void cpu_set_aux_flag_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, bool is_8bit);
+
 static void cpu_set_sign_flag(cpu_state *cpu_state, uint32_t result, bool is_8bit);
 static void cpu_set_zero_flag(cpu_state *cpu_state, uint32_t result);
 static void cpu_set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit, bool is_subtraction);
@@ -156,13 +159,31 @@ cpu_set_eflag_arith(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t r
 	if(is_subtraction){
 		cpu_set_carry_sub(cpu_state, op1, op2);
 		cpu_set_overflow_sub(cpu_state, op1, op2, result, is_8bit);
+		cpu_set_aux_flag_sub(cpu_state, op1, op2, is_8bit);
 	} else {
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_overflow_add(cpu_state, op1, op2, result, is_8bit);
+		cpu_set_aux_flag_add(cpu_state, op1, op2, result, is_8bit);
 	}
 	cpu_set_sign_flag(cpu_state, result, is_8bit);
 	cpu_set_zero_flag(cpu_state, result);
 }
+
+static void cpu_set_aux_flag_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, bool is_8bit){
+	cpu_set_flag(cpu_state, AUX_CARRY_FLAG, ((minuend & 0x07) < (subtrahend & 0x07)));
+}
+
+static void cpu_set_aux_flag_add(cpu_state *cpu_state, uint32_t op1, uint32_t op2, uint32_t result, bool is_8bit){
+	if(is_8bit){
+		bool raised = ((op1 >> 3) & 0x01) ^ ((op2 >> 3) & 0x01) && !((result >> 3) & 0x01);
+		cpu_set_flag(cpu_state, AUX_CARRY_FLAG, raised);
+	} else {
+		bool raised = ((op1 >> 7) & 0x01) ^ ((op2 >> 7) & 0x01) && !((result >> 7) & 0x01);
+		cpu_set_flag(cpu_state, AUX_CARRY_FLAG, raised);
+	}
+	return;
+}
+
 /** @brief Set sign bit in EFLAG register
  *
  */
