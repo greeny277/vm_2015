@@ -11,7 +11,6 @@ case 0: {
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
 	return true;
-	break;
 }
 case 1: {
 	/* Decrement r/m word by 1 */
@@ -26,8 +25,6 @@ case 1: {
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
 	return true;
-
-	break;
 }
 case 2: {
 	/*  CALL r/m32 */
@@ -40,7 +37,6 @@ case 4: {
 	/* jump near, absolute indirect, address given in r/m32 (r). */
 	cpu_set_eip(cpu_state, cpu_read_word_from_reg(s_op.regmem_reg));
 	return true;
-	break;
 }
 
 default:
