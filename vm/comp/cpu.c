@@ -603,7 +603,7 @@ cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 static uint32_t
 cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
-	uint32_t data;
+	uint32_t data = 0;
 	uint8_t byte1, byte2, byte3, byte4;
 	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 	mem_addr++;
@@ -714,7 +714,7 @@ static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte){
  *  @param doubleword that get pushed on stack
  */
 static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword){
-	uint8_t byte;
+	uint8_t byte = 0;
 	byte = (doubleword >> 24) & 0xff;
 	cpu_stack_push_byte(cpu_state, byte);
 
@@ -748,7 +748,7 @@ static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state){
  *  @return doubleword on stack
  */
 static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state){
-	uint32_t dw;
+	uint32_t dw = 0;
 	uint8_t byte0, byte1, byte2, byte3;
 
 	byte0 = cpu_stack_pop_byte(cpu_state);
@@ -769,7 +769,7 @@ cpu_step(void *_cpu_state) {
 	/* cast */
 	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
 
-	uint8_t op_code;
+	uint8_t op_code = 0;
 
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
