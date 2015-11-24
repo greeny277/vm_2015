@@ -1,6 +1,6 @@
 case 0x30:{
 	/*r/m8 XOR r8.*/
-	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src;
 		if(s_op.regmem_type == MEMORY)
 			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
@@ -32,7 +32,7 @@ case 0x30:{
 
 case 0x31:{
 	/*r/m32 XOR r32.*/
-	if(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1;
 		if(s_op.regmem_type == MEMORY)
 			op1 = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
@@ -64,7 +64,7 @@ case 0x31:{
 
 case 0x32:{
 	/*r8 XOR r/m8.*/
-	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t op1 = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
 		uint8_t op2;
 		if(s_op.regmem_type == MEMORY)
@@ -93,7 +93,7 @@ case 0x32:{
 
 case 0x33:{
 	/*r32 XOR r/m32.*/
-	if(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1 = cpu_read_word_from_reg(s_op.reg);
 		uint32_t op2;
 		if(s_op.regmem_type == MEMORY)

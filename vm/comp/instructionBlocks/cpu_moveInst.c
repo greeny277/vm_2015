@@ -1,6 +1,6 @@
 case 0x88: {
 	/* Copy r8 to r/m8 */
-	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
 		if(s_op.regmem_type == MEMORY){
 			cpu_write_byte_in_mem(cpu_state, src, s_op.regmem_mem);
@@ -18,7 +18,7 @@ case 0x88: {
 }
 case 0x89: {
 	/* Copy r32 to r/m32 */
-	if(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src = cpu_read_word_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY){
 			cpu_write_word_in_mem(cpu_state, src, s_op.regmem_mem);
@@ -37,7 +37,7 @@ case 0x89: {
 
 case 0x8A: {
 	/* Copy r/m8 to r8. */
-	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src;
 		if(s_op.regmem_type == MEMORY){
 			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
@@ -57,7 +57,7 @@ case 0x8A: {
 
 case 0x8B: {
 	/* Copy r/m32 to r32. */
-	if(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT)){
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src;
 		if(s_op.regmem_type == MEMORY){
 			src = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
