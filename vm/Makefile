@@ -2,7 +2,7 @@
 
 CFLAGS=\
 	-g \
-	-O2 \
+	-O0 \
 	\
 	-Wall \
 #	-Werror \
