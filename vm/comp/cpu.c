@@ -361,19 +361,26 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 	uint32_t *mod_reg;
 	uint32_t *mod_rm;
 
+	mod->addr_or_scale_mode = (byte >> 6) & (0x7);
+
 	/* Decode register */
 	mod->mod_reg_name = cpu_modrm_eval_register(cpu_state, (byte >> 3) & (0x7), &mod_reg, is_8bit);
 	if( -1 == mod->mod_reg_name) {
 		return false;
 	}
 
+
+	if(mod->addr_or_scale_mode == REGISTER){
+		mod->mod_rm_name = cpu_modrm_eval_register(cpu_state, byte & 0x7, &mod_rm, is_8bit);
+	} else{
+		mod->mod_rm_name = cpu_modrm_eval_register(cpu_state, byte & 0x7, &mod_rm, !EIGHT_BIT);
+	}
+
 	/* Decode register/memory */
-	mod->mod_rm_name = cpu_modrm_eval_register(cpu_state, byte & 0x7, &mod_rm, !EIGHT_BIT);
 	if( -1 == mod->mod_rm_name) {
 		return false;
 	}
 
-	mod->addr_or_scale_mode = (byte >> 6) & (0x7);
 	mod->mod_reg = mod_reg;
 	mod->mod_rm = mod_rm;
 
