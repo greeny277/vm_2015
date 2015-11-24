@@ -61,6 +61,17 @@ case 0xC7: {
 	break;
 }
 
+case 0xF6: {
+	/* Special case: Specific instruction decoded in Mod/RM byte */
+
+	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
+		switch(s_op.reg_value){
+			#include "cpu_special0xF6.c"
+		}
+	}
+	break;
+}
+
 case 0xFF: {
 	/* Special case: Specific instruction decoded in Mod/RM byte */
 
