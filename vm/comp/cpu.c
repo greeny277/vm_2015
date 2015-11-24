@@ -408,7 +408,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 		return false;
 	}
 
-	addr->reg_value = s_modrm.mod_reg_name;
+	addr->reg_value = s_modrm.mod_reg_name & 0x07;
 
 	/*
 	 * set reg part, this is straightforward
