@@ -27,9 +27,8 @@ _copy_block:
 	movb %bl, 0xd003
 	movb $0, 0xd00b
 	xorl %ecx, %ecx
-	jmp copy_loop
+	call copy_loop
 
-_after_call:
 	inc %ebx
 	cmp $7, %ebx
 	jne _copy_block
@@ -48,4 +47,4 @@ copy_loop:
 	cmpl $512, %ecx
 	jb copy_loop
 
-	jmp _after_call
+	ret
