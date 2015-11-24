@@ -1,5 +1,5 @@
 
-#define DEBUG 1
+//#define DEBUG
 
 #ifdef DEBUG
 	#define DEBUG_PRINT_INST 1
