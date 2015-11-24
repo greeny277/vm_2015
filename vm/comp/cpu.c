@@ -513,8 +513,8 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
  */
 static void
 cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, op_addr *op) {
-	uint8_t displ1;
-	uint32_t displacement_complete;
+	int8_t displ1;
+	int32_t displacement_complete;
 	switch(mode){
 		case NO_DISPLACEMENT:
 			/* Indirection with no displacement */
