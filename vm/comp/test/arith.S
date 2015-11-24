@@ -15,7 +15,7 @@
 .text
 .globl _start
 _start:
-	movl $250, %ecx
+	movl $5, %ecx
 	call arith_fak
 
 	movl $_num_erg, %ebx
