@@ -1,63 +1,103 @@
 		case 0x40: {
-			/* Increment doubleword register eax by 1 */
+			/* Increment word register eax by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->eax));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->eax), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC EAX \n");
+			#endif
+
 			return true;
 		}
-		
+
 		case 0x41: {
-			/* Increment doubleword register ecx by 1 */
+			/* Increment word register ecx by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ecx));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->ecx), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC ECX \n");
+			#endif
+
 			return true;
 		}
 
 		case 0x42: {
-			/* Increment doubleword register edx by 1 */
+			/* Increment word register edx by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->edx));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->edx), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC EDX \n");
+			#endif
+
 			return true;
 		}
 
 		case 0x43: {
-			/* Increment doubleword register ebx by 1 */
+			/* Increment word register ebx by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ebx));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->ebx), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC EBX \n");
+			#endif
+
 			return true;
 		}
 
 		case 0x44: {
-			/* Increment doubleword register esp by 1 */
+			/* Increment word register esp by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->esp));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->esp), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC ESP \n");
+			#endif
+
 			return true;
 		}
 
 		case 0x45: {
-			/* Increment doubleword register ebp by 1 */
+			/* Increment word register ebp by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->ebp));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->ebp), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC EBP \n");
+			#endif
+
 			return true;
 		}
 
 		case 0x46: {
-			/* Increment doubleword register esi by 1 */
+			/* Increment word register esi by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->esi));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->esi), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC ESI \n");
+			#endif
+
 			return true;
 		}
 
 		case 0x47: {
-			/* Increment doubleword register edi by 1 */
+			/* Increment word register edi by 1 */
 			uint32_t src = cpu_read_word_from_reg(&(cpu_state->edi));
 			src++;
 			cpu_write_word_in_reg(&(cpu_state->edi), src);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "INC EDI \n");
+			#endif
+
 			return true;
 		}

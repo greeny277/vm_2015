@@ -6,16 +6,25 @@ case 0x3C:{
 
 	cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 			EIGHT_BIT,SUBTRACTION);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "CMP imm8 AL \n");
+	#endif
+
 	return true;
 }
 case 0x3D: {
-	/*Compare imm32 with AL*/
+	/*Compare imm32 with EAX*/
 	uint32_t subtrahend = cpu_consume_word_from_mem(cpu_state);
 	uint32_t minuend = cpu_state->eax;
 	uint32_t result = minuend - subtrahend;
 
 	cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 			!EIGHT_BIT,SUBTRACTION);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "CMP imm32 EAX \n");
+	#endif
 
 	return true;
 }
@@ -34,6 +43,11 @@ case 0x38: {
 
 		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				EIGHT_BIT,SUBTRACTION);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "CMP r8 rm8 \n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -52,6 +66,11 @@ case 0x39: {
 
 		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				!EIGHT_BIT,SUBTRACTION);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "CMP r32 rm32 \n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -70,6 +89,11 @@ case 0x3A: {
 
 		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				EIGHT_BIT,SUBTRACTION);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "CMP rm8 r8 \n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -89,6 +113,11 @@ case 0x3B: {
 
 		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 				!EIGHT_BIT,SUBTRACTION);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "CMP rm32 r32 \n");
+		#endif
+
 		return true;
 	}
 	break;

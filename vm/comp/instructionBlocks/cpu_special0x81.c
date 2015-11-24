@@ -20,6 +20,10 @@ case 0: {
 	cpu_set_carry_add(cpu_state, op1, result);
 	cpu_set_parity_flag(cpu_state, result);
 
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "ADD rm32 imm32\n");
+	#endif
+
 	return true;
 }
 
@@ -45,6 +49,10 @@ case 6: {
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_parity_flag(cpu_state, result);
 
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "XOR rm32 imm32\n");
+	#endif
+
 	return true;
 }
 case 7: {
@@ -59,6 +67,10 @@ case 7: {
 
 	cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
 			!EIGHT_BIT,SUBTRACTION);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "CMP rm32 imm32\n");
+	#endif
 
 	return true;
 }

@@ -10,6 +10,11 @@ case 0: {
 		src++;
 		cpu_write_byte_in_reg(s_op.regmem_reg, src ,IS_HIGH(s_op.regmem));
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "INC rm8\n");
+	#endif
+
 	return true;
 }
 
@@ -25,6 +30,11 @@ case 1: {
 		src--;
 		cpu_write_byte_in_reg(s_op.regmem_reg, src ,IS_HIGH(s_op.regmem));
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "DEC rm8\n");
+	#endif
+
 	return true;
 }
 

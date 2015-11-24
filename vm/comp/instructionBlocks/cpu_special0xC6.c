@@ -6,6 +6,11 @@ case 0: {
 	} else {
 		cpu_write_byte_in_reg(s_op.regmem_reg, src, IS_HIGH(s_op.regmem));
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "MOV rm8 imm8\n");
+	#endif
+
 	return true;
 }
 default:

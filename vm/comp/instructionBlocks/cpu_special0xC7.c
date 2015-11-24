@@ -6,6 +6,11 @@ case 0: {
 	} else {
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "MOV rm32 imm32\n");
+	#endif
+
 	return true;
 }
 default:

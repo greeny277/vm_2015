@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "cpu.h"
+#include "debug.h"
 
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
@@ -798,6 +799,14 @@ cpu_step(void *_cpu_state) {
 
 	op_addr s_op;
 	memset(&s_op, 0, sizeof(op_addr));
+
+	#ifdef DEBUG_PRINT_INST_ADDR
+		#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "Instruction (%#08x): %#x   ", cpu_state->eip, op_code);
+		#else
+			fprintf(stderr, "Instruction (%#08x): %#x\n", cpu_state->eip, op_code);
+		#endif
+	#endif
 
 	switch(op_code) {
 		#include "instructionBlocks/cpu_addInst.c"

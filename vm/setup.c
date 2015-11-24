@@ -15,6 +15,8 @@
 #include "cpu.h"
 #include "memory.h"
 
+#include "debug.h"
+
 /** config of the entire vm */
 struct cpssp {
 	/* busses */

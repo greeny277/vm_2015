@@ -8,6 +8,10 @@ case 0x82: {
 		cpu_set_eip(cpu_state, cpu_state->eip + offset);
 	}
 
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "JB rel32\n");
+	#endif
+
 	return true;
 }
 
@@ -20,6 +24,11 @@ case 0x84: {
 	if(cpu_get_zero_flag(cpu_state)){
 		cpu_set_eip(cpu_state, cpu_state->eip + offset);
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "JE rel32\n");
+	#endif
+
 	return true;
 }
 
@@ -32,5 +41,10 @@ case 0x85: {
 	if(!cpu_get_zero_flag(cpu_state)){
 		cpu_set_eip(cpu_state, cpu_state->eip + offset);
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "JNE rel32\n");
+	#endif
+
 	return true;
 }

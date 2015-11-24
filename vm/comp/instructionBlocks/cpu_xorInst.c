@@ -20,6 +20,11 @@ case 0x30:{
 		cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "XOR rm8 r8\n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -47,6 +52,11 @@ case 0x31:{
 		cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "XOR rm32 r32\n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -71,6 +81,11 @@ case 0x32:{
 		cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "XOR r8 rm8\n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -95,6 +110,11 @@ case 0x33:{
 		cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "XOR r32 rm32\n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -112,6 +132,11 @@ case 0x34:{
 	cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_parity_flag(cpu_state, result);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "XOR AL imm8\n");
+	#endif
+
 	return true;
 }
 
@@ -127,6 +152,11 @@ case 0x35:{
 	cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_parity_flag(cpu_state, result);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "XOR EAX imm32\n");
+	#endif
+
 	return true;
 }
 

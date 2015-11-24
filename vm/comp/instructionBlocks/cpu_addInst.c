@@ -1,5 +1,5 @@
 case 0x00:{
-	/*ADD r/m8 r8.*/
+	/*ADD r/m8 rm8*/
 	if(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT)){
 		uint8_t op1;
 		if(s_op.regmem_type == MEMORY)
@@ -20,6 +20,11 @@ case 0x00:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "ADD rm8 r8 \n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -47,7 +52,14 @@ case 0x01:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
-		return true;
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "ADD m32 r32 \n");
+		#endif
+
+	  	return true;
+
+
 	}
 	break;
 }
@@ -71,7 +83,13 @@ case 0x02:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "ADD r8 rm8 \n");
+		#endif
+
 		return true;
+
 	}
 	break;
 }
@@ -95,6 +113,11 @@ case 0x03:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
+
+		#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "ADD r32 rm32 \n");
+		#endif
+
 		return true;
 	}
 	break;
@@ -112,7 +135,13 @@ case 0x04: {
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_carry_add(cpu_state, op1, result);
 	cpu_set_parity_flag(cpu_state, result);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "ADD AL imm8 \n");
+	#endif
+
 	return true;
+
 }
 
 case 0x05: {
@@ -127,7 +156,13 @@ case 0x05: {
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_carry_add(cpu_state, op1, result);
 	cpu_set_parity_flag(cpu_state, result);
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "ADD eax imm32 \n");
+	#endif
+
 	return true;
+
 }
 
 //case 0x80 0 is a special case, see cpu_special0x80.c

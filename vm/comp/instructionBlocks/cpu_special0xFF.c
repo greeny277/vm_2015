@@ -10,6 +10,11 @@ case 0: {
 		src++;
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "INC rm32\n");
+	#endif
+
 	return true;
 }
 case 1: {
@@ -24,18 +29,28 @@ case 1: {
 		src--;
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "DEC rm32\n");
+	#endif
+
 	return true;
 }
 case 2: {
 	/*  CALL r/m32 */
-	
 }
+
 case 3: {
-	
 }
+
 case 4: {
 	/* jump near, absolute indirect, address given in r/m32 (r). */
 	cpu_set_eip(cpu_state, cpu_read_word_from_reg(s_op.regmem_reg));
+
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "JMP rm32\n");
+	#endif
+
 	return true;
 }
 
