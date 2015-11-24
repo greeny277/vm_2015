@@ -58,7 +58,7 @@ case 0x75: {
  */
 case 0xEA: {
 	/* Jump far, absolute 32*/
-	int32_t abs = cpu_consume_word_from_mem(cpu_state);
+	uint32_t abs = cpu_consume_word_from_mem(cpu_state);
 	cpu_set_eip(cpu_state, abs);
 
 	#ifdef DEBUG_PRINT_INST
