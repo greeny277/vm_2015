@@ -22,6 +22,10 @@ case 4: {
 		cpu_raise_flag(cpu_state, CARRY_FLAG);
 	}
 
+	#ifdef DEBUG_PRINT_INST
+	fprintf(stderr, "MULB rm8\n");
+	#endif
+
 	return true;
 
 }
