@@ -93,6 +93,7 @@ cpu_create(struct sig_host_bus *port_host) {
 	 * The address is hardcoded, like in real hardware.
 	 */
 	cpu_state->eip = 0xE000;
+	cpu_state->esp = 1024*32;
 
 	sig_host_bus_connect(port_host, cpu_state, &hf);
 	return cpu_state;
