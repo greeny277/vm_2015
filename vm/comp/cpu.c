@@ -331,7 +331,7 @@ cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_a
 	if(unlikely(reg > EDI))
 		return 0xff;
 
-	if(likely(!is_8bit)){
+	if(!is_8bit){
 		*reg_addr = &(cpu_state->eax)+reg;
 		return reg;
 	}else{
