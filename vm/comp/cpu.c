@@ -365,7 +365,7 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 
 	/* Decode register */
 	mod->mod_reg_name = cpu_modrm_eval_register(cpu_state, (byte >> 3) & (0x7), &mod_reg, is_8bit);
-	if( -1 == mod->mod_reg_name) {
+	if(unlikely(-1 == mod->mod_reg_name)) {
 		return false;
 	}
 
@@ -377,7 +377,7 @@ cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit)
 	}
 
 	/* Decode register/memory */
-	if( -1 == mod->mod_rm_name) {
+	if(unlikely(-1 == mod->mod_rm_name)) {
 		return false;
 	}
 
@@ -412,7 +412,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 	memset(&s_modrm, 0, sizeof(modsib));
 	// memset(addr, 0, sizeof(op_addr));
 
-	if(false == cpu_modrm_eval(cpu_state, &s_modrm, mod_rm, is_8bit)){
+	if(unlikely(false == cpu_modrm_eval(cpu_state, &s_modrm, mod_rm, is_8bit))){
 		return false;
 	}
 
@@ -463,7 +463,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 			modsib s_sib;
 			memset(&s_sib,0,sizeof(modsib));
 
-			if(false == cpu_modrm_eval(cpu_state, &s_sib, sib, is_8bit)){
+			if(unlikely(false == cpu_modrm_eval(cpu_state, &s_sib, sib, is_8bit))){
 				return false;
 			}
 
