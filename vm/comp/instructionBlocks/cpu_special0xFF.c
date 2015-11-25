@@ -38,9 +38,11 @@ case 1: {
 }
 case 2: {
 	/*  CALL r/m32 */
+	break;
 }
 
 case 3: {
+	break;
 }
 
 case 4: {

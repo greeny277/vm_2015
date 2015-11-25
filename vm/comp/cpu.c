@@ -839,9 +839,12 @@ cpu_step(void *_cpu_state) {
 
 
 		default:
-			fprintf(stderr, "Unknown op-code: 0x%02x\n", op_code);
 			break;
 	}
+
+	#ifdef DEBUG_PRINT_INST
+		fprintf(stderr, "Unknown op-code: 0x%02x\n", op_code);
+	#endif
 	return false;
 }
 
