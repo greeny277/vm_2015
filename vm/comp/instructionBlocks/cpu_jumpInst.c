@@ -2,34 +2,26 @@ case 0x72: {
 	/* JB rel8
 	 * Jump short if below (CF=1).
 	 */
-	int8_t offset = cpu_consume_byte_from_mem(cpu_state);
-
-	if(cpu_get_carry_flag(cpu_state)){
-		cpu_set_eip(cpu_state, cpu_state->eip + offset);
-	}
 
 	#ifdef DEBUG_PRINT_INST
 	fprintf(stderr, "JB rel8 \n");
 	#endif
 
-	return true;
+	cond = cpu_get_carry_flag(cpu_state);
+	goto jmp8;
 }
 
 case 0x74: {
 	/* JE rel8
 	 * Jump short if equal (ZF=1).
 	 */
-	int8_t offset = cpu_consume_byte_from_mem(cpu_state);
-
-	if(cpu_get_zero_flag(cpu_state)){
-		cpu_set_eip(cpu_state, cpu_state->eip + offset);
-	}
 
 	#ifdef DEBUG_PRINT_INST
 	fprintf(stderr, "JE rel8 \n");
 	#endif
 
-	return true;
+	cond = cpu_get_zero_flag(cpu_state);
+	goto jmp8;
 }
 
 
@@ -37,16 +29,21 @@ case 0x75: {
 	/* JNE rel8
 	 * Jump short if not equal (ZF=0).
 	 */
-	int8_t offset = cpu_consume_byte_from_mem(cpu_state);
-
-	if(!cpu_get_zero_flag(cpu_state)){
-		cpu_set_eip(cpu_state, cpu_state->eip + offset);
-	}
 
 	#ifdef DEBUG_PRINT_INST
 	fprintf(stderr, "JNE rel8 \n");
 	#endif
 
+	cond = !cpu_get_zero_flag(cpu_state);
+	goto jmp8;
+
+}
+
+jmp8: {
+	int8_t offset = cpu_consume_byte_from_mem(cpu_state);
+	if(cond){
+		cpu_set_eip(cpu_state, cpu_state->eip + offset);
+	}
 	return true;
 }
 

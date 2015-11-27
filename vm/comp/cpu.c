@@ -800,6 +800,7 @@ cpu_step(void *_cpu_state) {
 	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
 
 	uint8_t op_code = 0;
+	bool cond;
 
 	/* read the first byte from instruction pointer and increment ip
 	 * afterards */
