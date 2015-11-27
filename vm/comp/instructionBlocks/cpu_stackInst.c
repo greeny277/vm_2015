@@ -1,159 +1,71 @@
-case 0x50: {
-	/* Push eax. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->eax);
+case 0x50 ... 0x57: {
 	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH EAX\n");
+	switch(op_code & 0x7){
+		case 0:
+			fprintf(stderr, "PUSH EAX\n");
+			break;
+		case 1:
+			fprintf(stderr, "PUSH ECX\n");
+			break;
+		case 2:
+			fprintf(stderr, "PUSH EDX\n");
+			break;
+		case 3:
+			fprintf(stderr, "PUSH EBX\n");
+			break;
+		case 4:
+			fprintf(stderr, "PUSH ESP\n");
+			break;
+		case 5:
+			fprintf(stderr, "PUSH EBP\n");
+			break;
+		case 6:
+			fprintf(stderr, "PUSH ESI\n");
+			break;
+		case 7:
+			fprintf(stderr, "PUSH EDI\n");
+			break;
+	}
 	#endif
+
+	/* Push eax-edi. */
+	cpu_stack_push_doubleword(cpu_state, (&cpu_state->eax)[op_code & 0x7]);
 
 	return true;
 }
 
-case 0x51: {
-	/* Push ecx. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->ecx);
+case 0x58 ... 0x5f: {
 	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH ECX\n");
+	switch(op_code & 0x7){
+		case 0:
+			fprintf(stderr, "POP EAX\n");
+			break;
+		case 1:
+			fprintf(stderr, "POP ECX\n");
+			break;
+		case 2:
+			fprintf(stderr, "POP EDX\n");
+			break;
+		case 3:
+			fprintf(stderr, "POP EBX\n");
+			break;
+		case 4:
+			fprintf(stderr, "POP ESP\n");
+			break;
+		case 5:
+			fprintf(stderr, "POP EBP\n");
+			break;
+		case 6:
+			fprintf(stderr, "POP ESI\n");
+			break;
+		case 7:
+			fprintf(stderr, "POP EDI\n");
+			break;
+	}
 	#endif
 
-	return true;
-}
-
-case 0x52: {
-	/* Push edx. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->edx);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH EDX\n");
-	#endif
-
-	return true;
-}
-
-case 0x53: {
-	/* Push ebx. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->ebx);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH EBX\n");
-	#endif
-
-	return true;
-}
-
-case 0x54: {
-	/* Push esp. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->esp);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH ESP\n");
-	#endif
-
-	return true;
-}
-
-case 0x55: {
-	/* Push ebp. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->ebp);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH EBP\n");
-	#endif
-
-	return true;
-}
-
-case 0x56: {
-	/* Push esi. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->esi);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH ESI\n");
-	#endif
-
-	return true;
-}
-
-case 0x57: {
-	/* Push edi. */
-	cpu_stack_push_doubleword(cpu_state, cpu_state->edi);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "PUSH EDI\n");
-	#endif
-
-	return true;
-}
-
-case 0x58: {
 	/* Pop eax */
-	cpu_state->eax = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP EAX\n");
-	#endif
-
-	return true;
-}
-
-case 0x59: {
-	/* Pop ecx */
-	cpu_state->ecx = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP ECX\n");
-	#endif
-
-	return true;
-}
-
-case 0x5a: {
-	/* Pop edx */
-	cpu_state->edx = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP EDX\n");
-	#endif
-
-	return true;
-}
-
-case 0x5b: {
-	/* Pop ebx */
-	cpu_state->ebx = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP EBX\n");
-	#endif
-
-	return true;
-}
-
-case 0x5c: {
-	/* Pop esp */
-	cpu_state->esp = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP ESP\n");
-	#endif
-
-	return true;
-}
-
-case 0x5d: {
-	/* Pop ebp */
-	cpu_state->ebp = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP EBP\n");
-	#endif
-
-	return true;
-}
-
-case 0x5e: {
-	/* Pop esi */
-	cpu_state->esi = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP ESI\n");
-	#endif
-
-	return true;
-}
-
-case 0x5f: {
-	/* Pop edi */
-	cpu_state->edi = cpu_stack_pop_doubleword(cpu_state);
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "POP EDI\n");
-	#endif
+	(&cpu_state->eax)[op_code & 0x7] = cpu_stack_pop_doubleword(cpu_state);
 
 	return true;
 }
