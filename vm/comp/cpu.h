@@ -130,9 +130,6 @@ typedef struct op_addr {
 	uint32_t* regmem_reg;
 	uint32_t  regmem_mem;
 
-	/*Value of reg bits for determining opcode */
-	uint8_t reg_value;
-
 	/*type of the reg and r/m bits' decoded values*/
 	addr_type reg_type;
 	addr_type regmem_type;
