@@ -16,7 +16,8 @@ AS=as -32
 OBJCOPY=objcopy
 
 BUS_SRC=\
-	bus/sig_host_bus.c
+	bus/sig_host_bus.c \
+	bus/sig_boolean.c
 
 COMP_SRC=\
 	comp/disk_ctrl.c \
@@ -31,6 +32,10 @@ ROMS_SRC=\
 	comp/roms/bios_print_simple.S \
 	comp/roms/bios_print.S
 
+UTILS_SRC=\
+	utils/glue-io.c
+
+UTILS_OBJ=$(patsubst %.c,%.o,$(UTILS_SRC))
 BUS_OBJ=$(patsubst %.c,%.o,$(BUS_SRC))
 COMP_OBJ=$(patsubst %.c,%.o,$(COMP_SRC))
 ROMS_OBJ=$(patsubst %.S,%.o,$(ROMS_SRC))
@@ -41,11 +46,12 @@ DEFAULT_DISK_FILE=hallo.img
 
 all: vm_test $(ROMS_ROMS) $(ROMS_OBJ) $(ROMS_ELFS) disk.bin
 
-vm_test: setup.o $(BUS_OBJ) $(COMP_OBJ)
+vm_test: setup.o $(BUS_OBJ) $(COMP_OBJ) $(UTILS_OBJ)
 	$(CC) $(LDFLAGS) $^ -o $@
 
 clean:
 	$(RM) $(BUS_OBJ)
+	$(RM) $(UTILS_OBJ)
 	$(RM) $(COMP_OBJ)
 	$(RM) vm_test setup.o
 	$(RM) $(ROMS_ROMS)
