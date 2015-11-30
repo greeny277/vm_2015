@@ -1,0 +1,20 @@
+Aufgabe 2:
+TODOS
+
+Allgemein:
+- 3 sig_boolean structs anlegen (CPU <-> PIC, IO_DECODER <-> PIC,
+                                 SERIAL <-> PIC)
+- Empfaenger/Sender melden sich an sig_boolean an mit set() Funktion
+- Sender meldet mit IO an glue-io anmelden
+
+
+CPU:
+- boolean fuer Letung zu PIC
+- set() Funktion die von PIC aufgerufen wird, wenn sich Wert auf Leitung aendert
+- Routine fuer Interrupt Behandlung (EIP, EFLAGS etc auf Stack)
+- hlt: Kann VM runterfahren? Abhaengig von cli/sti
+- Op_codes implementieren: sti, cli, iret, lidt, inb, outb
+- Kommunikation mit PIC im Falle von outb und inb
+- Interrupt Tabelle
+
+PIC:
