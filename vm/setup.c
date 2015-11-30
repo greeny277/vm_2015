@@ -22,6 +22,7 @@ struct cpssp {
 	/* busses */
 	/** host bus */
 	struct sig_host_bus *host_bus;
+	struct sig_boolean *bool_bus;
 
 	/* components */
 	/** memory */
@@ -48,8 +49,8 @@ setup_create(struct cpssp *cpssp)
 
 	/* create components */
 	cpssp->comp_memory = memory_create(cpssp->host_bus);
-	cpssp->comp_disk_ctrl = disk_ctrl_create(cpssp->host_bus, "disk.bin");
-	cpssp->comp_serial_ctrl = serial_ctrl_create(cpssp->host_bus);
+	cpssp->comp_disk_ctrl = disk_ctrl_create(cpssp->host_bus, "comp/test/arith.img");
+	cpssp->comp_serial_ctrl = serial_ctrl_create(cpssp->host_bus, cpssp->bool_bus);
 	cpssp->comp_bios_rom =
 		bios_rom_create(cpssp->host_bus, cpssp->setup_bios_rom);
 	cpssp->comp_cpu = cpu_create(cpssp->host_bus);
