@@ -226,7 +226,7 @@ serial_ctrl_create(
 	sig_host_bus_connect(port_host, cpssp, &hf);
 	/* listen to stdin events */
 	/* FIXME: Uncomment line below when implementing serial_ctrl */
-	//glue_io_connect(cpssp, 0, &io_f);
+	glue_io_connect(cpssp, 0, &io_f);
 
 	return cpssp;
 }

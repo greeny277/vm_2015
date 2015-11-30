@@ -14,6 +14,7 @@
 #include "bios_rom.h"
 #include "cpu.h"
 #include "memory.h"
+#include "utils/glue-io.h"
 
 #include "debug.h"
 
@@ -46,6 +47,9 @@ setup_create(struct cpssp *cpssp)
 {
 	/* create busses */
 	cpssp->host_bus = sig_host_bus_create();
+
+	/* Create glue-io (init signal handler) */
+	glue_io_create();
 
 	/* create components */
 	cpssp->comp_memory = memory_create(cpssp->host_bus);
