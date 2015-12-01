@@ -12,7 +12,7 @@ struct sig_host_bus_funcs {
 	/** callback for read byte.
 	  * @param s object pointer of callee
 	  * @param addr requested address
-	  * @param caller should write value there
+	  * @param valp should write value there
 	  * @return true, if address is from callee
 	  */
 	bool (*readb)(void *s, uint32_t addr, uint8_t *valp);
@@ -20,10 +20,26 @@ struct sig_host_bus_funcs {
 	/** callback for write byte
 	  * @param s object pointer of callee
 	  * @param addr requested address
-	  * @param caller should write value there
+	  * @param val the value to write
 	  * @return true, if port is from callee
 	  */
 	bool (*writeb)(void *s, uint32_t addr, uint8_t val);
+
+	/** callback for writing a byte via io-devices
+	  * @param s object pointer of callee
+	  * @param addr requested address
+	  * @param val the value to write
+	  * @return true, if port is from callee
+	  */
+	bool (*outb)(void *s, uint32_t addr, uint8_t val);
+
+	/** callback for reading a byte via io-devices
+	  * @param s object pointer of callee
+	  * @param addr requested address
+	  * @param vap should write value there
+	  * @return true, if port is from callee
+	  */
+	bool (*inb)(void *s, uint32_t addr, uint8_t *valp);
 };
 
 /** host bus structure */
