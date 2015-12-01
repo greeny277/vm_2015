@@ -88,6 +88,12 @@ typedef struct cpu_state {
 	 *  0           Carry Flag                CF
 	 */
 	uint32_t eflags;
+
+	/**
+	 * IDTR BASE and LIMIT
+	 */
+	uint32_t idtr_base;
+	uint16_t idtr_limit;
 } cpu_state;
 
 typedef enum flag {

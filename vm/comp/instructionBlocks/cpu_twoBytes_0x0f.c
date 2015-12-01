@@ -37,6 +37,15 @@ case 0x85: {
 	goto jmp32;
 }
 
+case 0x01: {
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
+		switch(s_op.reg_value){
+			#include "cpu_twoBytes_special0x01.c"
+		}
+	}
+	break;
+}
+
 jmp32: {
 	int32_t offset = cpu_consume_word_from_mem(cpu_state);
 
