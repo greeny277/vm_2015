@@ -9,12 +9,40 @@ Allgemein:
 
 
 CPU:
-- boolean fuer Letung zu PIC
+- boolean fuer Leitung zu PIC
 - set() Funktion die von PIC aufgerufen wird, wenn sich Wert auf Leitung aendert
 - Routine fuer Interrupt Behandlung (EIP, EFLAGS etc auf Stack)
 - hlt: Kann VM runterfahren? Abhaengig von cli/sti
 - Op_codes implementieren: sti, cli, iret, lidt, inb, outb
 - Kommunikation mit PIC im Falle von outb und inb
 - Interrupt Tabelle
+- outb und inb Funktion schreiben
+
+IO-Decoder:
+- Bekommt alle Adressen und sendet diese an PICs
+- Wenn auf Hostbus (IO) 0x20-0x3f dann wird PIC
+
+
+Init IO-Decoder:
+- CPU schreibt via outb an HostBus
+- IO-Decoder schaut nach, welche Adresse das ist (0x20-0x3f)
+- Meldet über sig_boolean Leitung PIC
+- PIC fragt Leitungen IRQ0-7 ab, verodert diese und meldet es CPU
+
+- CPU Step:
+  1. Nachfrage ob IRQ gesetzt ist
+  2. Sichere Status
+  3. Stößt Interrupt Acknowledge Zyklus an
+  4. PIC fragt ab, addiert Dinge
+  5. CPU springt in IDT mit Offset von PIC
 
 PIC:
+- Kennt Interrupt Acknowledge, weitere Funktion in host_bus funcs struct
+	=> Opcode
+- Einstellen in Header ob auf steigende oder sinkende Flanken reagiert werden soll
+- hat irr Register, der Interrupt meldet
+
+	Fully Nested Mode
+- Interrupt mit kleinster Nummer hat höchste Priorität und wird in isr
+  Register kopiert
+- Doku durchlesen
