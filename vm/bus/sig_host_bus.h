@@ -137,5 +137,8 @@ sig_host_bus_read_io_dev(const struct sig_host_bus *bus, void *s, uint32_t addr)
 
 extern void
 sig_host_bus_write_io_dev(const struct sig_host_bus *bus, void *s, uint32_t addr, uint8_t val);
+
+extern void
+sig_host_bus_int_ack(const struct sig_host_bus *bus, void *s, uint8_t int_num);
 #endif /* __SIG_HOST_BUS_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
