@@ -4,6 +4,7 @@
 #define __CPU_H_INCLUDED
 
 #include "sig_host_bus.h"
+#include "sig_boolean.h"
 
 typedef enum modrm_mod_bits {
 	NO_DISPLACEMENT,
@@ -45,10 +46,11 @@ cpu_step(void *s);
 
 /** create a cpu
   * @param port_host host bus instance
+  * @param pic_to_cpu_bool bus interface connecting pic and cpu
   * @return cpu instance.
   */
 extern void *
-cpu_create(struct sig_host_bus *port_host);
+cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool);
 
 /** destroy a cpu instance
   * @param s cpu instance
@@ -59,6 +61,7 @@ cpu_destroy(void *s);
 typedef struct cpu_state {
 	/** ports */
 	struct sig_host_bus *port_host;
+	struct sig_boolean *pic_to_cpu_bool;
 
 	/** state */
 	/** Register beginning with letter 'e' have length of 32 bits */

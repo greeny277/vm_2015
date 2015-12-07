@@ -25,6 +25,8 @@ struct cpssp {
 	/** host bus */
 	struct sig_host_bus *host_bus;
 	struct sig_boolean *bool_bus;
+	struct sig_boolean *pic_to_cpu_bool;
+	
 
 	/* components */
 	/** memory */
@@ -39,6 +41,8 @@ struct cpssp {
 	void *comp_cpu;
 	/** io decoder */
 	void *comp_io_decoder;
+	/** pic */
+	void *comp_pic;
 	/* ... */
 
 	/** filename of bios rom */
@@ -50,6 +54,9 @@ setup_create(struct cpssp *cpssp)
 {
 	/* create busses */
 	cpssp->host_bus = sig_host_bus_create();
+	cpssp->bool_bus = sig_boolean_create();
+	cpssp->pic_to_cpu_bool = sig_boolean_create();
+
 
 	/* Create glue-io (init signal handler) */
 	glue_io_create();
@@ -61,7 +68,8 @@ setup_create(struct cpssp *cpssp)
 	cpssp->comp_bios_rom =
 		bios_rom_create(cpssp->host_bus, cpssp->setup_bios_rom);
 	cpssp->comp_io_decoder = io_decoder_create(cpssp->host_bus);
-	cpssp->comp_cpu = cpu_create(cpssp->host_bus);
+	cpssp->comp_cpu = cpu_create(cpssp->host_bus, cpssp->pic_to_cpu_bool);
+	cpssp->comp_pic = pic_create(cpssp->host_bus, cpssp->pic_to_cpu_bool);
 }
 
 static void
