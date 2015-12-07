@@ -2,42 +2,55 @@
 
 
 static bool
-io_decoder_inb(void *s, uint32_t addr, uint8_t *valp){return true;};
+io_decoder_inb(void *_io_state, uint32_t addr, uint8_t *valp){
+	io_decoder_state *io_state = (struct io_decoder_state*) _io_state;
+	uint32_t offset = addr-PIC_BEGIN;
+
+	if(offset <= PIC_END){
+		/* Address is in PIC range */
+		*valp = sig_host_bus_read_io_dev(io_state->port_host, io_state, addr);
+		return true;
+	}
+	
+	return false;
+}
 
 static bool
-io_decoder_outb(void *s, uint32_t addr, uint8_t valp){return true;};
+io_decoder_outb(void *_io_state, uint32_t addr, uint8_t val){
+	io_decoder_state *io_decoder_state = (struct io_decoder_state*) _io_state;
+	uint32_t offset = addr-PIC_BEGIN;
 
-static void
-io_decoder_set(void *s, bool val){};
+	if(offset <= PIC_END){
+		/* Address is in PIC range */
+		sig_host_bus_write_io_dev(io_decoder_state->port_host, io_decoder_state, addr, val);
+		return true;
+	}
+	
+	return false;
+}
 
 
 void *
-iodecoder_create(struct sig_host_bus *port_host, struct sig_boolean *sig_boolean)
+io_decoder_create(struct sig_host_bus *port_host)
 {
-	iodecoder_state *iodecoder_state;
+	io_decoder_state *io_decoder_state;
 	static const struct sig_host_bus_funcs hf = {
 		.inb = io_decoder_inb,
 		.writeb = io_decoder_outb
 	};
 
-	static const struct sig_boolean_funcs bf = {
-		.set = io_decoder_set
-	};
+	io_decoder_state = malloc(sizeof(struct io_decoder_state));
+	assert(io_decoder_state != NULL);
 
-	iodecoder_state = malloc(sizeof(struct iodecoder_state));
-	assert(iodecoder_state != NULL);
+	io_decoder_state->port_host = port_host;
 
-	iodecoder_state->port_host = port_host;
-	iodecoder_state->boolean_host = sig_boolean;
+	sig_host_bus_connect(port_host, io_decoder_state, &hf);
 
-	sig_host_bus_connect(port_host, iodecoder_state, &hf);
-	sig_boolean_connect(sig_boolean, iodecoder_state, &bf);
-
-	return iodecoder_state;
+	return io_decoder_state;
 }
 
 void
-iodecoder_destroy(void *_iodecoder_state)
+io_decoder_destroy(void *_io_decoder_state)
 {
-	free(_iodecoder_state);
+	free(_io_decoder_state);
 }

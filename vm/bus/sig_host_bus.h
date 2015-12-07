@@ -40,6 +40,31 @@ struct sig_host_bus_funcs {
 	  * @return true, if port is from callee
 	  */
 	bool (*inb)(void *s, uint32_t addr, uint8_t *valp);
+
+	/** callback for writing a byte to an io-device
+	 *  from io-decoder
+	 * @param s object pointer of callee
+	 * @param addr requested address
+	 * @param val the value to write
+	 * @return true, if port is from callee
+	 */
+	bool (*write_to_io_dev)(void *s, uint32_t addr, uint8_t val);
+
+	/** callback for reading a byte from an io-device
+	  * @param s object pointer of callee
+	  * @param addr requested address
+	  * @param vap should write value there
+	  * @return true, if port is from callee
+	  */
+	bool (*read_from_io_dev)(void *s, uint32_t addr, uint8_t *valp);
+
+	/** callback for signalizing PIC that interrupt has been
+	 * handled.
+	 * @param s object pointer of callee
+	 * @param int_num the interrupt to acknowledge
+	 * @return true, if port is from callee
+	 */
+	bool (*int_ack)(void *s, uint8_t int_num);
 };
 
 /** host bus structure */
@@ -101,6 +126,16 @@ sig_host_bus_writeb(
 extern uint8_t
 sig_host_bus_readb(const struct sig_host_bus *bus, void *s, uint32_t addr);
 
+extern uint8_t
+sig_host_bus_inb(const struct sig_host_bus *bus, void *s, uint32_t addr);
 
+extern void
+sig_host_bus_outb(const struct sig_host_bus *bus, void *s, uint32_t addr, uint8_t val);
+
+extern uint8_t
+sig_host_bus_read_io_dev(const struct sig_host_bus *bus, void *s, uint32_t addr);
+
+extern void
+sig_host_bus_write_io_dev(const struct sig_host_bus *bus, void *s, uint32_t addr, uint8_t val);
 #endif /* __SIG_HOST_BUS_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

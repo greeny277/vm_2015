@@ -112,8 +112,6 @@ sig_host_bus_readb(
 	return ret;
 }
 
-
-
 uint8_t
 sig_host_bus_inb(
 	const struct sig_host_bus *bus,
@@ -147,8 +145,6 @@ sig_host_bus_inb(
 	return ret;
 }
 
-
-
 void
 sig_host_bus_outb(
 	const struct sig_host_bus *bus,
@@ -179,5 +175,69 @@ sig_host_bus_outb(
 		}
 	}
 
+}
+
+uint8_t
+sig_host_bus_read_io_dev(
+	const struct sig_host_bus *bus,
+	void *s,
+	uint32_t addr
+)
+{
+	uint8_t ret = 0xFF;
+	unsigned int i;
+	bool r;
+
+	for (i = 0; i < bus->nmembers; i++) {
+		if (bus->members[i].s == s) {
+			continue;
+		}
+
+		if (bus->members[i].f == NULL) {
+			continue;
+		}
+
+		if (bus->members[i].f->read_from_io_dev == NULL) {
+			continue;
+		}
+
+		r = bus->members[i].f->read_from_io_dev(bus->members[i].s, addr, &ret);
+		if (r) {
+			break;
+		}
+	}
+
+	return ret;
+}
+
+void
+sig_host_bus_write_io_dev(
+	const struct sig_host_bus *bus,
+	void *s,
+	uint32_t addr,
+	uint8_t val
+)
+{
+	unsigned int i;
+	bool ret;
+
+	for (i = 0; i < bus->nmembers; i++) {
+		if (bus->members[i].s == s) {
+			continue;
+		}
+
+		if (bus->members[i].f == NULL) {
+			continue;
+		}
+
+		if (bus->members[i].f->write_to_io_dev == NULL) {
+			continue;
+		}
+
+		ret = bus->members[i].f->write_to_io_dev(bus->members[i].s, addr, val);
+		if (ret) {
+			break;
+		}
+	}
 }
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

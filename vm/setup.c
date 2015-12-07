@@ -10,6 +10,7 @@
 #include <stdbool.h>
 #include "sig_host_bus.h"
 #include "disk_ctrl.h"
+#include "io_decoder.h"
 #include "serial_ctrl.h"
 #include "bios_rom.h"
 #include "cpu.h"
@@ -36,6 +37,8 @@ struct cpssp {
 	void *comp_bios_rom;
 	/** cpu */
 	void *comp_cpu;
+	/** io decoder */
+	void *comp_io_decoder;
 	/* ... */
 
 	/** filename of bios rom */
@@ -57,6 +60,7 @@ setup_create(struct cpssp *cpssp)
 	cpssp->comp_serial_ctrl = serial_ctrl_create(cpssp->host_bus, cpssp->bool_bus);
 	cpssp->comp_bios_rom =
 		bios_rom_create(cpssp->host_bus, cpssp->setup_bios_rom);
+	cpssp->comp_io_decoder = io_decoder_create(cpssp->host_bus);
 	cpssp->comp_cpu = cpu_create(cpssp->host_bus);
 }
 

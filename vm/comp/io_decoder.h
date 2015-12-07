@@ -2,33 +2,32 @@
 #define __IODECODER_H_INCLUDED
 
 #include "sig_host_bus.h"
-#include "sig_boolean.h"
 
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
-#define IODECODER_MEM_BASE 0x0020
+#define PIC_BEGIN 0x0020
+#define PIC_END   0x003f
 
-typedef struct iodecoder_state {
+typedef struct io_decoder_state {
 	/** ports */
 	struct sig_host_bus *port_host;
-	struct sig_boolean *boolean_host;
-} iodecoder_state;
+} io_decoder_state;
 
 /** create a memory instance
   * @param port_host port to host bus.
   * @return memory instance.
   */
 extern void *
-iodecoder_create(struct sig_host_bus *port_host, struct sig_boolean *sig_boolean);
+io_decoder_create(struct sig_host_bus *port_host);
 
 /** destroy a memory instance.
   * @param s memory instance.
   */
 extern void
-iodecoder_destroy(void *s);
+io_decoder_destroy(void *s);
 
 #endif /* __IODECODER_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

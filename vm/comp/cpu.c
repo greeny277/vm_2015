@@ -794,6 +794,13 @@ static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state){
 	return dw;
 }
 
+/** @brief Save state of cpu on stack. This procedure is called bv an
+ *         interrupt handling routine.
+ */
+static void cpu_save_state(cpu_state *cpu_state){
+	return;
+}
+
 bool
 cpu_step(void *_cpu_state) {
 	/* cast */
