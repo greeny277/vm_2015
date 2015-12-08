@@ -2,17 +2,36 @@
 #define __PIC_H_INCLUDED
 
 #include "sig_host_bus.h"
+#include "sig_boolean.h"
 
 #include <assert.h>
 #include <inttypes.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <stdio.h>
 
+#define IC4 0
+#define SNGL 1
+#define LTIM 3
+
+#define T3 3
+
+#define uPM 0
+#define AEOI 1
+#define SFNM 4
 
 typedef struct pic_state {
 	/** ports */
 	struct sig_host_bus *port_host;
-	struct sig_boolean *pic_to_cpu_bool;
+	struct sig_boolean *INT_line;
+
+	uint8_t interrupt_mask;
+	uint8_t interrupt_vector_byte_base;
+
+	uint8_t cur_icw_byte_no;
+	uint8_t cur_ocw_byte_no;
+
+	uint8_t irr;
 } pic_state;
 
 /** create a memory instance
