@@ -15,6 +15,7 @@
 #include "bios_rom.h"
 #include "cpu.h"
 #include "memory.h"
+#include "pic.h"
 #include "utils/glue-io.h"
 
 #include "debug.h"
@@ -26,7 +27,7 @@ struct cpssp {
 	struct sig_host_bus *host_bus;
 	struct sig_boolean *bool_bus;
 	struct sig_boolean *pic_to_cpu_bool;
-	
+
 
 	/* components */
 	/** memory */
