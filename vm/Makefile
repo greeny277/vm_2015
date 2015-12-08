@@ -25,7 +25,8 @@ COMP_SRC=\
 	comp/cpu.c \
 	comp/bios_rom.c \
 	comp/memory.c \
-	comp/io_decoder.c
+	comp/io_decoder.c \
+	comp/pic.c
 
 ROMS_SRC=\
 	comp/roms/bios_boot.S\
