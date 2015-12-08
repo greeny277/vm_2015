@@ -65,4 +65,25 @@ sig_boolean_set(
 	bool val
 );
 
+/** raise a boolean bus (set to 1).
+ *  @param bus bus instance.
+ *  @param s sender object.
+ *  @param val new value to set.
+ */
+extern void
+sig_boolean_raise(
+	struct sig_boolean *bus,
+	void *s
+);
+/** clear a boolean bus (set to 0).
+ *  @param bus bus instance.
+ *  @param s sender object.
+ *  @param val new value to set.
+ */
+extern void
+sig_boolean_clear(
+	struct sig_boolean *bus,
+	void *s
+);
+
 #endif /* __SIG_BOOLEAN_H_INCLUDED */

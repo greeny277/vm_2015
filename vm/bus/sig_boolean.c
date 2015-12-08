@@ -69,3 +69,15 @@ sig_boolean_set(struct sig_boolean *bus, void *s, bool val)
 		bus->members[i].f->set(bus->members[i].s, val);
 	}
 }
+
+void
+sig_boolean_raise(struct sig_boolean *bus, void *s)
+{
+	sig_boolean_set(bus, s, true);
+}
+
+void
+sig_boolean_clear(struct sig_boolean *bus, void *s)
+{
+	sig_boolean_set(bus, s, false);
+}
