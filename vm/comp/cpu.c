@@ -85,7 +85,7 @@ cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool) 
 		.readb = cpu_readb,
 		.writeb = cpu_writeb
 	};
-	
+
 	static const struct sig_boolean_funcs bf = {
 		.set = cpu_set
 	};
@@ -101,9 +101,15 @@ cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool) 
 	cpu_state->eip = 0xE000;
 	cpu_state->esp = 1024*32;
 
+	cpu_state->interrupt_raised = false;
+
 	sig_host_bus_connect(port_host, cpu_state, &hf);
 	sig_boolean_connect(pic_to_cpu_bool, cpu_state, &bf);
 	return cpu_state;
+}
+
+void cpu_interrupt(cpu_state *instance){
+	instance->interrupt_raised = true;
 }
 
 /** @brief Set instruction pointer

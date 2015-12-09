@@ -6,9 +6,9 @@
 static bool pic_write_to_io_dev(void *_pic_state, uint32_t addr, uint8_t val);
 static bool pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp);
 
-static bool handle_OCW_Byte(pic_state *pic_state, uint8_t ocw_byte);
-static bool handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte);
-static bool handle_interrupt(pic_state *pic_state, uint8_t int_num);
+static bool pic_handle_OCW_Byte(pic_state *pic_state, uint8_t ocw_byte);
+static bool pic_handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte);
+static bool pic_handle_interrupt(pic_state *pic_state, uint8_t int_num);
 
 /**
  * Callback for writing to the pic from the CPU via the iodecoder using OUTB.
@@ -23,9 +23,9 @@ pic_write_to_io_dev(void *_pic_state, uint32_t addr, uint8_t val){
 	pic_state *pic_state = (struct pic_state*) _pic_state;
 
 	if(pic_state->cur_icw_byte_no > 4){
-		handle_OCW_Byte(pic_state, val);
+		pic_handle_OCW_Byte(pic_state, val);
 	}else{
-		handle_ICW_byte(pic_state, val);
+		pic_handle_ICW_byte(pic_state, val);
 	}
 	return false;
 }
@@ -43,7 +43,6 @@ static bool
 pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp){
 	pic_state *pic_state = (struct pic_state*) _pic_state;
 
-	sig_boolean_clear(pic_state->INT_line, pic_state);
 	//todo: reraise, if irr != 0?
 
 	//in case no irr bit is set, return 7
@@ -65,7 +64,7 @@ pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp){
  * @param icw_byte one ICW byte
  * @return false in error case else true
  */
-static bool handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
+static bool pic_handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
 	switch(pic_state->cur_icw_byte_no){
 		case 1:
 			if(unlikely((icw_byte & (1 << IC4)) == 0)){
@@ -117,7 +116,7 @@ static bool handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
  * @param ocw_byte one ICW byte
  * @return false in error case else true
  */
-static bool handle_OCW_Byte(pic_state *pic_state, uint8_t ocw_byte){
+static bool pic_handle_OCW_Byte(pic_state *pic_state, uint8_t ocw_byte){
 	if(pic_state->cur_ocw_byte_no == 1)
 		pic_state->interrupt_mask = ocw_byte;
 
@@ -136,7 +135,8 @@ static bool handle_OCW_Byte(pic_state *pic_state, uint8_t ocw_byte){
  * @param _pic_state the pic instance
  * @param int_num the interrupt number to handle
  */
-static bool handle_interrupt(pic_state *pic_state, uint8_t int_num){
+
+static bool pic_handle_interrupt(pic_state *pic_state, uint8_t int_num){
 	pic_state->irr |= 1<<int_num;
 
 	if(!(pic_state->interrupt_mask & (1 << int_num))){
@@ -144,7 +144,7 @@ static bool handle_interrupt(pic_state *pic_state, uint8_t int_num){
 		return false;
 	}
 
-	sig_boolean_raise(pic_state->INT_line, pic_state);
+	cpu_interrupt(pic_state->cpu);
 
 	return true;
 }
@@ -154,9 +154,11 @@ void INT_line_was_set(void *s, bool val){};
 
 /**
  * The PICs' constructor
+ * @param port_host the Host bus to which this pic is connected
+ * @param cpu_instance the cpu to which this pic is connected
  */
 void *
-pic_create(struct sig_host_bus *port_host, struct sig_boolean *INT_line)
+pic_create(struct sig_host_bus *port_host, cpu_state *cpu_instance)
 {
 	pic_state *pic_state;
 	static const struct sig_host_bus_funcs hf = {
@@ -164,21 +166,17 @@ pic_create(struct sig_host_bus *port_host, struct sig_boolean *INT_line)
 		.write_to_io_dev = pic_write_to_io_dev
 	};
 
-	static const struct sig_boolean_funcs INT_line_callback = {
-		.set = INT_line_was_set
-	};
-
 	pic_state = malloc(sizeof(struct pic_state));
 	assert(pic_state != NULL);
 
 	pic_state->port_host = port_host;
-	pic_state->INT_line = INT_line;
+	pic_state->cpu = cpu_instance;
+
 	pic_state->cur_icw_byte_no = 1;
 	pic_state->cur_ocw_byte_no = 1;
 	pic_state->irr = 0;
 
 	sig_host_bus_connect(port_host, pic_state, &hf);
-	sig_boolean_connect(INT_line, pic_state, &INT_line_callback);
 
 	return pic_state;
 }

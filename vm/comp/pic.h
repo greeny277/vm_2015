@@ -2,7 +2,7 @@
 #define __PIC_H_INCLUDED
 
 #include "sig_host_bus.h"
-#include "sig_boolean.h"
+#include "cpu.h"
 
 #include <assert.h>
 #include <inttypes.h>
@@ -23,7 +23,7 @@
 typedef struct pic_state {
 	/** ports */
 	struct sig_host_bus *port_host;
-	struct sig_boolean *INT_line;
+	struct cpu_state *cpu;
 
 	uint8_t interrupt_mask;
 	uint8_t interrupt_vector_byte_base;
@@ -39,7 +39,7 @@ typedef struct pic_state {
   * @return memory instance.
   */
 extern void *
-pic_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool);
+pic_create(struct sig_host_bus *port_host, cpu_state *cpu_instance);
 
 /** destroy a memory instance.
   * @param s memory instance.

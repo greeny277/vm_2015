@@ -35,7 +35,6 @@ typedef enum cpu_register {
 	BH
 } cpu_register;
 
-
 /** evaluate one instruction
   * @param s cpu instance
   * @return false if the cpu suspended, true if another instruction
@@ -91,6 +90,8 @@ typedef struct cpu_state {
 	 *  0           Carry Flag                CF
 	 */
 	uint32_t eflags;
+
+	bool interrupt_raised;
 
 	/**
 	 * IDTR BASE and LIMIT
@@ -148,6 +149,11 @@ typedef struct op_addr {
 } op_addr;
 
 
+/** raise the interrupt flag
+  * @param instance cpu instance
+  */
+void
+cpu_interrupt(cpu_state *instance);
 
 #endif /* __CPU_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

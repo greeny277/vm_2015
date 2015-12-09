@@ -70,7 +70,7 @@ setup_create(struct cpssp *cpssp)
 		bios_rom_create(cpssp->host_bus, cpssp->setup_bios_rom);
 	cpssp->comp_io_decoder = io_decoder_create(cpssp->host_bus);
 	cpssp->comp_cpu = cpu_create(cpssp->host_bus, cpssp->pic_to_cpu_bool);
-	cpssp->comp_pic = pic_create(cpssp->host_bus, cpssp->pic_to_cpu_bool);
+	cpssp->comp_pic = pic_create(cpssp->host_bus, cpssp->comp_cpu);
 }
 
 static void
