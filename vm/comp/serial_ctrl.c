@@ -1,7 +1,7 @@
 /* $Id: serial_ctrl.c 10341 2014-11-12 15:38:08Z raimue $
  *
  * Copyright (C) 2009 Stefan Potyra, Friedrich-Alexander University
- * Erlangen-Nuremberg, Department of Computer Science 3 
+ * Erlangen-Nuremberg, Department of Computer Science 3
  * (Computer Architecture).
  *
  * Part of the lecture "virtual machines".
@@ -29,7 +29,7 @@
  */
 #define CHARACTER_BASED_READING 1
 
-/** backup termios struct only useful to restore termios on 
+/** backup termios struct only useful to restore termios on
  *  SIGABRT, or on quit.
  */
 #ifdef CHARACTER_BASED_READING
@@ -124,8 +124,8 @@ serial_ctrl_writeb(void *_cpssp, uint32_t addr, uint8_t val)
 			}
 			break;
 		}
-			
-		
+
+
 		break;
 
 	default: /* not defined */
@@ -232,7 +232,7 @@ serial_ctrl_create(
 	return cpssp;
 }
 
-void 
+void
 serial_ctrl_destroy(void *_cpssp)
 {
 	free(_cpssp);
