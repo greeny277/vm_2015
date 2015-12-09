@@ -5,6 +5,7 @@
 
 #include "sig_host_bus.h"
 #include "sig_boolean.h"
+#include "pic.h"
 
 /** create a serial controller
   * @param port_host host bus instance.
@@ -14,7 +15,7 @@
 extern void *
 serial_ctrl_create(
 	struct sig_host_bus *port_host,
-	struct sig_boolean *port_int
+	pic_connection *pic_conn
 );
 
 /** destroy a serial controller instance.

@@ -38,7 +38,7 @@ static struct termios _backup_ti;
 
 struct cpssp {
 	/** ports */
-	struct sig_boolean *port_int;
+	pic_connection *pic_conn;
 
 	/** state */
 	/** recieve register */
@@ -56,7 +56,7 @@ serial_ctrl_flush(struct cpssp *cpssp)
 	char c;
 
 	assert(! cpssp->recieve_full);
-	
+
 	ret = read(0, &c, 1);
 	if (ret <= 0) {
 		/* nothing to flush (or error). */
@@ -66,7 +66,8 @@ serial_ctrl_flush(struct cpssp *cpssp)
 	cpssp->recieve_full = true;
 	cpssp->reg_recieve = (uint8_t)c;
 
-	sig_boolean_set(cpssp->port_int, cpssp, true);
+//	sig_boolean_set(cpssp->port_int, cpssp, true);
+	pic_interrupt(cpssp->pic_conn);
 }
 
 static bool
@@ -77,14 +78,14 @@ serial_ctrl_readb(void *_cpssp, uint32_t addr, uint8_t *valp)
 	if ((addr & ~SERIAL_MEM_MASK) != SERIAL_MEM_BASE) {
 		return false;
 	}
-	
+
 	/* currently hardwired to ground */
 	switch (addr & SERIAL_MEM_MASK) {
 	case 0x0: /* return register contents */
 		*valp = cpssp->reg_recieve;
 
 		/* unflag interrupt, reenable recieve logic */
-		sig_boolean_set(cpssp->port_int, cpssp, false);
+		//sig_boolean_set(cpssp->port_int, cpssp, false);
 		cpssp->recieve_full = false;
 
 		/* flush again, maybe there's more data to read. */
@@ -191,14 +192,14 @@ serial_ctrl_stdin_event(void *_cpssp)
 	if (cpssp->recieve_full) {
 		return;
 	}
-	
+
 	serial_ctrl_flush(cpssp);
 }
 
 void *
 serial_ctrl_create(
 	struct sig_host_bus *port_host,
-	struct sig_boolean *port_int
+	pic_connection *pic_conn
 )
 {
 	struct cpssp *cpssp;
@@ -213,7 +214,7 @@ serial_ctrl_create(
 	cpssp = malloc(sizeof(struct cpssp));
 	assert(cpssp != NULL);
 
-	cpssp->port_int = port_int;
+	cpssp->pic_conn = pic_conn;
 	cpssp->reg_recieve = 0;
 	cpssp->recieve_full = false;
 

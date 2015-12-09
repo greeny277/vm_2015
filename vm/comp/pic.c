@@ -149,8 +149,27 @@ static bool pic_handle_interrupt(pic_state *pic_state, uint8_t int_num){
 	return true;
 }
 
-//We do not need this here, only for connecting the boolean bus
-void INT_line_was_set(void *s, bool val){};
+bool pic_connect(pic_state *pic_instance, uint8_t int_no, pic_connection **conn){
+	if(pic_instance->connected_lines & (1<<int_no))
+		return false;
+
+	if(int_no > 7)
+		return false;
+
+	pic_instance->connected_lines |= (1<<int_no);
+
+	*conn = pic_instance->connections + int_no;
+	(*conn)->pic_instance = pic_instance;
+	(*conn)->int_no = int_no;
+
+	return true;
+}
+
+bool inline pic_interrupt(pic_connection *conn){
+	if(conn->int_no > 7)
+		return false;
+	return pic_handle_interrupt(conn->pic_instance, conn->int_no);
+}
 
 /**
  * The PICs' constructor
@@ -166,7 +185,7 @@ pic_create(struct sig_host_bus *port_host, cpu_state *cpu_instance)
 		.write_to_io_dev = pic_write_to_io_dev
 	};
 
-	pic_state = malloc(sizeof(struct pic_state));
+	pic_state = malloc(sizeof(struct _pic_state));
 	assert(pic_state != NULL);
 
 	pic_state->port_host = port_host;
@@ -175,6 +194,8 @@ pic_create(struct sig_host_bus *port_host, cpu_state *cpu_instance)
 	pic_state->cur_icw_byte_no = 1;
 	pic_state->cur_ocw_byte_no = 1;
 	pic_state->irr = 0;
+
+	pic_state->connected_lines = 0;
 
 	sig_host_bus_connect(port_host, pic_state, &hf);
 

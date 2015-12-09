@@ -20,7 +20,14 @@
 #define AEOI 1
 #define SFNM 4
 
-typedef struct pic_state {
+struct _pic_state;
+
+typedef struct pic_connection {
+	struct _pic_state *pic_instance;
+	uint8_t int_no;
+} pic_connection;
+
+typedef struct _pic_state {
 	/** ports */
 	struct sig_host_bus *port_host;
 	struct cpu_state *cpu;
@@ -32,7 +39,29 @@ typedef struct pic_state {
 	uint8_t cur_ocw_byte_no;
 
 	uint8_t irr;
+
+	//bitmask of populated lines for sanity checks
+	uint8_t connected_lines;
+	pic_connection connections[8];
 } pic_state;
+
+
+/** request connection to the PIC
+  *
+  * @param pic_state the PIC instance
+  * @param int_no the line to request connection to
+  * @param conn the pointer to write the pointer to the connection object to
+  * @return true on success, false if the line was already assigned or int_no is too high
+  */
+bool
+pic_connect(pic_state *pic_instance, uint8_t int_no, pic_connection **conn);
+
+/** raise an interrupt
+ *
+ * @param conn a pointer to a connection object retrieved with pic_connect
+ * @return true if the interrupt was raised, false if it is masked and on error
+ */
+bool pic_interrupt(pic_connection *conn);
 
 /** create a memory instance
   * @param port_host port to host bus.

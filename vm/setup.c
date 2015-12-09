@@ -65,12 +65,15 @@ setup_create(struct cpssp *cpssp)
 	/* create components */
 	cpssp->comp_memory = memory_create(cpssp->host_bus);
 	cpssp->comp_disk_ctrl = disk_ctrl_create(cpssp->host_bus, "comp/test/arith.img");
-	cpssp->comp_serial_ctrl = serial_ctrl_create(cpssp->host_bus, cpssp->bool_bus);
 	cpssp->comp_bios_rom =
 		bios_rom_create(cpssp->host_bus, cpssp->setup_bios_rom);
 	cpssp->comp_io_decoder = io_decoder_create(cpssp->host_bus);
 	cpssp->comp_cpu = cpu_create(cpssp->host_bus, cpssp->pic_to_cpu_bool);
 	cpssp->comp_pic = pic_create(cpssp->host_bus, cpssp->comp_cpu);
+
+	pic_connection *serial_conn;
+	pic_connect(cpssp->comp_pic, 1, &serial_conn); //create a connection to INT1
+	cpssp->comp_serial_ctrl = serial_ctrl_create(cpssp->host_bus, serial_conn);
 }
 
 static void
