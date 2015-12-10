@@ -43,7 +43,8 @@ static bool
 pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp){
 	pic_state *pic_state = (struct _pic_state*) _pic_state;
 
-	//todo: reraise, if irr != 0?
+	if(pic_state->irr != 0)
+		cpu_interrupt(pic_state->cpu);
 
 	//in case no irr bit is set, return 7
 	uint8_t i=0;
