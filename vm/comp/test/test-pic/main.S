@@ -118,7 +118,7 @@ page_fault:
 
 	iret
 
-	
+
 /* exception handler for division by 0 */
 handle_div0:
 	movl $str_div0, %edx

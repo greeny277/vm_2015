@@ -70,6 +70,7 @@ static bool cpu_get_carry_flag(cpu_state *cpu_state);
 static bool cpu_get_overflow_flag(cpu_state *cpu_state);
 static bool cpu_get_sign_flag(cpu_state *cpu_state);
 static bool cpu_get_zero_flag(cpu_state *cpu_state);
+static bool cpu_get_interrupt_flag(cpu_state *cpu_state);
 
 /** @brief "constructor" of the cpu
  *
@@ -297,6 +298,17 @@ static bool cpu_get_sign_flag(cpu_state *cpu_state){
 static bool cpu_get_zero_flag(cpu_state *cpu_state){
 	return cpu_state->eflags & (1 << ZERO_FLAG);
 }
+
+
+/** @brief returns interrupt flag in EFLAG register
+ *
+ *  @return true when interrupt flag is set
+ *          false else
+ */
+static bool cpu_get_interrupt_flag(cpu_state *cpu_state){
+	return cpu_state->eflags & (1 << INTERRUPT_FLAG);
+}
+
 
 /** @brief returns overflow flag in EFLAG register
  *
@@ -881,7 +893,7 @@ cpu_step(void *_cpu_state) {
 	/* cast */
 	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
 
-	if(cpu_state->interrupt_raised){
+	if(cpu_state->interrupt_raised && cpu_get_interrupt_flag(cpu_state)){
 		cpu_handle_interrupt(cpu_state);
 	}
 
@@ -904,6 +916,23 @@ cpu_step(void *_cpu_state) {
 	#endif
 
 	switch(op_code) {
+		case 0xfa:{
+			/*CLI*/
+			cpu_clear_flag(cpu_state, INTERRUPT_FLAG);
+
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "CLI\n");
+			#endif
+			return true;
+		}
+		case 0xfb:{
+			/*STI*/
+			cpu_raise_flag(cpu_state, INTERRUPT_FLAG);
+			#ifdef DEBUG_PRINT_INST
+			fprintf(stderr, "STI\n");
+			#endif
+			return true;
+		}
 
 		#include "instructionBlocks/cpu_addInst.c"
 
@@ -926,7 +955,6 @@ cpu_step(void *_cpu_state) {
 		#include "instructionBlocks/cpu_hltInst.c"
 
 		#include "instructionBlocks/cpu_ioInst.c"
-
 
 		default:
 			break;

@@ -79,7 +79,7 @@ glue_io_create(void)
 	struct sigaction saio;
 	int ret;
 
-	saio.sa_handler = glue_io_sigio;
+	saio.sa_handler = glue_io_step;
 	saio.sa_flags = SA_RESTART;
 	sigemptyset(&saio.sa_mask);
 	ret = sigaction(SIGIO, &saio, NULL);

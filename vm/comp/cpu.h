@@ -3,6 +3,8 @@
 #ifndef __CPU_H_INCLUDED
 #define __CPU_H_INCLUDED
 
+#include <signal.h>
+
 #include "sig_host_bus.h"
 #include "sig_boolean.h"
 
