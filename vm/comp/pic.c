@@ -43,9 +43,6 @@ static bool
 pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp){
 	pic_state *pic_state = (struct _pic_state*) _pic_state;
 
-	if(pic_state->irr != 0)
-		cpu_interrupt(pic_state->cpu);
-
 	//in case no irr bit is set, return 7
 	uint8_t i=0;
 	while(i<8){
@@ -54,6 +51,13 @@ pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp){
 		i++;
 	}
 	*valp = pic_state->interrupt_vector_byte_base + i;
+
+	pic_state->irr &= ~(1 << i);
+
+	if(pic_state->irr != 0){
+		fprintf(stderr, "reraising interrupt");
+		cpu_interrupt(pic_state->cpu);
+	}
 
 	return true;
 }
