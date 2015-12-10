@@ -35,6 +35,7 @@ static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
 static uint32_t cpu_read_doubleword_from_reg(uint32_t *reg_addr);
 static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint16_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 static uint32_t cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 
 static uint8_t  cpu_consume_byte_from_mem(cpu_state *cpu_state);
@@ -650,12 +651,36 @@ cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 	return sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 }
 
-/** @brief read a word (4 byte) at given address from memory. keeps IP untouched.
+/** @brief read a word (2 byte) at given address from memory. keeps IP untouched.
  *
  * @param cpu_state CPU instance
  * @param mem_addr  the address to read at
  *
  * @return the word read
+ */
+static uint16_t
+cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+
+	uint16_t data = 0;
+	uint8_t byte1, byte2;
+	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	mem_addr++;
+
+	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	mem_addr++;
+
+	data = byte1;
+	data |= (byte2 << 8);
+
+	return data;
+}
+
+/** @brief read a double word (4 byte) at given address from memory. keeps IP untouched.
+ *
+ * @param cpu_state CPU instance
+ * @param mem_addr  the address to read at
+ *
+ * @return the double word read
  */
 static uint32_t
 cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
