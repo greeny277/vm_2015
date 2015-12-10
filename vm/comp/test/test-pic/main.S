@@ -23,6 +23,8 @@ main_loop:
 
 /* program pic0 to 8086 mode, autoeoi, single */
 setup_pic0_single_autoeoi:
+	movl $str_begin_pic, %edx
+	call libs_puts
 	/* icw1: edge triggered, single, ic4 present */
 	movb $0x13, %al
 	outb %al, $0x0020
@@ -32,7 +34,7 @@ setup_pic0_single_autoeoi:
 	outb %al, $0x0021
 
 	/* no icw3 (single) */
-	/* FIXME (pic in FAUmachine) 
+	/* FIXME (pic in FAUmachine)
 	xorb %al, %al
 	outb %al, $0x0021 */
 
@@ -43,6 +45,9 @@ setup_pic0_single_autoeoi:
 	/* program interrupt mask, disable all ints apart from 1 */
 	movb $0xfd, %al
 	outb %al, $0x0021
+
+	movl $str_done_pic, %edx
+	call libs_puts
 	ret
 
 setup_idt:
@@ -137,10 +142,10 @@ irq0_handler:
 	iret
 
 irq1_handler:
-	/* enable for debug output....
+	/*enable for debug output....
 	movl $str_irq1, %edx
-	call libs_puts
-	*/
+	call libs_puts*/
+
 
 	call release_comp_irq
 	iret
@@ -198,17 +203,17 @@ idt:
 	/* generic format traps/interrupts:
 	 * (we're little endian!)
          *
-	 * l1: 
+	 * l1:
 	 * 	15-0: offset 15-0.
 	 * 	31-16: segment selector
-	 * l0: 
+	 * l0:
 	 * 	7-5: 000, 4-0: reserved (use 0 here)
 	 *      15-8:
-	 *      	15: valid?, 
-	 * 		14+13: dpl, 
+	 *      	15: valid?,
+	 * 		14+13: dpl,
 	 *		12-9: 0D11 (D=1 -> 32 bit, 0 -> 16 bit)
 	 * 		8: leave IF enabled? (1)
-	 * 
+	 *
 	 * 	31-16: offset 31-16
 	 */
 
@@ -550,3 +555,9 @@ str_irq6:
 
 str_irq7:
 	.ascii "Interrupt 7\n\0"
+
+str_begin_pic:
+	.ascii "Start programming PIC\n\0"
+
+str_done_pic:
+	.ascii "Start programming PIC\n\0"

@@ -29,6 +29,8 @@ wait_controller_output_full:
 
 .globl setup_controller
 setup_controller:
+	movl $str_begin, %edx
+	call libs_puts
 	/* setup for read mode */
 	movb $0x20, %al
 	outb %al, $0x0064
@@ -90,6 +92,8 @@ kbd_key_read:
 .section .rodata
 str_ready:
 	.ascii "Keyboard controller programmed.\n\0"
+str_begin:
+	.ascii "Programming Keyboard controller.\n\0"
 
 
 /* normal lookup table */

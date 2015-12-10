@@ -64,7 +64,7 @@ libs_puts_done:
 libs_clrscr:
 	ret
 
-/** print value in eax as hex number. 
+/** print value in eax as hex number.
  *  Clobbered: see libs_printb, apart from
  *  eax.
  */
@@ -91,7 +91,7 @@ libs_printl:
 	ret
 
 
-/** print value in al as hex number. 
+/** print value in al as hex number.
  *  Clobbered: see libs_printb, apart from
  *  eax.
  */
