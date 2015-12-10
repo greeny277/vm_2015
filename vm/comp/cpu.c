@@ -9,6 +9,10 @@
 #include "io_decoder.h"
 #include "debug.h"
 
+#ifdef DEBUG
+	#include "memory.h"
+#endif
+
 #define likely(x)       __builtin_expect((x),1)
 #define unlikely(x)     __builtin_expect((x),0)
 
@@ -904,6 +908,9 @@ bool
 cpu_step(void *_cpu_state) {
 	/* cast */
 	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
+	#ifdef DEBUG
+	ram_state *_ram_state = (ram_state *)(cpu_state->port_host->members[0].s);
+	#endif
 
 	if(cpu_state->interrupt_raised && cpu_get_interrupt_flag(cpu_state)){
 		cpu_handle_interrupt(cpu_state);

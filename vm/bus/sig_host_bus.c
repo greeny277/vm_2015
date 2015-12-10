@@ -77,6 +77,12 @@ sig_host_bus_writeb(
 		}
 	}
 
+	#ifdef DEBUG_PRINT_ERRORS
+		if(!ret){
+			fprintf(stderr, "No device on bus for address (%#d) in write\n", addr);
+		}
+	#endif
+
 }
 
 uint8_t
@@ -108,6 +114,12 @@ sig_host_bus_readb(
 			break;
 		}
 	}
+
+	#ifdef DEBUG_PRINT_ERRORS
+		if(!r){
+			fprintf(stderr, "No device on bus for address (%#d) in read\n", addr);
+		}
+	#endif
 
 	return ret;
 }
