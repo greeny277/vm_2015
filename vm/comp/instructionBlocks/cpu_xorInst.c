@@ -1,4 +1,8 @@
 case 0x30:{
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("XOR rm8 r8\n");
+		#endif
 	/*r/m8 XOR r8.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src;
@@ -21,9 +25,6 @@ case 0x30:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "XOR rm8 r8\n");
-		#endif
 
 		return true;
 	}
@@ -31,6 +32,10 @@ case 0x30:{
 }
 
 case 0x31:{
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("XOR rm32 r32\n");
+		#endif
 	/*r/m32 XOR r32.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1;
@@ -53,9 +58,6 @@ case 0x31:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "XOR rm32 r32\n");
-		#endif
 
 		return true;
 	}
@@ -63,6 +65,10 @@ case 0x31:{
 }
 
 case 0x32:{
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("XOR r8 rm8\n");
+		#endif
 	/*r8 XOR r/m8.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t op1 = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
@@ -82,9 +88,6 @@ case 0x32:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "XOR r8 rm8\n");
-		#endif
 
 		return true;
 	}
@@ -92,6 +95,10 @@ case 0x32:{
 }
 
 case 0x33:{
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("XOR r32 rm32\n");
+		#endif
 	/*r32 XOR r/m32.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1 = cpu_read_word_from_reg(s_op.reg);
@@ -111,9 +118,6 @@ case 0x33:{
 		cpu_set_zero_flag(cpu_state, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "XOR r32 rm32\n");
-		#endif
 
 		return true;
 	}
@@ -121,6 +125,10 @@ case 0x33:{
 }
 
 case 0x34:{
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("XOR AL imm8\n");
+	#endif
 	/*XOR AL, imm8*/
 	uint8_t op1 = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 	uint8_t op2 = cpu_consume_byte_from_mem(cpu_state);
@@ -133,14 +141,15 @@ case 0x34:{
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_parity_flag(cpu_state, result);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "XOR AL imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0x35:{
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("XOR EAX imm32\n");
+	#endif
 	/*XOR EAX, imm32*/
 	uint8_t op1 = cpu_read_word_from_reg(&(cpu_state->eax));
 	uint8_t op2 = cpu_consume_word_from_mem(cpu_state);
@@ -153,9 +162,6 @@ case 0x35:{
 	cpu_set_zero_flag(cpu_state, result);
 	cpu_set_parity_flag(cpu_state, result);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "XOR EAX imm32\n");
-	#endif
 
 	return true;
 }

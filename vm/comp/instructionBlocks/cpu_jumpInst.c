@@ -1,24 +1,26 @@
 case 0x72: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JB rel8 \n");
+	#endif
 	/* JB rel8
 	 * Jump short if below (CF=1).
 	 */
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JB rel8 \n");
-	#endif
 
 	cond = cpu_get_carry_flag(cpu_state);
 	goto jmp8;
 }
 
 case 0x74: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JE rel8 \n");
+	#endif
 	/* JE rel8
 	 * Jump short if equal (ZF=1).
 	 */
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JE rel8 \n");
-	#endif
 
 	cond = cpu_get_zero_flag(cpu_state);
 	goto jmp8;
@@ -26,13 +28,14 @@ case 0x74: {
 
 
 case 0x75: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JNE rel8 \n");
+	#endif
 	/* JNE rel8
 	 * Jump short if not equal (ZF=0).
 	 */
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JNE rel8 \n");
-	#endif
 
 	cond = !cpu_get_zero_flag(cpu_state);
 	goto jmp8;
@@ -54,35 +57,38 @@ jmp8: {
  * Unconditional jumps
  */
 case 0xEA: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JMP ptr16:32 \n");
+	#endif
 	/* Jump far, absolute 32*/
 	uint32_t abs = cpu_consume_word_from_mem(cpu_state);
 	cpu_set_eip(cpu_state, abs);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JMP ptr16:32 \n");
-	#endif
 
 	return true;
 }
 case 0xEB: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JMP rel8 \n");
+	#endif
 	/* Jump short relative 8*/
 	int8_t rel8 = cpu_consume_byte_from_mem(cpu_state);
 	cpu_set_eip(cpu_state, cpu_state->eip + rel8);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JMP rel8 \n");
-	#endif
 
 	return true;
 }
 case 0xE9: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JMP rel32 \n");
+	#endif
 	/* Jump near, relative 32*/
 	int32_t rel32 = cpu_consume_word_from_mem(cpu_state);
 	cpu_set_eip(cpu_state, cpu_state->eip + rel32);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JMP rel32 \n");
-	#endif
 
 	return true;
 }

@@ -2,28 +2,28 @@ case 0x40 ... 0x47: {
 	#ifdef DEBUG_PRINT_INST
 	switch(op_code & 0x7){
 		case 0:
-			fprintf(stderr, "INC EAX\n");
+			cpu_print_inst("INC EAX\n");
 			break;
 		case 1:
-			fprintf(stderr, "INC ECX\n");
+			cpu_print_inst("INC ECX\n");
 			break;
 		case 2:
-			fprintf(stderr, "INC EDX\n");
+			cpu_print_inst("INC EDX\n");
 			break;
 		case 3:
-			fprintf(stderr, "INC EBX\n");
+			cpu_print_inst("INC EBX\n");
 			break;
 		case 4:
-			fprintf(stderr, "INC ESP\n");
+			cpu_print_inst("INC ESP\n");
 			break;
 		case 5:
-			fprintf(stderr, "INC EBP\n");
+			cpu_print_inst("INC EBP\n");
 			break;
 		case 6:
-			fprintf(stderr, "INC ESI\n");
+			cpu_print_inst("INC ESI\n");
 			break;
 		case 7:
-			fprintf(stderr, "INC EDI\n");
+			cpu_print_inst("INC EDI\n");
 			break;
 	}
 

@@ -1,4 +1,9 @@
 case 0x00:{
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("ADD rm8 r8 \n");
+	#endif
+
 	/*ADD r/m8 rm8*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t op1;
@@ -21,9 +26,6 @@ case 0x00:{
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "ADD rm8 r8 \n");
-		#endif
 
 		return true;
 	}
@@ -31,6 +33,11 @@ case 0x00:{
 }
 
 case 0x01:{
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("ADD m32 r32 \n");
+	#endif
+
 	/*r/ADD m32 r32.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1;
@@ -53,9 +60,6 @@ case 0x01:{
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "ADD m32 r32 \n");
-		#endif
 
 	  	return true;
 
@@ -65,6 +69,11 @@ case 0x01:{
 }
 
 case 0x02:{
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("ADD r8 rm8 \n");
+	#endif
+
 	/*ADD r8 r/m8.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t op1 = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
@@ -84,9 +93,6 @@ case 0x02:{
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "ADD r8 rm8 \n");
-		#endif
 
 		return true;
 
@@ -95,6 +101,11 @@ case 0x02:{
 }
 
 case 0x03:{
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("ADD r32 rm32 \n");
+	#endif
+
 	/*ADD r32 r/m32.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1 = cpu_read_word_from_reg(s_op.reg);
@@ -114,9 +125,6 @@ case 0x03:{
 		cpu_set_carry_add(cpu_state, op1, result);
 		cpu_set_parity_flag(cpu_state, result);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "ADD r32 rm32 \n");
-		#endif
 
 		return true;
 	}
@@ -124,6 +132,11 @@ case 0x03:{
 }
 
 case 0x04: {
+
+#ifdef DEBUG_PRINT_INST
+cpu_print_inst("ADD AL imm8 \n");
+#endif
+
 	/*ADD AL, imm8*/
 	uint8_t op1 = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 	uint8_t op2 = cpu_consume_byte_from_mem(cpu_state);
@@ -136,15 +149,17 @@ case 0x04: {
 	cpu_set_carry_add(cpu_state, op1, result);
 	cpu_set_parity_flag(cpu_state, result);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "ADD AL imm8 \n");
-	#endif
 
 	return true;
 
 }
 
 case 0x05: {
+
+#ifdef DEBUG_PRINT_INST
+cpu_print_inst("ADD eax imm32 \n");
+#endif
+
 	/*ADD EAX, imm32*/
 	uint8_t op1 = cpu_read_word_from_reg(&(cpu_state->eax));
 	uint8_t op2 = cpu_consume_word_from_mem(cpu_state);
@@ -157,9 +172,6 @@ case 0x05: {
 	cpu_set_carry_add(cpu_state, op1, result);
 	cpu_set_parity_flag(cpu_state, result);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "ADD eax imm32 \n");
-	#endif
 
 	return true;
 

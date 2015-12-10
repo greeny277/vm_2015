@@ -1,4 +1,8 @@
 case 0: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("INC rm32\n");
+	#endif
 	/* Increment r/m word by 1 */
 	uint32_t src;
 	if(s_op.regmem_type == MEMORY){
@@ -11,13 +15,14 @@ case 0: {
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "INC rm32\n");
-	#endif
 
 	return true;
 }
 case 1: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("DEC rm32\n");
+	#endif
 	/* Decrement r/m word by 1 */
 	uint32_t src;
 	if(s_op.regmem_type == MEMORY){
@@ -30,9 +35,6 @@ case 1: {
 		cpu_write_word_in_reg(s_op.regmem_reg, src);
 	}
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "DEC rm32\n");
-	#endif
 
 	return true;
 }
@@ -46,12 +48,13 @@ case 3: {
 }
 
 case 4: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JMP rm32\n");
+	#endif
 	/* jump near, absolute indirect, address given in r/m32 (r). */
 	cpu_set_eip(cpu_state, cpu_read_word_from_reg(s_op.regmem_reg));
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JMP rm32\n");
-	#endif
 
 	return true;
 }

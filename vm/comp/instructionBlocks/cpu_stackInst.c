@@ -2,28 +2,28 @@ case 0x50 ... 0x57: {
 	#ifdef DEBUG_PRINT_INST
 	switch(op_code & 0x7){
 		case 0:
-			fprintf(stderr, "PUSH EAX\n");
+			cpu_print_inst("PUSH EAX\n");
 			break;
 		case 1:
-			fprintf(stderr, "PUSH ECX\n");
+			cpu_print_inst("PUSH ECX\n");
 			break;
 		case 2:
-			fprintf(stderr, "PUSH EDX\n");
+			cpu_print_inst("PUSH EDX\n");
 			break;
 		case 3:
-			fprintf(stderr, "PUSH EBX\n");
+			cpu_print_inst("PUSH EBX\n");
 			break;
 		case 4:
-			fprintf(stderr, "PUSH ESP\n");
+			cpu_print_inst("PUSH ESP\n");
 			break;
 		case 5:
-			fprintf(stderr, "PUSH EBP\n");
+			cpu_print_inst("PUSH EBP\n");
 			break;
 		case 6:
-			fprintf(stderr, "PUSH ESI\n");
+			cpu_print_inst("PUSH ESI\n");
 			break;
 		case 7:
-			fprintf(stderr, "PUSH EDI\n");
+			cpu_print_inst("PUSH EDI\n");
 			break;
 	}
 	#endif
@@ -38,28 +38,28 @@ case 0x58 ... 0x5f: {
 	#ifdef DEBUG_PRINT_INST
 	switch(op_code & 0x7){
 		case 0:
-			fprintf(stderr, "POP EAX\n");
+			cpu_print_inst("POP EAX\n");
 			break;
 		case 1:
-			fprintf(stderr, "POP ECX\n");
+			cpu_print_inst("POP ECX\n");
 			break;
 		case 2:
-			fprintf(stderr, "POP EDX\n");
+			cpu_print_inst("POP EDX\n");
 			break;
 		case 3:
-			fprintf(stderr, "POP EBX\n");
+			cpu_print_inst("POP EBX\n");
 			break;
 		case 4:
-			fprintf(stderr, "POP ESP\n");
+			cpu_print_inst("POP ESP\n");
 			break;
 		case 5:
-			fprintf(stderr, "POP EBP\n");
+			cpu_print_inst("POP EBP\n");
 			break;
 		case 6:
-			fprintf(stderr, "POP ESI\n");
+			cpu_print_inst("POP ESI\n");
 			break;
 		case 7:
-			fprintf(stderr, "POP EDI\n");
+			cpu_print_inst("POP EDI\n");
 			break;
 	}
 	#endif
@@ -71,20 +71,25 @@ case 0x58 ... 0x5f: {
 }
 
 case 0xE8: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("CALL rel32\n");
+	#endif
 	/* CALL rel32 */
 	int32_t rel32 = cpu_consume_word_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 
 	cpu_write_word_in_reg(&(cpu_state->eip), cpu_state->eip+rel32);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "CALL rel32\n");
-	#endif
 
 	return true;
 }
 
 case 0x9A: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("CALL ptr32\n");
+	#endif
 	/* CALL ptr32
 	 * Call far, absolute, address given in operand.
 	 */
@@ -92,20 +97,18 @@ case 0x9A: {
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 	cpu_write_word_in_reg(&(cpu_state->eip), abs);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "CALL ptr32\n");
-	#endif
 
 	return true;
 }
 
 case 0xC3: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("RET\n");
+	#endif
 	/* Near return to calling procedure. */
 	cpu_write_word_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "RET\n");
-	#endif
 
 	return true;
 }
@@ -117,12 +120,16 @@ case 0xCB:{
 	 */
 
 	/* No segments implemented yet */
-	fprintf(stderr, "No segments implemented yet\n");
+	cpu_print_inst("No segments implemented yet\n");
 
 	break;
 }
 
 case 0xC2: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("RET imm16\n");
+	#endif
 	/* RET imm16 */
 
 	/* Near return to calling procedure and pop
@@ -142,9 +149,6 @@ case 0xC2: {
 
 	cpu_write_word_in_reg(&(cpu_state->esp), cpu_state->esp+imm16);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "RET imm16\n");
-	#endif
 
 	return true;
 }
@@ -155,18 +159,19 @@ case 0xCA: {
 	 */
 
 	/* No segments implemented yet */
-	fprintf(stderr, "No segments implemented yet\n");
+	cpu_print_inst("No segments implemented yet\n");
 
 	break;
 }
 
 case 0xCF: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("IRET\n");
+	#endif
 	/*IRET*/
 	cpu_restore_state(cpu_state);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "IRET\n");
-	#endif
 
 	return true;
 }

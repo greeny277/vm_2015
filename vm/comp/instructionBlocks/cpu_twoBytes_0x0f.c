@@ -1,37 +1,40 @@
 case 0x82: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JB rel32\n");
+	#endif
 	/* JB rel32
 	 * Jump short if below (CF=1).
 	 */
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JB rel32\n");
-	#endif
 
 	cond = cpu_get_carry_flag(cpu_state);
 	goto jmp32;
 }
 
 case 0x84: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JE rel32\n");
+	#endif
 	/* JE rel32
 	 * Jump short if equal (ZF=1).
 	 */
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JE rel32\n");
-	#endif
 
 	cond = cpu_get_zero_flag(cpu_state);
 	goto jmp32;
 }
 
 case 0x85: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("JNE rel32\n");
+	#endif
 	/* JNE rel32
 	 * Jump short if not equal (ZF=0).
 	 */
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "JNE rel32\n");
-	#endif
 
 	cond = !cpu_get_zero_flag(cpu_state);
 	goto jmp32;

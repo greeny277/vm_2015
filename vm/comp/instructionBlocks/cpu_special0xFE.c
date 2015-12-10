@@ -1,4 +1,8 @@
 case 0: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("INC rm8\n");
+	#endif
 	/* Increment r/m byte by 1 */
 	uint8_t src;
 	if(s_op.regmem_type == MEMORY){
@@ -16,14 +20,15 @@ case 0: {
 	cpu_set_sign_flag(cpu_state, src, !EIGHT_BIT);
 	cpu_set_zero_flag(cpu_state, src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "INC rm8\n");
-	#endif
 
 	return true;
 }
 
 case 1: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("DEC rm8\n");
+	#endif
 	/* Decrement r/m byte by 1 */
 	uint8_t src;
 	if(s_op.regmem_type == MEMORY){
@@ -41,9 +46,6 @@ case 1: {
 	cpu_set_sign_flag(cpu_state, src, !EIGHT_BIT);
 	cpu_set_zero_flag(cpu_state, src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "DEC rm8\n");
-	#endif
 
 	return true;
 }

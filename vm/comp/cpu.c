@@ -72,6 +72,10 @@ static bool cpu_get_sign_flag(cpu_state *cpu_state);
 static bool cpu_get_zero_flag(cpu_state *cpu_state);
 static bool cpu_get_interrupt_flag(cpu_state *cpu_state);
 
+#ifdef DEBUG_PRINT_INST
+static void cpu_print_inst(char *inst);
+#endif
+
 /** @brief "constructor" of the cpu
  *
  *  @param port_host  the port the cpu is connected to
@@ -888,6 +892,14 @@ static void cpu_handle_interrupt(cpu_state * cpu_state){
 	cpu_state->eip = offset;
 }
 
+#ifdef DEBUG_PRINT_INST
+static void
+cpu_print_inst(char *inst){
+	fprintf(stderr, "%s", inst);
+	return;
+}
+#endif
+
 bool
 cpu_step(void *_cpu_state) {
 	/* cast */
@@ -918,19 +930,19 @@ cpu_step(void *_cpu_state) {
 	switch(op_code) {
 		case 0xfa:{
 			/*CLI*/
+			#ifdef DEBUG_PRINT_INST
+			cpu_print_inst("CLI\n");
+			#endif
 			cpu_clear_flag(cpu_state, INTERRUPT_FLAG);
 
-			#ifdef DEBUG_PRINT_INST
-			fprintf(stderr, "CLI\n");
-			#endif
 			return true;
 		}
 		case 0xfb:{
 			/*STI*/
-			cpu_raise_flag(cpu_state, INTERRUPT_FLAG);
 			#ifdef DEBUG_PRINT_INST
-			fprintf(stderr, "STI\n");
+			cpu_print_inst("STI\n");
 			#endif
+			cpu_raise_flag(cpu_state, INTERRUPT_FLAG);
 			return true;
 		}
 

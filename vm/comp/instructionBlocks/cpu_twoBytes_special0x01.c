@@ -1,8 +1,9 @@
 case 3: {
-	/*  LIDT m16&32: Load m into IDTR. */
+
 	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "LIDT m16&m32\n");
+	cpu_print_inst("LIDT m16&m32\n");
 	#endif
+	/*  LIDT m16&32: Load m into IDTR. */
 
 	uint32_t src;
 	if(likely(s_op.regmem_type == MEMORY)){

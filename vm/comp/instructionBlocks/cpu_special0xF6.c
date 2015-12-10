@@ -1,4 +1,8 @@
 case 4: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MULB rm8\n");
+	#endif
 	/* MUL r/m8
 	unsigned multiply (AX ← AL ∗ r/m8)
 	*/
@@ -22,9 +26,6 @@ case 4: {
 		cpu_raise_flag(cpu_state, CARRY_FLAG);
 	}
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MULB rm8\n");
-	#endif
 
 	return true;
 

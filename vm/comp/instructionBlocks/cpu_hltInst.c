@@ -1,6 +1,7 @@
 case 0xF4: {
+
 	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "HLT \n");
+	cpu_print_inst("HLT \n");
 	#endif
 
 	//If interrupts are disabled (cli was called), stop vm execution

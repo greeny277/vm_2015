@@ -1,4 +1,8 @@
 case 0x88: {
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("MOV r8 rm8 \n");
+		#endif
 	/* Copy r8 to r/m8 */
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
@@ -8,15 +12,16 @@ case 0x88: {
 			cpu_write_byte_in_reg(s_op.regmem_reg, src, IS_HIGH(s_op.regmem));
 		}
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "MOV r8 rm8 \n");
-		#endif
 
 		return true;
 	}
 	break;
 }
 case 0x89: {
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("MOV r32 rm32 \n");
+		#endif
 	/* Copy r32 to r/m32 */
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src = cpu_read_word_from_reg(s_op.reg);
@@ -26,9 +31,6 @@ case 0x89: {
 			cpu_write_word_in_reg(s_op.regmem_reg, src);
 		}
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "MOV r32 rm32 \n");
-		#endif
 
 		return true;
 	}
@@ -36,6 +38,10 @@ case 0x89: {
 }
 
 case 0x8A: {
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("MOV rm8 r8 \n");
+		#endif
 	/* Copy r/m8 to r8. */
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src;
@@ -46,9 +52,6 @@ case 0x8A: {
 		}
 		cpu_write_byte_in_reg(s_op.reg, src, IS_HIGH(s_op.regmem));
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "MOV rm8 r8 \n");
-		#endif
 
 		return true;
 	}
@@ -56,6 +59,10 @@ case 0x8A: {
 }
 
 case 0x8B: {
+
+		#ifdef DEBUG_PRINT_INST
+		cpu_print_inst("MOV rm32 r32 \n");
+		#endif
 	/* Copy r/m32 to r32. */
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src;
@@ -66,9 +73,6 @@ case 0x8B: {
 		}
 		cpu_write_word_in_reg(s_op.reg, src);
 
-		#ifdef DEBUG_PRINT_INST
-		fprintf(stderr, "MOV rm32 r32 \n");
-		#endif
 
 		return true;
 	}
@@ -76,32 +80,38 @@ case 0x8B: {
 }
 
 case 0xA0: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV AL moffs8 \n");
+	#endif
 	/* Copy byte at (seg:offset) to AL */
 	uint32_t src_addr = cpu_consume_word_from_mem(cpu_state);
 	uint8_t src_byte = cpu_read_byte_from_mem(cpu_state, src_addr);
 	cpu_write_byte_in_reg(&(cpu_state->eax), src_byte, !HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV AL moffs8 \n");
-	#endif
 
 	return true;
 }
 
 case 0xA1: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV EAX moffs32 \n");
+	#endif
 	/* Copy word at (seg:offset) to EAX */
 	uint32_t src_addr = cpu_consume_word_from_mem(cpu_state);
 	uint32_t src_doubleword = cpu_read_word_from_mem(cpu_state, src_addr);
 	cpu_write_word_in_reg(&(cpu_state->eax), src_doubleword);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV EAX moffs32 \n");
-	#endif
 
 	return true;
 }
 
 case 0xA2: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV moffs8 AL\n");
+	#endif
 	/* Copy AL to (seg:offset) */
 	uint32_t dest_addr = cpu_consume_word_from_mem(cpu_state);
 
@@ -109,14 +119,15 @@ case 0xA2: {
 
 	cpu_write_byte_in_mem(cpu_state, src_byte, dest_addr);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV moffs8 AL\n");
-	#endif
 
 	return true;
 }
 
 case 0xA3: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV moffs32 EAX\n");
+	#endif
 	/* Copy EAX to (seg:offset) */
 
 	uint32_t dest_addr = cpu_consume_word_from_mem(cpu_state);
@@ -124,216 +135,229 @@ case 0xA3: {
 
 	cpu_write_word_in_mem(cpu_state, src_doubleword, dest_addr);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV moffs32 EAX\n");
-	#endif
 
 	return true;
 }
 
 case 0xB0: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV AL imm8\n");
+	#endif
 	/* Copy imm8 to AL */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->eax), src, !HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV AL imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB1: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV CL imm8\n");
+	#endif
 	/* Copy imm8 to CL */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->ecx), src, !HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV CL imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB2: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV DL imm8\n");
+	#endif
 	/* Copy imm8 to DL */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->edx), src, !HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV DL imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB3: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV BL imm8\n");
+	#endif
 	/* Copy imm8 to BL */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->ebx), src, !HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV BL imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB4: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV AH imm8\n");
+	#endif
 	/* Copy imm8 to AH */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->eax), src, HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV AH imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB5: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV CH imm8\n");
+	#endif
 	/* Copy imm8 to CH */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->ecx), src, HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV CH imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB6: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV DH imm8\n");
+	#endif
 	/* Copy imm8 to DH */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->edx), src, HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV DH imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB7: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV BH imm8\n");
+	#endif
 	/* Copy imm8 to BH */
 	uint8_t src;
 	src = cpu_consume_byte_from_mem(cpu_state);
 	cpu_write_byte_in_reg(&(cpu_state->ebx), src, HIGH_BYTE);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV BH imm8\n");
-	#endif
 
 	return true;
 }
 
 case 0xB8: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV EAX imm32\n");
+	#endif
 	/* Copy imm32 to EAX */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->eax), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV EAX imm32\n");
-	#endif
 
 	return true;
 }
 
 case 0xB9: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV ECX imm32\n");
+	#endif
 	/* Copy imm32 to ECX */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->ecx), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV ECX imm32\n");
-	#endif
 
 	return true;
 }
 
 case 0xBA: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV EDX imm32\n");
+	#endif
 	/* Copy imm32 to EDX */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->edx), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV EDX imm32\n");
-	#endif
 
 	return true;
 }
 
 case 0xBB: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV EBX imm32\n");
+	#endif
 	/* Copy imm32 to EBX */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->ebx), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV EBX imm32\n");
-	#endif
 
 	return true;
 }
 
 case 0xBC: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV ESP imm32\n");
+	#endif
 	/* Copy imm32 to ESP */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->esp), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV ESP imm32\n");
-	#endif
 
 	return true;
 }
 
 case 0xBD: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV EBP imm32\n");
+	#endif
 	/* Copy imm32 to EBP */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->ebp), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV EBP imm32\n");
-	#endif
 
 	return true;
 }
 
 case 0xBE: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV ESI imm32\n");
+	#endif
 	/* Copy imm32 to ESI */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->esi), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV ESI imm32\n");
-	#endif
 
 	return true;
 }
 case 0xBF: {
+
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV EDI imm32\n");
+	#endif
 	/* Copy imm32 to EDI */
 	uint32_t src;
 	src = cpu_consume_word_from_mem(cpu_state);
 	cpu_write_word_in_reg(&(cpu_state->edi), src);
 
-	#ifdef DEBUG_PRINT_INST
-	fprintf(stderr, "MOV EDI imm32\n");
-	#endif
 
 	return true;
 }
