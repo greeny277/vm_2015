@@ -56,7 +56,6 @@ setup_create(struct cpssp *cpssp)
 	/* create busses */
 	cpssp->host_bus = sig_host_bus_create();
 	cpssp->bool_bus = sig_boolean_create();
-	cpssp->pic_to_cpu_bool = sig_boolean_create();
 
 
 	/* Create glue-io (init signal handler) */
@@ -68,7 +67,7 @@ setup_create(struct cpssp *cpssp)
 	cpssp->comp_bios_rom =
 		bios_rom_create(cpssp->host_bus, cpssp->setup_bios_rom);
 	cpssp->comp_io_decoder = io_decoder_create(cpssp->host_bus);
-	cpssp->comp_cpu = cpu_create(cpssp->host_bus, cpssp->pic_to_cpu_bool);
+	cpssp->comp_cpu = cpu_create(cpssp->host_bus);
 	cpssp->comp_pic = pic_create(cpssp->host_bus, cpssp->comp_cpu);
 
 	pic_connection *serial_conn;

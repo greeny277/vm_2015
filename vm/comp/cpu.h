@@ -52,7 +52,7 @@ cpu_step(void *s);
   * @return cpu instance.
   */
 extern void *
-cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool);
+cpu_create(struct sig_host_bus *port_host);
 
 /** destroy a cpu instance
   * @param s cpu instance
@@ -63,7 +63,6 @@ cpu_destroy(void *s);
 typedef struct cpu_state {
 	/** ports */
 	struct sig_host_bus *port_host;
-	struct sig_boolean *pic_to_cpu_bool;
 
 	/** state */
 	/** Register beginning with letter 'e' have length of 32 bits */

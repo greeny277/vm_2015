@@ -21,10 +21,6 @@
 
 #define IS_HIGH(x) (x ## _type == REGISTER_HIGH)
 
-void *cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool);
-void  cpu_destroy(void *_cpu_state);
-static void cpu_set(void *_cpu_state, bool val);
-
 static cpu_register cpu_modrm_eval_register(cpu_state *cpu_state, cpu_register reg, uint32_t **reg_addr, bool is_8bit);
 static bool         cpu_modrm_eval(cpu_state *cpu_state, modsib *mod, uint8_t byte, uint8_t is_8bit);
 
@@ -80,22 +76,17 @@ static bool cpu_get_zero_flag(cpu_state *cpu_state);
  *  @param port_host  the port the cpu is connected to
  */
 void *
-cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool) {
+cpu_create(struct sig_host_bus *port_host) {
 	struct cpu_state *cpu_state;
 	static const struct sig_host_bus_funcs hf = {
 		.readb = cpu_readb,
 		.writeb = cpu_writeb
 	};
 
-	static const struct sig_boolean_funcs bf = {
-		.set = cpu_set
-	};
-
 	cpu_state = malloc(sizeof(struct cpu_state));
 	assert(cpu_state != NULL);
 
 	cpu_state->port_host = port_host;
-	cpu_state->pic_to_cpu_bool = pic_to_cpu_bool;
 	/* Set base pointer to start address of ROM.
 	 * The address is hardcoded, like in real hardware.
 	 */
@@ -105,7 +96,6 @@ cpu_create(struct sig_host_bus *port_host, struct sig_boolean *pic_to_cpu_bool) 
 	cpu_state->interrupt_raised = false;
 
 	sig_host_bus_connect(port_host, cpu_state, &hf);
-	sig_boolean_connect(pic_to_cpu_bool, cpu_state, &bf);
 	return cpu_state;
 }
 
@@ -947,8 +937,6 @@ cpu_step(void *_cpu_state) {
 	#endif
 	return false;
 }
-
-static void cpu_set(void *_cpu_state, bool val){}
 
 
 /** @brief nop - cpu does not support reading via bus
