@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_real
+END
+kbd_ctrl.S
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_real/kbd_ctrl.S
+END
+boot-cdrom.S
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_real/boot-cdrom.S
+END
+linux_libs.S
+K 25
+svn:wc:ra_dav:version-url
+V 92
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_real/linux_libs.S
+END
+gfx_libs.S
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_real/gfx_libs.S
+END

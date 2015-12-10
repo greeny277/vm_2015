@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 77
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_vm
+END
+combine_rom.c
+K 25
+svn:wc:ra_dav:version-url
+V 91
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_vm/combine_rom.c
+END
+setup_serial_irq.S
+K 25
+svn:wc:ra_dav:version-url
+V 96
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_vm/setup_serial_irq.S
+END
+vm_libs.S
+K 25
+svn:wc:ra_dav:version-url
+V 87
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_vm/vm_libs.S
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_vm/Makefile
+END
+kbd_ctrl.S
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/lib_vm/kbd_ctrl.S
+END
