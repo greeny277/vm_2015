@@ -901,12 +901,10 @@ static void cpu_handle_interrupt(cpu_state * cpu_state){
 		return;
 	}
 
-	uint8_t *idtr_vector_base = ((uint8_t*)cpu_state->idtr_base) + index * VECTOR_SIZE;
+	uint32_t idtr_vector_base = (cpu_state->idtr_base) + index * VECTOR_SIZE;
 
-	uint32_t offset = (*(idtr_vector_base+0)) |
-				((*(idtr_vector_base+1)) << 8) |
-				((*(idtr_vector_base+6)) << 16) |
-				((*(idtr_vector_base+7)) << 24);
+	uint32_t offset = cpu_read_word_from_mem(cpu_state, idtr_vector_base) |
+						cpu_read_word_from_mem(cpu_state, idtr_vector_base+6) << 16;
 
 	//save state, jump to calculated address
 	cpu_save_state(cpu_state);
