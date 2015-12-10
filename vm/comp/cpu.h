@@ -6,6 +6,9 @@
 #include "sig_host_bus.h"
 #include "sig_boolean.h"
 
+//vector size in the interrupt descriptor table in bytes
+#define VECTOR_SIZE 8
+
 typedef enum modrm_mod_bits {
 	NO_DISPLACEMENT,
 	DISPLACEMENT_8,
@@ -83,6 +86,7 @@ typedef struct cpu_state {
 	 * EFLAGS register
 	 * Bit Number   Meaning                 Shortcut
 	 * 11           Overflow Flag             OF
+	 *  9           Interrupt enable Flag     IF
 	 *  7           Sign Flag                 SF
 	 *  6           Zero Flag                 ZF
 	 *  4           Auxiliary Carry Flag      AF
@@ -101,7 +105,8 @@ typedef struct cpu_state {
 } cpu_state;
 
 typedef enum flag {
-	OVERFLOW_FLAG =  11,
+	OVERFLOW_FLAG = 11,
+	INTERRUPT_FLAG = 9,
 	SIGN_FLAG =      7,
 	ZERO_FLAG =      6,
 	AUX_CARRY_FLAG = 4,

@@ -161,13 +161,8 @@ case 0xCA: {
 }
 
 case 0xCF: {
-	/* IRET
-	 */
-	cpu_state->eip = cpu_stack_pop_doubleword(cpu_state);
-	cpu_state->cs  = cpu_stack_pop_byte(cpu_state);
-	cpu_state->cs |= cpu_stack_pop_byte(cpu_state) << 8;
-
-	cpu_state->eflags = cpu_stack_pop_doubleword(cpu_state);
+	/*IRET*/
+	cpu_restore_state(cpu_state);
 
 	#ifdef DEBUG_PRINT_INST
 	fprintf(stderr, "IRET\n");

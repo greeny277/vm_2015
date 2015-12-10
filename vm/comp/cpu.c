@@ -6,6 +6,7 @@
 #include <stdio.h>
 
 #include "cpu.h"
+#include "io_decoder.h"
 #include "debug.h"
 
 #define likely(x)       __builtin_expect((x),1)
@@ -771,6 +772,22 @@ static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword)
 	cpu_stack_push_byte(cpu_state, byte);
 }
 
+/** @brief Save a word on stack and decrements stack pointer
+ *         afterwards. The most significant byte
+ *         get pushed first (on the higher address).
+ *
+ *  @param cpu_state is the cpu instance
+ *  @param word that get pushed on stack
+ */
+static void cpu_stack_push_word(cpu_state *cpu_state, uint16_t word){
+	uint8_t byte = 0;
+	byte = (word >> 8) & 0xff;
+	cpu_stack_push_byte(cpu_state, byte);
+
+	byte = word & 0xff;
+	cpu_stack_push_byte(cpu_state, byte);
+}
+
 /** @brief Read byte from stack and increments stack pointer afterwards
  *
  *  @param cpu_state is the cpu instance
@@ -807,17 +824,76 @@ static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state){
 	return dw;
 }
 
+/** @brief Read word from stack and increments stack pointer afterwards.
+ *         Least significant byte is read first.
+ *
+ *  @param cpu_state is the cpu instance
+ *
+ *  @return word on stack
+ */
+static uint16_t cpu_stack_pop_word(cpu_state *cpu_state){
+	uint16_t dw = 0;
+	uint8_t byte0, byte1;
+
+	byte0 = cpu_stack_pop_byte(cpu_state);
+	byte1 = cpu_stack_pop_byte(cpu_state);
+
+	dw  = byte0;
+	dw |= (byte1 << 8);
+
+	return dw;
+}
+
 /** @brief Save state of cpu on stack. This procedure is called bv an
  *         interrupt handling routine.
  */
 static void cpu_save_state(cpu_state *cpu_state){
-	return;
+	cpu_stack_push_doubleword(cpu_state, cpu_state->eflags);
+	cpu_stack_push_word(cpu_state, cpu_state->cs);
+	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
+}
+
+/** @brief Save state of cpu on stack. This procedure is called by IRET
+ */
+static void cpu_restore_state(cpu_state *cpu_state){
+	cpu_state->eip = cpu_stack_pop_doubleword(cpu_state);
+	cpu_state->cs = cpu_stack_pop_word(cpu_state);
+	cpu_state->eflags = cpu_stack_pop_doubleword(cpu_state);
+}
+
+static void cpu_handle_interrupt(cpu_state * cpu_state){
+	uint8_t index = sig_host_bus_read_io_dev(cpu_state->port_host,
+		cpu_state, PIC_BEGIN);
+
+	if(index * VECTOR_SIZE > cpu_state->idtr_limit){
+		fprintf(stderr, "Array index out of bounds exception, ignoring interrupt");
+		return;
+	}
+
+	uint8_t *idtr_vector_base = ((uint8_t*)cpu_state->idtr_base) + index * VECTOR_SIZE;
+
+	uint32_t offset = (*(idtr_vector_base+0)) |
+				((*(idtr_vector_base+1)) << 8) |
+				((*(idtr_vector_base+6)) << 16) |
+				((*(idtr_vector_base+7)) << 24);
+
+	//save state, jump to calculated address
+	cpu_save_state(cpu_state);
+
+	cpu_state->interrupt_raised = false;
+	cpu_clear_flag(cpu_state, INTERRUPT_FLAG);
+
+	cpu_state->eip = offset;
 }
 
 bool
 cpu_step(void *_cpu_state) {
 	/* cast */
 	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
+
+	if(cpu_state->interrupt_raised){
+		cpu_handle_interrupt(cpu_state);
+	}
 
 	uint8_t op_code = 0;
 	bool cond;
@@ -838,6 +914,7 @@ cpu_step(void *_cpu_state) {
 	#endif
 
 	switch(op_code) {
+
 		#include "instructionBlocks/cpu_addInst.c"
 
 		#include "instructionBlocks/cpu_compareInst.c"
@@ -857,6 +934,8 @@ cpu_step(void *_cpu_state) {
 		#include "instructionBlocks/cpu_decInst.c"
 
 		#include "instructionBlocks/cpu_hltInst.c"
+
+		#include "instructionBlocks/cpu_ioInst.c"
 
 
 		default:
