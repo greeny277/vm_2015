@@ -73,15 +73,21 @@ static bool pic_handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
 	switch(pic_state->cur_icw_byte_no){
 		case 1:
 			if(unlikely((icw_byte & (1 << IC4)) == 0)){
-				fprintf(stderr, "^IC4 in ICW1 implies MCS-80/85 and normal EOI mode, which is unsupported!");
+				#ifdef DEBUG_PRINT_ERRORS
+				fprintf(stderr, "^IC4 in ICW1 implies MCS-80/85 and normal EOI mode, which is unsupported!\n");
+				#endif
 				return false;
 			}
 			if(unlikely((icw_byte & (1 << SNGL)) == 0)){
-				fprintf(stderr, "^SNGL in ICW1 sets cascade mode, which is unsupported!");
+				#ifdef DEBUG_PRINT_ERRORS
+				fprintf(stderr, "^SNGL in ICW1 sets cascade mode, which is unsupported!\n");
+				#endif
 				return false;
 			}
 			if(unlikely((icw_byte & (1 << LTIM)) == 0)){
-				fprintf(stderr, "^LTIM in ICW1 sets level triggered mode, which is unsupported!");
+				#ifdef DEBUG_PRINT_ERRORS
+				fprintf(stderr, "LTIM in ICW1 sets level triggered mode, which is unsupported!\n");
+				#endif
 				return false;
 			}
 			pic_state->cur_icw_byte_no++;
@@ -93,22 +99,30 @@ static bool pic_handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
 			break;
 		case 4:
 			if(unlikely((icw_byte & (1 << uPM)) == 0)){
-				fprintf(stderr, "^uPM in ICW4 sets MCS-80/85, which is unsupported!");
+				#ifdef DEBUG_PRINT_ERRORS
+				fprintf(stderr, "^uPM in ICW4 sets MCS-80/85, which is unsupported!\n");
+				#endif
 				return false;
 			}
 			if(unlikely((icw_byte & (1 << AEOI)) == 0)){
-				fprintf(stderr, "^SNGL in ICW4 sets normal EOI mode, which is unsupported!");
+				#ifdef DEBUG_PRINT_ERRORS
+				fprintf(stderr, "^SNGL in ICW4 sets normal EOI mode, which is unsupported!\n");
+				#endif
 				return false;
 			}
 			//TODO: Sollten wir BUF und MS auch pruefen?
 			if(unlikely((icw_byte & (1 << SFNM)) == 1)){
-				fprintf(stderr, "SFNM in ICW4 sets special fully nested mode, which is unsupported!");
+				#ifdef DEBUG_PRINT_ERRORS
+				fprintf(stderr, "SFNM in ICW4 sets special fully nested mode, which is unsupported!\n");
+				#endif
 				return false;
 			}
 			pic_state->cur_icw_byte_no++;
 			break;
 		default:
+			#ifdef DEBUG_PRINT_ERRORS
 			fprintf(stderr, "Invalid number of ICW bytes read");
+			#endif
 			return false;
 	}
 	return true;
