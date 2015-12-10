@@ -17,6 +17,7 @@ CPU:
 - Kommunikation mit PIC im Falle von outb und inb
 - Interrupt Tabelle
 - outb und inb Funktion schreiben
+- write_word in reg in doubleword umbennenen, word implementieren und in INB nutzen
 
 IO-Decoder:
 - Bekommt alle Adressen und sendet diese an PICs
