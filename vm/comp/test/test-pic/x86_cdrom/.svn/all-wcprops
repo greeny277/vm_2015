@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 89
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/x86_cdrom
+END
+generate
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/x86_cdrom/generate
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/x86_cdrom/Makefile
+END
+boot.lds
+K 25
+svn:wc:ra_dav:version-url
+V 98
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/x86_cdrom/boot.lds
+END

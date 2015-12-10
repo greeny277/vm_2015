@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 79
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic
+END
+main.S
+K 25
+svn:wc:ra_dav:version-url
+V 86
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/main.S
+END
+test-pic.S
+K 25
+svn:wc:ra_dav:version-url
+V 90
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/test-pic.S
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/Makefile
+END
+bios.lds
+K 25
+svn:wc:ra_dav:version-url
+V 88
+/i4svn/lehre/!svn/ver/11509/trunk/V_VM/WS2015/uebung/src_aufgabe2/test/test-pic/bios.lds
+END

@@ -1,0 +1,5 @@
+cdrom_insert	cdrom.iso
+debug
+power_on
+wait_asc	TIMEOUT				240000
+power_off
