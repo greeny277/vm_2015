@@ -480,38 +480,31 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 
 		if(s_modrm.mod_rm_name == ESP){
 			/* We have a SIB byte following */
-			uint32_t *base;
-			uint32_t *index;
+			uint8_t base;
+			uint8_t index;
 
 			uint8_t sib = 0;
 			uint8_t scale = 0;
 
 			/* Read next byte increment eip */
 			sib = cpu_consume_byte_from_mem(cpu_state);
-			modsib s_sib;
-			memset(&s_sib,0,sizeof(modsib));
 
-			if(unlikely(false == cpu_modrm_eval(cpu_state, &s_sib, sib, is_8bit))){
-				return false;
-			}
-
-			scale = s_sib.addr_or_scale_mode;
-			scale = 1 << scale;
-			base = s_sib.mod_rm;
-			index = s_sib.mod_reg;
+			scale = 1 << (sib >> 6);
+			base = sib & 0x03;
+			index = (sib>>3) & 0x07;
 
 			/* Compute base address for mod_rm */
 			uint32_t base_mod_rm;
-			if(s_sib.mod_reg_name == ESP) {
+			if(index == ESP) {//see lecture slides 80x86 ass 14-15
 				/* Index is not used */
-				base_mod_rm = *base;
+				base_mod_rm = *(&(cpu_state->eax) + base);
 
-			} else if (s_sib.mod_rm_name == EBP){
+			} else if (base == EBP){ //see lecture slides 80x86 ass 14-15
 				/* Base is not used */
-				base_mod_rm= *index * scale;
+				base_mod_rm= (*(&(cpu_state->eax) + index)) * scale;
 
 			} else {
-				base_mod_rm = *base + (*index * scale);
+				base_mod_rm = *(&(cpu_state->eax) + base) + ((*(&(cpu_state->eax) + index)) * scale);
 			}
 			/* Remember: addressing mode is unequal to REGISTER! */
 			cpu_set_opaddr_regmem(cpu_state, s_modrm.addr_or_scale_mode, &base_mod_rm, addr);
