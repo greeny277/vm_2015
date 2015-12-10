@@ -240,34 +240,4 @@ sig_host_bus_write_io_dev(
 		}
 	}
 }
-
-extern void
-sig_host_bus_int_ack(
-	const struct sig_host_bus *bus,
-	void *s,
-	uint8_t int_num
-)
-{
-	unsigned int i;
-	bool ret;
-
-	for (i = 0; i < bus->nmembers; i++) {
-		if (bus->members[i].s == s) {
-			continue;
-		}
-
-		if (bus->members[i].f == NULL) {
-			continue;
-		}
-
-		if (bus->members[i].f->int_ack == NULL) {
-			continue;
-		}
-
-		ret = bus->members[i].f->int_ack(bus->members[i].s, int_num);
-		if (ret) {
-			break;
-		}
-	}
-}
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */

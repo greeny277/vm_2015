@@ -57,14 +57,6 @@ struct sig_host_bus_funcs {
 	  * @return true, if port is from callee
 	  */
 	bool (*read_from_io_dev)(void *s, uint32_t addr, uint8_t *valp);
-
-	/** callback for signalizing PIC that interrupt has been
-	 * handled.
-	 * @param s object pointer of callee
-	 * @param int_num the interrupt to acknowledge
-	 * @return true, if port is from callee
-	 */
-	bool (*int_ack)(void *s, uint8_t int_num);
 };
 
 /** host bus structure */
@@ -138,7 +130,5 @@ sig_host_bus_read_io_dev(const struct sig_host_bus *bus, void *s, uint32_t addr)
 extern void
 sig_host_bus_write_io_dev(const struct sig_host_bus *bus, void *s, uint32_t addr, uint8_t val);
 
-extern void
-sig_host_bus_int_ack(const struct sig_host_bus *bus, void *s, uint8_t int_num);
 #endif /* __SIG_HOST_BUS_H_INCLUDED */
 /* vim: set tabstop=4 softtabstop=4 shiftwidth=4 noexpandtab : */
