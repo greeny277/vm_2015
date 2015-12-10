@@ -120,7 +120,9 @@ case 0xCB:{
 	 */
 
 	/* No segments implemented yet */
-	cpu_print_inst("No segments implemented yet\n");
+	#ifdef DEBUG_PRINT_ERRORS
+	fprintf(stderr, "No segments implemented yet\n");
+	#endif
 
 	break;
 }
@@ -159,7 +161,9 @@ case 0xCA: {
 	 */
 
 	/* No segments implemented yet */
-	cpu_print_inst("No segments implemented yet\n");
+	#ifdef DEBUG_PRINT_ERRORS
+	fprintf(stderr, "No segments implemented yet\n");
+	#endif
 
 	break;
 }
