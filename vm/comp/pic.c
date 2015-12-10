@@ -20,7 +20,7 @@ static bool pic_handle_interrupt(pic_state *pic_state, uint8_t int_num);
  */
 static bool
 pic_write_to_io_dev(void *_pic_state, uint32_t addr, uint8_t val){
-	pic_state *pic_state = (struct pic_state*) _pic_state;
+	pic_state *pic_state = (struct _pic_state*) _pic_state;
 
 	if(pic_state->cur_icw_byte_no > 4){
 		pic_handle_OCW_Byte(pic_state, val);
@@ -41,7 +41,7 @@ pic_write_to_io_dev(void *_pic_state, uint32_t addr, uint8_t val){
  */
 static bool
 pic_read_from_io_dev(void *_pic_state, uint32_t addr, uint8_t *valp){
-	pic_state *pic_state = (struct pic_state*) _pic_state;
+	pic_state *pic_state = (struct _pic_state*) _pic_state;
 
 	//todo: reraise, if irr != 0?
 
