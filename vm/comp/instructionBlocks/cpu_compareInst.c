@@ -20,7 +20,7 @@ case 0x3D: {
 	cpu_print_inst("CMP imm32 EAX \n");
 	#endif
 	/*Compare imm32 with EAX*/
-	uint32_t subtrahend = cpu_consume_word_from_mem(cpu_state);
+	uint32_t subtrahend = cpu_consume_doubleword_from_mem(cpu_state);
 	uint32_t minuend = cpu_state->eax;
 	uint32_t result = minuend - subtrahend;
 
@@ -64,11 +64,11 @@ case 0x39: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t minuend, subtrahend;
 
-		subtrahend = cpu_read_word_from_reg(s_op.reg);
+		subtrahend = cpu_read_doubleword_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY)
-			minuend = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
+			minuend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
 		else
-			minuend = cpu_read_word_from_reg(s_op.regmem_reg);
+			minuend = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 		uint32_t result = minuend - subtrahend;
 
 		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,
@@ -113,11 +113,11 @@ case 0x3B: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t minuend, subtrahend;
 
-		minuend = cpu_read_word_from_reg(s_op.reg);
+		minuend = cpu_read_doubleword_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY)
-			subtrahend = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
+			subtrahend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
 		else
-			subtrahend = cpu_read_word_from_reg(s_op.regmem_reg);
+			subtrahend = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 		uint32_t result = minuend - subtrahend;
 
 		cpu_set_eflag_arith(cpu_state, minuend, subtrahend, result,

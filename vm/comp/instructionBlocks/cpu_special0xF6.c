@@ -14,9 +14,9 @@ case 4: {
 	else
 		op2 = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 
-	uint32_t result = (cpu_read_word_from_reg(&(cpu_state->eax)) & 0xFFFF0000) | ((op1*op2) & 0xFFFF);
+	uint32_t result = (cpu_read_doubleword_from_reg(&(cpu_state->eax)) & 0xFFFF0000) | ((op1*op2) & 0xFFFF);
 
-	cpu_write_word_in_reg(&(cpu_state->eax), result);
+	cpu_write_doubleword_in_reg(&(cpu_state->eax), result);
 
 	if(cpu_read_byte_from_reg(&(cpu_state->eax), HIGH_BYTE) == 0){
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);

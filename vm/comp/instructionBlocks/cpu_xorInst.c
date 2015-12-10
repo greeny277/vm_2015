@@ -40,17 +40,17 @@ case 0x31:{
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1;
 		if(s_op.regmem_type == MEMORY)
-			op1 = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
+			op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
 		else
-			op1 = cpu_read_word_from_reg(s_op.regmem_reg);
+			op1 = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 
-		uint32_t op2 = cpu_read_word_from_reg(s_op.reg);
+		uint32_t op2 = cpu_read_doubleword_from_reg(s_op.reg);
 		uint32_t result = op1 ^ op2;
 
 		if(s_op.regmem_type == MEMORY)
-			cpu_write_word_in_mem(cpu_state, result, s_op.regmem_mem);
+			cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem);
 		else
-			cpu_write_word_in_reg(s_op.regmem_reg, result);
+			cpu_write_doubleword_in_reg(s_op.regmem_reg, result);
 
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 		cpu_clear_flag(cpu_state, CARRY_FLAG);
@@ -101,16 +101,16 @@ case 0x33:{
 		#endif
 	/*r32 XOR r/m32.*/
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
-		uint32_t op1 = cpu_read_word_from_reg(s_op.reg);
+		uint32_t op1 = cpu_read_doubleword_from_reg(s_op.reg);
 		uint32_t op2;
 		if(s_op.regmem_type == MEMORY)
-			op2 = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
+			op2 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
 		else
-			op2 = cpu_read_word_from_reg(s_op.regmem_reg);
+			op2 = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 
 		uint32_t result = op1 ^ op2;
 
-		cpu_write_word_in_reg(s_op.reg, result);
+		cpu_write_doubleword_in_reg(s_op.reg, result);
 
 		cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 		cpu_clear_flag(cpu_state, CARRY_FLAG);
@@ -151,10 +151,10 @@ case 0x35:{
 	cpu_print_inst("XOR EAX imm32\n");
 	#endif
 	/*XOR EAX, imm32*/
-	uint8_t op1 = cpu_read_word_from_reg(&(cpu_state->eax));
-	uint8_t op2 = cpu_consume_word_from_mem(cpu_state);
+	uint8_t op1 = cpu_read_doubleword_from_reg(&(cpu_state->eax));
+	uint8_t op2 = cpu_consume_doubleword_from_mem(cpu_state);
 	uint8_t result = op1 ^ op2;
-	cpu_write_word_in_reg(&(cpu_state->eax), result);
+	cpu_write_doubleword_in_reg(&(cpu_state->eax), result);
 
 	cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
 	cpu_clear_flag(cpu_state, CARRY_FLAG);

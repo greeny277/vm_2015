@@ -76,10 +76,10 @@ case 0xE8: {
 	cpu_print_inst("CALL rel32\n");
 	#endif
 	/* CALL rel32 */
-	int32_t rel32 = cpu_consume_word_from_mem(cpu_state);
+	int32_t rel32 = cpu_consume_doubleword_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 
-	cpu_write_word_in_reg(&(cpu_state->eip), cpu_state->eip+rel32);
+	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_state->eip+rel32);
 
 
 	return true;
@@ -93,9 +93,9 @@ case 0x9A: {
 	/* CALL ptr32
 	 * Call far, absolute, address given in operand.
 	 */
-	uint32_t abs = cpu_consume_word_from_mem(cpu_state);
+	uint32_t abs = cpu_consume_doubleword_from_mem(cpu_state);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
-	cpu_write_word_in_reg(&(cpu_state->eip), abs);
+	cpu_write_doubleword_in_reg(&(cpu_state->eip), abs);
 
 
 	return true;
@@ -107,7 +107,7 @@ case 0xC3: {
 	cpu_print_inst("RET\n");
 	#endif
 	/* Near return to calling procedure. */
-	cpu_write_word_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
+	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
 
 
 	return true;
@@ -135,7 +135,7 @@ case 0xC2: {
 	/* Near return to calling procedure and pop
 	 * imm16 bytes from stack.
 	 */
-	cpu_write_word_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
+	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
 
 	uint16_t imm16;
 
@@ -147,7 +147,7 @@ case 0xC2: {
 	imm16 = byte0;
 	imm16 |= (byte1 << 8);
 
-	cpu_write_word_in_reg(&(cpu_state->esp), cpu_state->esp+imm16);
+	cpu_write_doubleword_in_reg(&(cpu_state->esp), cpu_state->esp+imm16);
 
 
 	return true;

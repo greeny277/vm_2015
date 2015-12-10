@@ -29,9 +29,9 @@ case 0x40 ... 0x47: {
 
 	#endif
 	/* Increment word register eax-edi by 1 */
-	uint32_t src = cpu_read_word_from_reg(&((&cpu_state->eax)[op_code & 0x7]));
+	uint32_t src = cpu_read_doubleword_from_reg(&((&cpu_state->eax)[op_code & 0x7]));
 	src++;
-	cpu_write_word_in_reg(&((&cpu_state->eax)[op_code & 0x7]), src);
+	cpu_write_doubleword_in_reg(&((&cpu_state->eax)[op_code & 0x7]), src);
 
 	cpu_set_overflow_add(cpu_state, src-1, 1, src, !EIGHT_BIT);
 	cpu_set_aux_flag_add(cpu_state, src+1, 1, src, !EIGHT_BIT);

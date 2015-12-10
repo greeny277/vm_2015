@@ -62,7 +62,7 @@ case 0xEA: {
 	cpu_print_inst("JMP ptr16:32 \n");
 	#endif
 	/* Jump far, absolute 32*/
-	uint32_t abs = cpu_consume_word_from_mem(cpu_state);
+	uint32_t abs = cpu_consume_doubleword_from_mem(cpu_state);
 	cpu_set_eip(cpu_state, abs);
 
 
@@ -86,7 +86,7 @@ case 0xE9: {
 	cpu_print_inst("JMP rel32 \n");
 	#endif
 	/* Jump near, relative 32*/
-	int32_t rel32 = cpu_consume_word_from_mem(cpu_state);
+	int32_t rel32 = cpu_consume_doubleword_from_mem(cpu_state);
 	cpu_set_eip(cpu_state, cpu_state->eip + rel32);
 
 

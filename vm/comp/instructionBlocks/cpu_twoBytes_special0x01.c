@@ -7,7 +7,7 @@ case 3: {
 
 	uint32_t src;
 	if(likely(s_op.regmem_type == MEMORY)){
-		src = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
+		src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
 	}
 	else{
 		/* This should not happen */
@@ -15,9 +15,9 @@ case 3: {
 	}
 
 	/* Next 2 bytes at src define IDTR limit */
-	cpu_state->idtr_limit = cpu_read_word_from_mem(cpu_state, src) & 0xFFFF;
+	cpu_state->idtr_limit = cpu_read_doubleword_from_mem(cpu_state, src) & 0xFFFF;
 	/* Next 4 bytes at src+2 define IDTR base */
-	cpu_state->idtr_base = cpu_read_word_from_mem(cpu_state, src+2);
+	cpu_state->idtr_base = cpu_read_doubleword_from_mem(cpu_state, src+2);
 
 	return true;
 }

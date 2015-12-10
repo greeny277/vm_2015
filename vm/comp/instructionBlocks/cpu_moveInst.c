@@ -24,11 +24,11 @@ case 0x89: {
 		#endif
 	/* Copy r32 to r/m32 */
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
-		uint32_t src = cpu_read_word_from_reg(s_op.reg);
+		uint32_t src = cpu_read_doubleword_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY){
-			cpu_write_word_in_mem(cpu_state, src, s_op.regmem_mem);
+			cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem);
 		} else {
-			cpu_write_word_in_reg(s_op.regmem_reg, src);
+			cpu_write_doubleword_in_reg(s_op.regmem_reg, src);
 		}
 
 
@@ -67,11 +67,11 @@ case 0x8B: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src;
 		if(s_op.regmem_type == MEMORY){
-			src = cpu_read_word_from_mem(cpu_state, s_op.regmem_mem);
+			src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
 		} else {
-			src = cpu_read_word_from_reg(s_op.regmem_reg);
+			src = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 		}
-		cpu_write_word_in_reg(s_op.reg, src);
+		cpu_write_doubleword_in_reg(s_op.reg, src);
 
 
 		return true;
@@ -85,7 +85,7 @@ case 0xA0: {
 	cpu_print_inst("MOV AL moffs8 \n");
 	#endif
 	/* Copy byte at (seg:offset) to AL */
-	uint32_t src_addr = cpu_consume_word_from_mem(cpu_state);
+	uint32_t src_addr = cpu_consume_doubleword_from_mem(cpu_state);
 	uint8_t src_byte = cpu_read_byte_from_mem(cpu_state, src_addr);
 	cpu_write_byte_in_reg(&(cpu_state->eax), src_byte, !HIGH_BYTE);
 
@@ -99,9 +99,9 @@ case 0xA1: {
 	cpu_print_inst("MOV EAX moffs32 \n");
 	#endif
 	/* Copy word at (seg:offset) to EAX */
-	uint32_t src_addr = cpu_consume_word_from_mem(cpu_state);
-	uint32_t src_doubleword = cpu_read_word_from_mem(cpu_state, src_addr);
-	cpu_write_word_in_reg(&(cpu_state->eax), src_doubleword);
+	uint32_t src_addr = cpu_consume_doubleword_from_mem(cpu_state);
+	uint32_t src_doubleword = cpu_read_doubleword_from_mem(cpu_state, src_addr);
+	cpu_write_doubleword_in_reg(&(cpu_state->eax), src_doubleword);
 
 
 	return true;
@@ -113,7 +113,7 @@ case 0xA2: {
 	cpu_print_inst("MOV moffs8 AL\n");
 	#endif
 	/* Copy AL to (seg:offset) */
-	uint32_t dest_addr = cpu_consume_word_from_mem(cpu_state);
+	uint32_t dest_addr = cpu_consume_doubleword_from_mem(cpu_state);
 
 	uint8_t src_byte = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 
@@ -130,10 +130,10 @@ case 0xA3: {
 	#endif
 	/* Copy EAX to (seg:offset) */
 
-	uint32_t dest_addr = cpu_consume_word_from_mem(cpu_state);
-	uint32_t src_doubleword = cpu_read_word_from_reg(&(cpu_state->eax));
+	uint32_t dest_addr = cpu_consume_doubleword_from_mem(cpu_state);
+	uint32_t src_doubleword = cpu_read_doubleword_from_reg(&(cpu_state->eax));
 
-	cpu_write_word_in_mem(cpu_state, src_doubleword, dest_addr);
+	cpu_write_doubleword_in_mem(cpu_state, src_doubleword, dest_addr);
 
 
 	return true;
@@ -258,8 +258,8 @@ case 0xB8: {
 	#endif
 	/* Copy imm32 to EAX */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->eax), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->eax), src);
 
 
 	return true;
@@ -272,8 +272,8 @@ case 0xB9: {
 	#endif
 	/* Copy imm32 to ECX */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->ecx), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->ecx), src);
 
 
 	return true;
@@ -286,8 +286,8 @@ case 0xBA: {
 	#endif
 	/* Copy imm32 to EDX */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->edx), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->edx), src);
 
 
 	return true;
@@ -300,8 +300,8 @@ case 0xBB: {
 	#endif
 	/* Copy imm32 to EBX */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->ebx), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->ebx), src);
 
 
 	return true;
@@ -314,8 +314,8 @@ case 0xBC: {
 	#endif
 	/* Copy imm32 to ESP */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->esp), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->esp), src);
 
 
 	return true;
@@ -328,8 +328,8 @@ case 0xBD: {
 	#endif
 	/* Copy imm32 to EBP */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->ebp), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->ebp), src);
 
 
 	return true;
@@ -342,8 +342,8 @@ case 0xBE: {
 	#endif
 	/* Copy imm32 to ESI */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->esi), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->esi), src);
 
 
 	return true;
@@ -355,8 +355,8 @@ case 0xBF: {
 	#endif
 	/* Copy imm32 to EDI */
 	uint32_t src;
-	src = cpu_consume_word_from_mem(cpu_state);
-	cpu_write_word_in_reg(&(cpu_state->edi), src);
+	src = cpu_consume_doubleword_from_mem(cpu_state);
+	cpu_write_doubleword_in_reg(&(cpu_state->edi), src);
 
 
 	return true;

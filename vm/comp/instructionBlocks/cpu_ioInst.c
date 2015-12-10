@@ -23,7 +23,7 @@ cpu_print_inst("IN AL imm32\n");
 					(sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr+1) << 8) |
 					sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr);
 
-	cpu_write_word_in_reg(&(cpu_state->eax), val);
+	cpu_write_doubleword_in_reg(&(cpu_state->eax), val);
 
 	return true;
 }
@@ -34,7 +34,7 @@ case 0xec: {
 cpu_print_inst("IN AL DX\n");
 #endif
 	/*IN AL,DX*/
-	uint16_t addr = cpu_read_word_from_reg(&(cpu_state->edx));
+	uint16_t addr = cpu_read_doubleword_from_reg(&(cpu_state->edx));
 	uint8_t val = sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr);
 	cpu_write_byte_in_reg(&(cpu_state->eax), val, !HIGH_BYTE);
 
@@ -47,13 +47,13 @@ case 0xed:{
 cpu_print_inst("IN EAX DX\n");
 #endif
 	/*IN EAX, DX*/
-	uint16_t addr = cpu_read_word_from_reg(&(cpu_state->edx));
+	uint16_t addr = cpu_read_doubleword_from_reg(&(cpu_state->edx));
 	uint32_t val =  (sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr+3) << 24) |
 					(sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr+2) << 16) |
 					(sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr+1) << 8) |
 					sig_host_bus_read_io_dev(cpu_state->port_host, cpu_state, addr);
 
-	cpu_write_word_in_reg(&(cpu_state->eax), val);
+	cpu_write_doubleword_in_reg(&(cpu_state->eax), val);
 
 	return true;
 }
@@ -78,7 +78,7 @@ cpu_print_inst("IN imm32 AL\n");
 #endif
 	/*OUT imm32, AL*/
 	uint8_t addr = cpu_consume_byte_from_mem(cpu_state);
-	uint32_t val = cpu_read_word_from_reg(&(cpu_state->eax));
+	uint32_t val = cpu_read_doubleword_from_reg(&(cpu_state->eax));
 
 	sig_host_bus_write_io_dev(cpu_state->port_host, cpu_state, addr+3, (val >> 24) & 0xFF);
 	sig_host_bus_write_io_dev(cpu_state->port_host, cpu_state, addr+2, (val >> 16) & 0xFF);
@@ -94,7 +94,7 @@ case 0xee:{
 cpu_print_inst("OUT DX AL\n");
 #endif
 	/*OUT DX,AL*/
-	uint16_t addr = cpu_read_word_from_reg(&(cpu_state->edx));
+	uint16_t addr = cpu_read_doubleword_from_reg(&(cpu_state->edx));
 	uint8_t val = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 	sig_host_bus_write_io_dev(cpu_state->port_host, cpu_state, addr, val);
 
@@ -107,8 +107,8 @@ case 0xef:{
 cpu_print_inst("OUT DX EAX\n");
 #endif
 	/*OUT DX,EAX*/
-	uint16_t addr = cpu_read_word_from_reg(&(cpu_state->edx));
-	uint32_t val = cpu_read_word_from_reg(&(cpu_state->eax));
+	uint16_t addr = cpu_read_doubleword_from_reg(&(cpu_state->edx));
+	uint32_t val = cpu_read_doubleword_from_reg(&(cpu_state->eax));
 
 	sig_host_bus_write_io_dev(cpu_state->port_host, cpu_state, addr+3, (val >> 24) & 0xFF);
 	sig_host_bus_write_io_dev(cpu_state->port_host, cpu_state, addr+2, (val >> 16) & 0xFF);

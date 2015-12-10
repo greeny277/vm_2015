@@ -50,7 +50,7 @@ case 0x01: {
 }
 
 jmp32: {
-	int32_t offset = cpu_consume_word_from_mem(cpu_state);
+	int32_t offset = cpu_consume_doubleword_from_mem(cpu_state);
 
 	if(cond){
 		cpu_set_eip(cpu_state, cpu_state->eip + offset);

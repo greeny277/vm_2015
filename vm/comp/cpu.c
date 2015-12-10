@@ -32,21 +32,23 @@ static bool cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit);
 static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *addr, op_addr *op);
 
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
-static uint32_t cpu_read_word_from_reg(uint32_t *reg_addr);
+static uint32_t cpu_read_doubleword_from_reg(uint32_t *reg_addr);
 static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
-static uint32_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint32_t cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
 
 static uint8_t  cpu_consume_byte_from_mem(cpu_state *cpu_state);
-static uint32_t cpu_consume_word_from_mem(cpu_state *cpu_state);
+static uint32_t cpu_consume_doubleword_from_mem(cpu_state *cpu_state);
 
 static void cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high);
-static void cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word);
+static void cpu_write_doubleword_in_reg(uint32_t *reg_addr, uint32_t word);
 static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr);
-static void cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
+static void cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
 
 static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte);
+static void cpu_stack_push_word(cpu_state *cpu_state, uint16_t word);
 static void cpu_stack_push_doubleword(cpu_state *cpu_state, uint32_t doubleword);
 static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state);
+static uint16_t cpu_stack_pop_word(cpu_state *cpu_state);
 static uint32_t cpu_stack_pop_doubleword(cpu_state *cpu_state);
 
 static bool cpu_readb(void *_cpu_state, uint32_t addr, uint8_t *valp);
@@ -556,7 +558,7 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 			/* Indirection with 32 bit displacement */
 
 			/* Attention: Lowest byte will be read first */
-			displacement_complete = cpu_consume_word_from_mem(cpu_state);
+			displacement_complete = cpu_consume_doubleword_from_mem(cpu_state);
 			op->regmem_mem = displacement_complete + (*base_addr);
 			return;
 		case REGISTER:
@@ -592,7 +594,7 @@ cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high) {
  * @return the byte read
  */
 static uint32_t
-cpu_read_word_from_reg(uint32_t *reg_addr) {
+cpu_read_doubleword_from_reg(uint32_t *reg_addr) {
 	return *reg_addr;
 }
 
@@ -618,7 +620,7 @@ cpu_consume_byte_from_mem(cpu_state *cpu_state) {
  * @return the word read
  */
 static uint32_t
-cpu_consume_word_from_mem(cpu_state *cpu_state) {
+cpu_consume_doubleword_from_mem(cpu_state *cpu_state) {
 	uint8_t displ1, displ2, displ3, displ4;
 	uint32_t displacement_complete;
 
@@ -655,7 +657,7 @@ cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
  * @return the word read
  */
 static uint32_t
-cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
 
 	uint32_t data = 0;
 	uint8_t byte1, byte2, byte3, byte4;
@@ -707,7 +709,7 @@ cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high) {
  * @param reg_addr  the address of the register to read
  */
 static void
-cpu_write_word_in_reg(uint32_t *reg_addr, uint32_t word) {
+cpu_write_doubleword_in_reg(uint32_t *reg_addr, uint32_t word) {
 	*reg_addr = word;
 }
 
@@ -729,7 +731,7 @@ cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr) {
  * @param mem_addr   the address in memory to write to
  */
 static void
-cpu_write_word_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
+cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
 	uint8_t byte = word & 0xff;
 
 	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
