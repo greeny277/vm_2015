@@ -95,6 +95,7 @@ setup_run(struct cpssp *cpssp)
 	bool ret = true;
 
 	while (ret) {
+		glue_io_step();
 		ret = cpu_step(cpssp->comp_cpu);
 	}
 }
