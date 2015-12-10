@@ -11,6 +11,7 @@ case 0xF4: {
 	sigset_t mask;
 	sigfillset(&mask);
 	sigdelset(&mask, SIGIO);
+	sigdelset(&mask, SIGINT);
 	sigsuspend(&mask);
 	return true;
 }
