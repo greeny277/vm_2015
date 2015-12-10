@@ -84,7 +84,7 @@ static bool pic_handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
 				#endif
 				return false;
 			}
-			if(unlikely((icw_byte & (1 << LTIM)) == 0)){
+			if(unlikely((icw_byte & (1 << LTIM)) == 1)){
 				#ifdef DEBUG_PRINT_ERRORS
 				fprintf(stderr, "LTIM in ICW1 sets level triggered mode, which is unsupported!\n");
 				#endif
@@ -93,7 +93,7 @@ static bool pic_handle_ICW_byte(pic_state *pic_state, uint8_t icw_byte){
 			pic_state->cur_icw_byte_no++;
 			break;
 		case 2:
-			pic_state->interrupt_vector_byte_base = icw_byte >> T3;
+			pic_state->interrupt_vector_byte_base = icw_byte & 0xF8;
 			pic_state->cur_icw_byte_no++;
 			pic_state->cur_icw_byte_no++; //SNGL 1 in ICW1 is 'hardcoded' in our PIC => skip ICW3
 			break;
@@ -158,7 +158,7 @@ static bool pic_handle_OCW_Byte(pic_state *pic_state, uint8_t ocw_byte){
 static bool pic_handle_interrupt(pic_state *pic_state, uint8_t int_num){
 	pic_state->irr |= 1<<int_num;
 
-	if(!(pic_state->interrupt_mask & (1 << int_num))){
+	if(pic_state->interrupt_mask & (1 << int_num)){
 		//this interrupt is masked and should not be handled
 		return false;
 	}
