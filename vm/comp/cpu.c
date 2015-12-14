@@ -490,7 +490,7 @@ cpu_decode_RM(cpu_state *cpu_state, op_addr *addr, bool is_8bit) {
 			sib = cpu_consume_byte_from_mem(cpu_state);
 
 			scale = 1 << (sib >> 6);
-			base = sib & 0x03;
+			base = sib & 0x07;
 			index = (sib>>3) & 0x07;
 
 			/* Compute base address for mod_rm */
