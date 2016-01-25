@@ -7,7 +7,7 @@ case 0x88: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
 		if(s_op.regmem_type == MEMORY){
-			cpu_write_byte_in_mem(cpu_state, src, s_op.regmem_mem);
+			cpu_write_byte_in_mem(cpu_state, src, s_op.regmem_mem, DATA);
 		} else {
 			cpu_write_byte_in_reg(s_op.regmem_reg, src, IS_HIGH(s_op.regmem));
 		}
@@ -26,7 +26,7 @@ case 0x89: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src = cpu_read_doubleword_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY){
-			cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem);
+			cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem, DATA);
 		} else {
 			cpu_write_doubleword_in_reg(s_op.regmem_reg, src);
 		}
@@ -46,7 +46,7 @@ case 0x8A: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src;
 		if(s_op.regmem_type == MEMORY){
-			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		} else {
 			src = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 		}
@@ -67,7 +67,7 @@ case 0x8B: {
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t src;
 		if(s_op.regmem_type == MEMORY){
-			src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+			src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		} else {
 			src = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 		}
@@ -79,6 +79,44 @@ case 0x8B: {
 	break;
 }
 
+case 0x8C: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV rm32 sreg \n");
+	#endif
+
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
+		segment_register *cur_reg = (&(cpu_state->es))+ s_op.reg_value;
+
+		if(s_op.regmem_type == MEMORY){
+			cpu_write_doubleword_in_mem(cpu_state, cur_reg->public_part, s_op.regmem_mem, DATA);
+		} else {
+			cpu_write_doubleword_in_reg(s_op.regmem_reg, cur_reg->public_part);
+		}
+	}
+}
+
+case 0x8E: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("MOV sreg rm32 \n");
+	#endif
+
+	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
+		uint16_t value = 0;
+		if(s_op.regmem_type == MEMORY){
+			value = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
+		} else {
+			value = cpu_read_doubleword_from_reg(s_op.regmem_reg);
+		}
+
+		if(unlikely(s_op.reg_value == CODE)){
+			return false;
+			//TODO: eigentlich sollte man hier eine exception werfen (invalid opcode exception #UD)
+		}
+
+		cpu_load_segment_register(cpu_state, (cpu_segment) s_op.reg_value, value);
+	}
+}
+
 case 0xA0: {
 
 	#ifdef DEBUG_PRINT_INST
@@ -86,7 +124,7 @@ case 0xA0: {
 	#endif
 	/* Copy byte at (seg:offset) to AL */
 	uint32_t src_addr = cpu_consume_doubleword_from_mem(cpu_state);
-	uint8_t src_byte = cpu_read_byte_from_mem(cpu_state, src_addr);
+	uint8_t src_byte = cpu_read_byte_from_mem(cpu_state, src_addr, DATA);
 	cpu_write_byte_in_reg(&(cpu_state->eax), src_byte, !HIGH_BYTE);
 
 
@@ -100,7 +138,7 @@ case 0xA1: {
 	#endif
 	/* Copy word at (seg:offset) to EAX */
 	uint32_t src_addr = cpu_consume_doubleword_from_mem(cpu_state);
-	uint32_t src_doubleword = cpu_read_doubleword_from_mem(cpu_state, src_addr);
+	uint32_t src_doubleword = cpu_read_doubleword_from_mem(cpu_state, src_addr, DATA);
 	cpu_write_doubleword_in_reg(&(cpu_state->eax), src_doubleword);
 
 
@@ -117,7 +155,7 @@ case 0xA2: {
 
 	uint8_t src_byte = cpu_read_byte_from_reg(&(cpu_state->eax), !HIGH_BYTE);
 
-	cpu_write_byte_in_mem(cpu_state, src_byte, dest_addr);
+	cpu_write_byte_in_mem(cpu_state, src_byte, dest_addr, DATA);
 
 
 	return true;
@@ -133,7 +171,7 @@ case 0xA3: {
 	uint32_t dest_addr = cpu_consume_doubleword_from_mem(cpu_state);
 	uint32_t src_doubleword = cpu_read_doubleword_from_reg(&(cpu_state->eax));
 
-	cpu_write_doubleword_in_mem(cpu_state, src_doubleword, dest_addr);
+	cpu_write_doubleword_in_mem(cpu_state, src_doubleword, dest_addr, DATA);
 
 
 	return true;

@@ -10,7 +10,7 @@ case 4: {
 
 	uint8_t op2;
 	if(s_op.regmem_type == MEMORY)
-		op2 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+		op2 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		op2 = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 

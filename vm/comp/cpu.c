@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
+#include <setjmp.h>
 
 /* DEBUG LIB */
 #include <stdio.h>
@@ -34,17 +35,17 @@ static void cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *
 
 static uint8_t  cpu_read_byte_from_reg(uint32_t *reg_addr, bool is_high);
 static uint32_t cpu_read_doubleword_from_reg(uint32_t *reg_addr);
-static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
-static uint16_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
-static uint32_t cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr);
+static uint8_t  cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment);
+static uint16_t cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment);
+static uint32_t cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment);
 
 static uint8_t  cpu_consume_byte_from_mem(cpu_state *cpu_state);
 static uint32_t cpu_consume_doubleword_from_mem(cpu_state *cpu_state);
 
 static void cpu_write_byte_in_reg(uint32_t *reg_addr, uint8_t byte, bool is_high);
 static void cpu_write_doubleword_in_reg(uint32_t *reg_addr, uint32_t word);
-static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr);
-static void cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr);
+static void cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr, cpu_segment segment);
+static void cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr, cpu_segment segment);
 
 static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte);
 static void cpu_stack_push_word(cpu_state *cpu_state, uint16_t word);
@@ -80,6 +81,14 @@ static bool cpu_get_sign_flag(cpu_state *cpu_state);
 static bool cpu_get_zero_flag(cpu_state *cpu_state);
 static bool cpu_get_interrupt_flag(cpu_state *cpu_state);
 
+
+static void cpu_handle_interrupt(cpu_state *cpu_state);
+static void cpu_handle_gpf(cpu_state *cpu_state);
+static void cpu_handle_interrupt_vector(cpu_state *cpu_state, int vector_number);
+
+static void cpu_load_segment_register(cpu_state *cpu_state, cpu_segment segment, uint16_t public);
+static void cpu_check_segment_range(cpu_state *cpu_state, cpu_segment segment, uint32_t address);
+
 #ifdef DEBUG_PRINT_INST
 static void cpu_print_inst(char *inst);
 #endif
@@ -98,6 +107,9 @@ cpu_create(struct sig_host_bus *port_host) {
 
 	cpu_state = malloc(sizeof(struct cpu_state));
 	assert(cpu_state != NULL);
+	cpu_state->saved_state = malloc(sizeof(struct cpu_state));
+	assert(cpu_state->saved_state != NULL);
+	((struct cpu_state*)(cpu_state->saved_state))->saved_state=NULL;
 
 	cpu_state->port_host = port_host;
 	/* Set base pointer to start address of ROM.
@@ -105,6 +117,16 @@ cpu_create(struct sig_host_bus *port_host) {
 	 */
 	cpu_state->eip = 0xE000;
 	cpu_state->esp = 1024*32;
+
+	int i;
+	for(i=0; i<6; i++){
+		(&(cpu_state->es)+i)->type = DATA_WRITEABLE;
+		(&(cpu_state->es)+i)->base_addr = 0;
+		(&(cpu_state->es)+i)->limit = 0xFFFF;
+	}
+	cpu_state->cs.type |= CODE_READABLE;
+	cpu_state->cs.base_addr = 0;
+	cpu_state->cs.limit = 0xFFFF;
 
 	cpu_state->interrupt_raised = false;
 
@@ -132,6 +154,7 @@ static void cpu_set_eip(cpu_state *cpu_state, uint32_t new_addr){
  */
 void
 cpu_destroy(void *_cpu_state) {
+	free(((cpu_state*)_cpu_state)->saved_state);
 	free(_cpu_state);
 }
 
@@ -563,6 +586,70 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 	return;
 }
 
+static void cpu_load_segment_register(cpu_state *cpu_state, cpu_segment segment, uint16_t public){
+	uint16_t gidt_offset = ((uint16_t) public) * VECTOR_SIZE;
+
+	if(gidt_offset > cpu_state->gdtr_limit){
+		cpu_handle_gpf(cpu_state);
+		//this should never be reached!
+		assert(false);
+	}
+
+	uint32_t entry_lower = cpu_read_doubleword_from_mem(cpu_state, cpu_state->gdtr_base + gidt_offset, NOCHECK);
+	uint32_t entry_upper = cpu_read_doubleword_from_mem(cpu_state, cpu_state->gdtr_base + gidt_offset + 4, NOCHECK);
+
+	uint32_t segment_base = (entry_lower >> 16) | (entry_upper & 0xFFFF) | ((entry_upper >> 16)  & 0xFF0000);
+	uint32_t segment_limit = (entry_lower & 0xFFFF) | ((entry_upper >> 24)  & 0xF);
+
+	bool s_flag  = entry_upper & (0x01 << 12); //1=code/data 0 = system
+	uint8_t dpl  = entry_upper & (0x03 << 13);
+	bool present = entry_upper & (0x01 << 15);
+	bool l_flag  = entry_upper & (0x01 << 21); //0=32 bit 1=64bit
+	bool db_flag = entry_upper & (0x01 << 22);
+
+
+	segment_register *cur_register = &(cpu_state->es)+segment;
+
+	if(segment == CODE && !(cur_register->type & DATACODE)){     // trying to load a data segment into cs
+		cpu_handle_gpf(cpu_state);
+		//this should never be reached!
+		assert(false);
+	}
+
+	uint8_t cur_type = cur_register->type;
+	if(!present ||                                               //segment not present
+	    !s_flag ||                                               //system stuff
+	    dpl != 0 ||                                              //privilege level != 0
+	    l_flag != 0 ||                                           //64/32bit
+	    db_flag != 1 ||                                          //16/32bit
+		(cur_type & DATACODE && cur_type & CODE_CONFORMING) ||   //code and conforming
+		(!(cur_type & DATACODE) && cur_type & DATA_EXPANDDOWN))  //data and expanding down)
+    {
+		cpu_handle_gpf(cpu_state);
+		//this should never be reached!
+		assert(false);
+	}
+
+	cur_register->public_part = public;
+	cur_register->base_addr = segment_base;
+	cur_register->limit = segment_limit;
+	cur_register->type = (entry_upper>>8) & 0xF;
+}
+
+static void cpu_check_segment_range(cpu_state *cpu_state, cpu_segment segment, uint32_t address){
+	if(segment == NOCHECK)
+		return;
+
+	uint32_t segment_base = (&(cpu_state->es)+segment)->base_addr;
+	uint32_t segment_limit = (&(cpu_state->es)+segment)->limit;
+
+	if(unlikely(segment_base + address > segment_limit)){
+		cpu_handle_gpf(cpu_state);
+		//this should never be reached!
+		assert(false);
+	}
+}
+
 /*
  *  Reading and peeking functions
  */
@@ -601,6 +688,7 @@ cpu_read_doubleword_from_reg(uint32_t *reg_addr) {
  */
 static uint8_t
 cpu_consume_byte_from_mem(cpu_state *cpu_state) {
+	cpu_check_segment_range(cpu_state, CODE, cpu_state->eip);
 	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
 	cpu_state->eip = cpu_state->eip + 1;
 
@@ -616,6 +704,8 @@ cpu_consume_byte_from_mem(cpu_state *cpu_state) {
  */
 static uint32_t
 cpu_consume_doubleword_from_mem(cpu_state *cpu_state) {
+	cpu_check_segment_range(cpu_state, CODE, cpu_state->eip);
+
 	uint8_t displ1, displ2, displ3, displ4;
 	uint32_t displacement_complete;
 
@@ -640,7 +730,9 @@ cpu_consume_doubleword_from_mem(cpu_state *cpu_state) {
  * @return the byte read
  */
 static uint8_t
-cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment) {
+	cpu_check_segment_range(cpu_state, segment, mem_addr);
+
 	return sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
 }
 
@@ -652,7 +744,8 @@ cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
  * @return the word read
  */
 static uint16_t
-cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment) {
+	cpu_check_segment_range(cpu_state, segment, mem_addr);
 
 	uint16_t data = 0;
 	uint8_t byte1, byte2;
@@ -676,7 +769,8 @@ cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
  * @return the double word read
  */
 static uint32_t
-cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr) {
+cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment) {
+	cpu_check_segment_range(cpu_state, segment, mem_addr);
 
 	uint32_t data = 0;
 	uint8_t byte1, byte2, byte3, byte4;
@@ -739,7 +833,8 @@ cpu_write_doubleword_in_reg(uint32_t *reg_addr, uint32_t word) {
  * @param mem_addr   the address in the mem to write to
  */
 static void
-cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr) {
+cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr, cpu_segment segment) {
+	cpu_check_segment_range(cpu_state, segment, mem_addr);
 	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
 }
 
@@ -750,7 +845,8 @@ cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr) {
  * @param mem_addr   the address in memory to write to
  */
 static void
-cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr) {
+cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_addr, cpu_segment segment) {
+	cpu_check_segment_range(cpu_state, segment, mem_addr);
 	uint8_t byte = word & 0xff;
 
 	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
@@ -778,7 +874,7 @@ static void cpu_stack_push_byte(cpu_state *cpu_state, uint8_t byte){
 	 * on the last pushed byte
 	 */
 	cpu_state->esp--;
-	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp);
+	cpu_write_byte_in_mem(cpu_state, byte, cpu_state->esp, STACK);
 }
 
 /** @brief Save doubleword on stack and decrements stack pointer
@@ -826,7 +922,7 @@ static void cpu_stack_push_word(cpu_state *cpu_state, uint16_t word){
  *  @return byte on stack
  */
 static uint8_t cpu_stack_pop_byte(cpu_state *cpu_state){
-	uint8_t byte = cpu_read_byte_from_mem(cpu_state, cpu_state->esp);
+	uint8_t byte = cpu_read_byte_from_mem(cpu_state, cpu_state->esp, STACK);
 	cpu_state->esp++;
 	return byte;
 }
@@ -880,7 +976,7 @@ static uint16_t cpu_stack_pop_word(cpu_state *cpu_state){
  */
 static void cpu_save_state(cpu_state *cpu_state){
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eflags);
-	cpu_stack_push_word(cpu_state, cpu_state->cs);
+	cpu_stack_push_word(cpu_state, cpu_state->cs.public_part);
 	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 }
 
@@ -888,7 +984,7 @@ static void cpu_save_state(cpu_state *cpu_state){
  */
 static void cpu_restore_state(cpu_state *cpu_state){
 	cpu_state->eip = cpu_stack_pop_doubleword(cpu_state);
-	cpu_state->cs = cpu_stack_pop_word(cpu_state);
+	cpu_load_segment_register(cpu_state, CODE, cpu_stack_pop_word(cpu_state));
 	cpu_state->eflags = cpu_stack_pop_doubleword(cpu_state);
 }
 
@@ -901,10 +997,23 @@ static void cpu_handle_interrupt(cpu_state * cpu_state){
 		return;
 	}
 
-	uint32_t idtr_vector_base = (cpu_state->idtr_base) + index * VECTOR_SIZE;
+	cpu_handle_interrupt_vector(cpu_state, index);
+}
 
-	uint32_t offset = cpu_read_word_from_mem(cpu_state, idtr_vector_base) |
-						cpu_read_word_from_mem(cpu_state, idtr_vector_base+6) << 16;
+/** @brief handles a general protection fault */
+static void cpu_handle_gpf(cpu_state *cpu_state){
+	memcpy(cpu_state, cpu_state->saved_state, sizeof(*cpu_state));
+
+	cpu_handle_interrupt_vector(cpu_state, 0x0D);
+
+	longjmp(cpu_state->jump_target_new_instruction, 1);
+}
+
+static void cpu_handle_interrupt_vector(cpu_state *cpu_state, int vector_number){
+	uint32_t idtr_vector_base = (cpu_state->idtr_base) + vector_number * VECTOR_SIZE;
+
+	uint32_t offset = cpu_read_word_from_mem(cpu_state, idtr_vector_base, NOCHECK) |
+						cpu_read_word_from_mem(cpu_state, idtr_vector_base+6, NOCHECK) << 16;
 
 	//save state, jump to calculated address
 	cpu_save_state(cpu_state);
@@ -925,12 +1034,21 @@ cpu_print_inst(char *inst){
 
 bool
 cpu_step(void *_cpu_state) {
+
 	/* cast */
 	cpu_state *cpu_state = (struct cpu_state *) _cpu_state;
 	#ifdef DEBUG
 	ram_state *_ram_state = (ram_state *)(cpu_state->port_host->members[0].s);
 	rom_state *_rom_state = (rom_state *)(cpu_state->port_host->members[2].s);
 	#endif
+
+	if(!setjmp(cpu_state->jump_target_new_instruction)){
+		/* if a general exception fault was handled, we jump here and return */
+		return true;
+	}
+
+	/* save the current cpu_state in case a general protection fault has to be handled*/
+	memcpy(cpu_state->saved_state, cpu_state, sizeof(*cpu_state));
 
 	if(cpu_state->interrupt_raised && cpu_get_interrupt_flag(cpu_state)){
 		cpu_handle_interrupt(cpu_state);

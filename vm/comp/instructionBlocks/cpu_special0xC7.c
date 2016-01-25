@@ -6,7 +6,7 @@ case 0: {
 	/* Copy imm32 to r/m32. */
 	uint8_t src = cpu_consume_doubleword_from_mem(cpu_state);
 	if(s_op.regmem_type == MEMORY){
-		cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem);
+		cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem, DATA);
 	} else {
 		cpu_write_doubleword_in_reg(s_op.regmem_reg, src);
 	}

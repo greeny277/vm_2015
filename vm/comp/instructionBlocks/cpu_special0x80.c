@@ -6,7 +6,7 @@ case 0: {
 	/*ADD r/m8  imm8.*/
 	uint8_t op1;
 	if(s_op.regmem_type == MEMORY)
-		op1 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+		op1 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		op1 = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 
@@ -14,7 +14,7 @@ case 0: {
 	uint8_t result = op1 + op2;
 
 	if(s_op.regmem_type == MEMORY)
-		cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem);
+		cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
 	else
 		cpu_write_byte_in_reg(s_op.regmem_reg, result, IS_HIGH(s_op.regmem));
 
@@ -36,7 +36,7 @@ case 6: {
 	/*r/m8 XOR imm8.*/
 	uint8_t op1;
 	if(s_op.regmem_type == MEMORY)
-		op1 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+		op1 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		op1 = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 
@@ -44,7 +44,7 @@ case 6: {
 	uint8_t result = op1 ^ op2;
 
 	if(s_op.regmem_type == MEMORY)
-		cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem);
+		cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
 	else
 		cpu_write_byte_in_reg(s_op.regmem_reg, result, IS_HIGH(s_op.regmem));
 
@@ -67,7 +67,7 @@ case 7: {
 	uint8_t subtrahend = cpu_consume_byte_from_mem(cpu_state);
 	uint8_t minuend;
 	if(s_op.regmem_type == MEMORY)
-		minuend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+		minuend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		minuend = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 	uint8_t result = minuend-subtrahend;

@@ -6,9 +6,9 @@ case 0: {
 	/* Increment r/m word by 1 */
 	uint32_t src;
 	if(s_op.regmem_type == MEMORY){
-		src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+		src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		src++;
-		cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem);
+		cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem, DATA);
 	} else {
 		src = cpu_read_doubleword_from_reg(s_op.reg);
 		src++;
@@ -26,9 +26,9 @@ case 1: {
 	/* Decrement r/m word by 1 */
 	uint32_t src;
 	if(s_op.regmem_type == MEMORY){
-		src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+		src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		src--;
-		cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem);
+		cpu_write_doubleword_in_mem(cpu_state, src, s_op.regmem_mem, DATA);
 	} else {
 		src = cpu_read_doubleword_from_reg(s_op.reg);
 		src--;

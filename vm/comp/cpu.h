@@ -3,12 +3,13 @@
 #ifndef __CPU_H_INCLUDED
 #define __CPU_H_INCLUDED
 
+#include <setjmp.h>
 #include <signal.h>
 
 #include "sig_host_bus.h"
 #include "sig_boolean.h"
 
-//vector size in the interrupt descriptor table in bytes
+//vector size in the interrupt and global descriptor table in bytes
 #define VECTOR_SIZE 8
 
 typedef enum modrm_mod_bits {
@@ -40,6 +41,18 @@ typedef enum cpu_register {
 	BH
 } cpu_register;
 
+//these enums have to be in the same order as the segment_registers
+//in cpu_state: cs, ds, ss, es, fs, gs;
+typedef enum cpu_segment {
+	EXTRA,
+	CODE,
+	STACK,
+	DATA,
+	GENERAL_PURPOSE1,
+	GENERAL_PURPOSE2,
+	NOCHECK
+} cpu_segment;
+
 /** evaluate one instruction
   * @param s cpu instance
   * @return false if the cpu suspended, true if another instruction
@@ -62,6 +75,21 @@ cpu_create(struct sig_host_bus *port_host);
 extern void
 cpu_destroy(void *s);
 
+#define DATA_ACCESSED 1
+#define DATA_WRITEABLE 2
+#define DATA_EXPANDDOWN 4
+#define CODE_ACCESSED 1
+#define CODE_READABLE 2
+#define CODE_CONFORMING 4
+#define DATACODE 8
+
+typedef struct segment_register {
+	uint16_t public_part;
+	uint32_t base_addr;
+	uint32_t limit;
+	uint8_t  type;
+} segment_register;
+
 typedef struct cpu_state {
 	/** ports */
 	struct sig_host_bus *port_host;
@@ -81,7 +109,7 @@ typedef struct cpu_state {
 	uint32_t edi;
 
 	/** Segment registers */
-	uint16_t cs, ds, es, fs, gs, ss;
+	segment_register es, cs, ss, ds, fs, gs;
 
 	/**
 	 * EFLAGS register
@@ -103,6 +131,15 @@ typedef struct cpu_state {
 	 */
 	uint32_t idtr_base;
 	uint16_t idtr_limit;
+
+	/**
+	 * GDT BASE and LIMIT
+	 */
+	uint32_t gdtr_base;
+	uint16_t gdtr_limit;
+
+	void *saved_state;
+	jmp_buf jump_target_new_instruction;
 } cpu_state;
 
 typedef enum flag {

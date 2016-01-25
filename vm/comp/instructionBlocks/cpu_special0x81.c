@@ -6,7 +6,7 @@ case 0: {
 	/*r/m32 ADD imm32.*/
 	uint8_t op1;
 	if(s_op.regmem_type == MEMORY)
-		op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+		op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		op1 = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 
@@ -14,7 +14,7 @@ case 0: {
 	uint32_t result = op1 + op2;
 
 	if(s_op.regmem_type == MEMORY)
-		cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem);
+		cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
 	else
 		cpu_write_doubleword_in_reg(s_op.regmem_reg, result);
 
@@ -36,7 +36,7 @@ case 6: {
 	/*r/m32 XOR imm32.*/
 	uint8_t op1;
 	if(s_op.regmem_type == MEMORY)
-		op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+		op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		op1 = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 
@@ -44,7 +44,7 @@ case 6: {
 	uint32_t result = op1 ^ op2;
 
 	if(s_op.regmem_type == MEMORY)
-		cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem);
+		cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
 	else
 		cpu_write_doubleword_in_reg(s_op.regmem_reg, result);
 
@@ -66,7 +66,7 @@ case 7: {
 	uint32_t subtrahend = cpu_consume_doubleword_from_mem(cpu_state);
 	uint32_t minuend;
 	if(s_op.regmem_type == MEMORY)
-		minuend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+		minuend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
 		minuend = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 	uint32_t result = minuend-subtrahend;

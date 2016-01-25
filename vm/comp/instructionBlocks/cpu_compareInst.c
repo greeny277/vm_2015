@@ -42,7 +42,7 @@ case 0x38: {
 
 		subtrahend = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
 		if(s_op.regmem_type == MEMORY)
-			minuend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+			minuend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			minuend = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 		uint8_t result = minuend - subtrahend;
@@ -66,7 +66,7 @@ case 0x39: {
 
 		subtrahend = cpu_read_doubleword_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY)
-			minuend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+			minuend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			minuend = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 		uint32_t result = minuend - subtrahend;
@@ -90,7 +90,7 @@ case 0x3A: {
 
 		minuend = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
 		if(s_op.regmem_type == MEMORY)
-			subtrahend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+			subtrahend = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			subtrahend = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 		uint8_t result = minuend - subtrahend;
@@ -115,7 +115,7 @@ case 0x3B: {
 
 		minuend = cpu_read_doubleword_from_reg(s_op.reg);
 		if(s_op.regmem_type == MEMORY)
-			subtrahend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+			subtrahend = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			subtrahend = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 		uint32_t result = minuend - subtrahend;

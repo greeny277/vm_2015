@@ -7,7 +7,7 @@ case 0x30:{
 	if(likely(cpu_decode_RM(cpu_state, &s_op, EIGHT_BIT))){
 		uint8_t src;
 		if(s_op.regmem_type == MEMORY)
-			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+			src = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			src = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 
@@ -15,7 +15,7 @@ case 0x30:{
 		uint8_t result = src ^ imm;
 
 		if(s_op.regmem_type == MEMORY)
-			cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem);
+			cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
 		else
 			cpu_write_byte_in_reg(s_op.regmem_reg, result, IS_HIGH(s_op.regmem));
 
@@ -40,7 +40,7 @@ case 0x31:{
 	if(likely(cpu_decode_RM(cpu_state, &s_op, !EIGHT_BIT))){
 		uint32_t op1;
 		if(s_op.regmem_type == MEMORY)
-			op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+			op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			op1 = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 
@@ -48,7 +48,7 @@ case 0x31:{
 		uint32_t result = op1 ^ op2;
 
 		if(s_op.regmem_type == MEMORY)
-			cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem);
+			cpu_write_doubleword_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
 		else
 			cpu_write_doubleword_in_reg(s_op.regmem_reg, result);
 
@@ -74,7 +74,7 @@ case 0x32:{
 		uint8_t op1 = cpu_read_byte_from_reg(s_op.reg, IS_HIGH(s_op.reg));
 		uint8_t op2;
 		if(s_op.regmem_type == MEMORY)
-			op2 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem);
+			op2 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			op2 = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
 
@@ -104,7 +104,7 @@ case 0x33:{
 		uint32_t op1 = cpu_read_doubleword_from_reg(s_op.reg);
 		uint32_t op2;
 		if(s_op.regmem_type == MEMORY)
-			op2 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem);
+			op2 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 		else
 			op2 = cpu_read_doubleword_from_reg(s_op.regmem_reg);
 
