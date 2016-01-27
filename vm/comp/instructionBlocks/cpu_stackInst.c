@@ -77,8 +77,8 @@ case 0xE8: {
 	#endif
 	/* CALL rel32 */
 	int32_t rel32 = cpu_consume_doubleword_from_mem(cpu_state);
-	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
 
+	cpu_save_state(cpu_state);
 	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_state->eip+rel32);
 
 
@@ -88,14 +88,18 @@ case 0xE8: {
 case 0x9A: {
 
 	#ifdef DEBUG_PRINT_INST
-	cpu_print_inst("CALL ptr32\n");
+	cpu_print_inst("LCALL ptr32\n");
 	#endif
 	/* CALL ptr32
 	 * Call far, absolute, address given in operand.
 	 */
 	uint32_t abs = cpu_consume_doubleword_from_mem(cpu_state);
-	cpu_stack_push_doubleword(cpu_state, cpu_state->eip);
-	cpu_write_doubleword_in_reg(&(cpu_state->eip), abs);
+	uint16_t segment = cpu_consume_word_from_mem(cpu_state);
+
+	cpu_save_state(cpu_state);
+
+	cpu_load_segment_register(cpu_state, CODE, segment);
+	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_state->cs.base_addr+abs);
 
 
 	return true;
@@ -107,8 +111,7 @@ case 0xC3: {
 	cpu_print_inst("RET\n");
 	#endif
 	/* Near return to calling procedure. */
-	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
-
+	cpu_restore_state(cpu_state);
 
 	return true;
 }
@@ -118,13 +121,12 @@ case 0xCB:{
 	 * A return to a calling procedure located
 	 * in a different segment
 	 */
-
-	/* No segments implemented yet */
-	#ifdef DEBUG_PRINT_ERRORS
-	fprintf(stderr, "No segments implemented yet\n");
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("LRET\n");
 	#endif
+	cpu_restore_state(cpu_state);
 
-	break;
+	return true;
 }
 
 case 0xC2: {
@@ -137,7 +139,7 @@ case 0xC2: {
 	/* Near return to calling procedure and pop
 	 * imm16 bytes from stack.
 	 */
-	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_stack_pop_doubleword(cpu_state));
+	cpu_restore_state(cpu_state);
 
 	uint16_t imm16;
 
@@ -159,13 +161,24 @@ case 0xCA: {
 	/*  Far return to calling procedure and pop imm16
 	 *  bytes from stack.
 	 */
-
-	/* No segments implemented yet */
-	#ifdef DEBUG_PRINT_ERRORS
-	fprintf(stderr, "No segments implemented yet\n");
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("LRET imm16\n");
 	#endif
+	cpu_restore_state(cpu_state);
 
-	break;
+	uint16_t imm16;
+
+	uint8_t byte0, byte1;
+
+	byte0 = cpu_consume_byte_from_mem(cpu_state);
+	byte1 = cpu_consume_byte_from_mem(cpu_state);
+
+	imm16 = byte0;
+	imm16 |= (byte1 << 8);
+
+	cpu_write_doubleword_in_reg(&(cpu_state->esp), cpu_state->esp+imm16);
+
+	return true;
 }
 
 case 0xCF: {
@@ -175,7 +188,6 @@ case 0xCF: {
 	#endif
 	/*IRET*/
 	cpu_restore_state(cpu_state);
-
 
 	return true;
 }

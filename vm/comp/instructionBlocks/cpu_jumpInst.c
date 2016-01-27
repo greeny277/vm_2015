@@ -59,11 +59,14 @@ jmp8: {
 case 0xEA: {
 
 	#ifdef DEBUG_PRINT_INST
-	cpu_print_inst("JMP ptr16:32 \n");
+	cpu_print_inst("LJMP ptr16:32 \n");
 	#endif
 	/* Jump far, absolute 32*/
 	uint32_t abs = cpu_consume_doubleword_from_mem(cpu_state);
-	cpu_set_eip(cpu_state, abs);
+	uint16_t segment = cpu_consume_word_from_mem(cpu_state);
+
+	cpu_load_segment_register(cpu_state, CODE, segment);
+	cpu_set_eip(cpu_state, cpu_state->cs.base_addr+abs);
 
 
 	return true;
