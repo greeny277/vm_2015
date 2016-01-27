@@ -1,7 +1,6 @@
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
-#include <setjmp.h>
 
 /* DEBUG LIB */
 #include <stdio.h>
@@ -586,54 +585,47 @@ cpu_set_opaddr_regmem(cpu_state *cpu_state, uint8_t mode, uint32_t *base_addr, o
 	return;
 }
 
-static void cpu_load_segment_register(cpu_state *cpu_state, cpu_segment segment, uint16_t public){
-	uint16_t gidt_offset = ((uint16_t) public) * VECTOR_SIZE;
+static void cpu_load_segment_register(cpu_state *cpu_state, cpu_segment segment, uint16_t gdtr_offset){
+	uint32_t entry_lower = cpu_read_doubleword_from_mem(cpu_state, cpu_state->gdtr_base + gdtr_offset, NOCHECK);
+	uint32_t entry_upper = cpu_read_doubleword_from_mem(cpu_state, cpu_state->gdtr_base + gdtr_offset + 4, NOCHECK);
 
-	if(gidt_offset > cpu_state->gdtr_limit){
-		cpu_handle_gpf(cpu_state);
-		//this should never be reached!
-		assert(false);
-	}
+	uint32_t segment_base = (entry_lower >> 16) | (entry_upper & 0xFF) << 16 | (entry_upper & 0xFF000000);
+	uint32_t segment_limit = (entry_lower & 0xFFFF) | (entry_upper & 0x0F0000);
 
-	uint32_t entry_lower = cpu_read_doubleword_from_mem(cpu_state, cpu_state->gdtr_base + gidt_offset, NOCHECK);
-	uint32_t entry_upper = cpu_read_doubleword_from_mem(cpu_state, cpu_state->gdtr_base + gidt_offset + 4, NOCHECK);
-
-	uint32_t segment_base = (entry_lower >> 16) | (entry_upper & 0xFFFF) | ((entry_upper >> 16)  & 0xFF0000);
-	uint32_t segment_limit = (entry_lower & 0xFFFF) | ((entry_upper >> 24)  & 0xF);
-
-	bool s_flag  = entry_upper & (0x01 << 12); //1=code/data 0 = system
-	uint8_t dpl  = entry_upper & (0x03 << 13);
-	bool present = entry_upper & (0x01 << 15);
-	bool l_flag  = entry_upper & (0x01 << 21); //0=32 bit 1=64bit
-	bool db_flag = entry_upper & (0x01 << 22);
+	bool s_flag      = entry_upper & (0x01 << 12); //1=code/data 0 = system
+	bool present     = entry_upper & (0x01 << 15);
+	bool l_flag      = entry_upper & (0x01 << 21); //0=32 bit 1=64bit
+	bool db_flag     = entry_upper & (0x01 << 22);
+	bool granularity = entry_upper & (0x01 << 23);
+	uint8_t dpl      = (entry_upper >> 13) & 0x03;
+	uint8_t type     = (entry_upper >>  8) & 0x0F;
 
 
 	segment_register *cur_register = &(cpu_state->es)+segment;
 
-	if(segment == CODE && !(cur_register->type & DATACODE)){     // trying to load a data segment into cs
+	if(segment == CODE && !(type & DATACODE)){     // trying to load a data segment into cs
 		cpu_handle_gpf(cpu_state);
 		//this should never be reached!
 		assert(false);
 	}
 
-	uint8_t cur_type = cur_register->type;
-	if(!present ||                                               //segment not present
-	    !s_flag ||                                               //system stuff
-	    dpl != 0 ||                                              //privilege level != 0
-	    l_flag != 0 ||                                           //64/32bit
-	    db_flag != 1 ||                                          //16/32bit
-		(cur_type & DATACODE && cur_type & CODE_CONFORMING) ||   //code and conforming
-		(!(cur_type & DATACODE) && cur_type & DATA_EXPANDDOWN))  //data and expanding down)
+	if(!present ||                                       //segment not present
+	    !s_flag ||                                       //system stuff
+	    dpl != 0 ||                                      //privilege level != 0
+	    l_flag != 0 ||                                   //64/32bit
+	    db_flag != 1 ||                                  //16/32bit
+	    (type & DATACODE && type & CODE_CONFORMING) ||   //code and conforming
+	    (!(type & DATACODE) && type & DATA_EXPANDDOWN))  //data and expanding down)
     {
 		cpu_handle_gpf(cpu_state);
 		//this should never be reached!
 		assert(false);
 	}
 
-	cur_register->public_part = public;
+	cur_register->public_part = gdtr_offset;
 	cur_register->base_addr = segment_base;
-	cur_register->limit = segment_limit;
-	cur_register->type = (entry_upper>>8) & 0xF;
+	cur_register->limit = granularity ? segment_limit*4*1024 : segment_limit;
+	cur_register->type = type;
 }
 
 static void cpu_check_segment_range(cpu_state *cpu_state, cpu_segment segment, uint32_t address){
@@ -643,7 +635,7 @@ static void cpu_check_segment_range(cpu_state *cpu_state, cpu_segment segment, u
 	uint32_t segment_base = (&(cpu_state->es)+segment)->base_addr;
 	uint32_t segment_limit = (&(cpu_state->es)+segment)->limit;
 
-	if(unlikely(segment_base + address > segment_limit)){
+	if(unlikely(segment_base + address >= segment_limit)){
 		cpu_handle_gpf(cpu_state);
 		//this should never be reached!
 		assert(false);
@@ -695,7 +687,30 @@ cpu_consume_byte_from_mem(cpu_state *cpu_state) {
 	return next_byte;
 }
 
-/** @brief read a word (4 byte) at the instruction pointer's address from memory
+/** @brief read a word (2 byte) at the instruction pointer's address from memory
+ *         and increment IP by 4
+ *
+ * @param cpu_state CPU instance
+ *
+ * @return the word read
+ */
+static uint16_t
+cpu_consume_word_from_mem(cpu_state *cpu_state) {
+	cpu_check_segment_range(cpu_state, CODE, cpu_state->eip);
+
+	uint8_t displ1, displ2;
+	uint16_t displacement_complete;
+
+	displ1 = cpu_consume_byte_from_mem(cpu_state);
+	displ2 = cpu_consume_byte_from_mem(cpu_state);
+
+	displacement_complete = displ1;
+	displacement_complete |= (displ2 << 8);
+
+	return displacement_complete;
+}
+
+/** @brief read a double word (4 byte) at the instruction pointer's address from memory
  *         and increment IP by 4
  *
  * @param cpu_state CPU instance
@@ -1004,6 +1019,10 @@ static void cpu_handle_interrupt(cpu_state * cpu_state){
 static void cpu_handle_gpf(cpu_state *cpu_state){
 	memcpy(cpu_state, cpu_state->saved_state, sizeof(*cpu_state));
 
+	#ifdef DEBUG
+		fprintf(stderr, "General Protection fault at address %#08x\n", cpu_state->eip);
+	#endif
+
 	cpu_handle_interrupt_vector(cpu_state, 0x0D);
 
 	longjmp(cpu_state->jump_target_new_instruction, 1);
@@ -1028,6 +1047,7 @@ static void cpu_handle_interrupt_vector(cpu_state *cpu_state, int vector_number)
 static void
 cpu_print_inst(char *inst){
 	fprintf(stderr, "%s", inst);
+	fflush(stderr);
 	return;
 }
 #endif
@@ -1042,7 +1062,7 @@ cpu_step(void *_cpu_state) {
 	rom_state *_rom_state = (rom_state *)(cpu_state->port_host->members[2].s);
 	#endif
 
-	if(!setjmp(cpu_state->jump_target_new_instruction)){
+	if(setjmp(cpu_state->jump_target_new_instruction)){
 		/* if a general exception fault was handled, we jump here and return */
 		return true;
 	}
@@ -1066,9 +1086,10 @@ cpu_step(void *_cpu_state) {
 
 	#ifdef DEBUG_PRINT_INST_ADDR
 		#ifdef DEBUG_PRINT_INST
-			fprintf(stderr, "Instruction (%#08x): %#x   ", cpu_state->eip, op_code);
+			fprintf(stderr, "Instruction (%#08x + %#08x): %#x   ", cpu_state->cs.base_addr,  cpu_state->eip, op_code);
 		#else
-			fprintf(stderr, "Instruction (%#08x): %#x\n", cpu_state->eip, op_code);
+			fprintf(stderr, "Instruction (%#08x + %#08x): %#x\n", cpu_state->cs.base_addr, cpu_state->eip, op_code);
+			fflush(stderr);
 		#endif
 	#endif
 
