@@ -37,7 +37,7 @@ main_loop_entry:
 	 *
 	 * Hence any register may have an arbitrary value.
 	 * The only guarantee is that the stack segment and
-	 * code segment are correctly (ss -> double fault, can't 
+	 * code segment are correctly (ss -> double fault, can't
 	 * recover. cs -> iret)
 	 */
 	movl $0x0010, %eax
@@ -171,7 +171,7 @@ setup_pic0_single_autoeoi:
 	outb %al, $0x0021
 
 	/* no icw3 (single) */
-	/* FIXME (uncomment to make it work with pic in FAUmachine) 
+	/* FIXME (uncomment to make it work with pic in FAUmachine)
 	xorb %al, %al
 	outb %al, $0x0021 */
 
@@ -200,7 +200,7 @@ setup_idt:
  * ******************************************************************** */
 
 /** return to the main loop. Stack must contain plain interrupt
- *  data and no additional entries. Data segments should have been 
+ *  data and no additional entries. Data segments should have been
  *  restored already.
  *
  *  This should get jumped to from interrupt handlers.
@@ -211,7 +211,7 @@ iret_to_main_loop_entry:
 	/* avoid this opcode with 16-Bit prefix... */
 	/* movw $0x08, 4(%esp) */
 
-	/* use this instead: before cs, there should be eflags, so it's safe 
+	/* use this instead: before cs, there should be eflags, so it's safe
 	 * read a long from there. However make sure to not break eflags! */
 	movl 4(%esp), %eax
 	andl $0xFFFF0000, %eax
@@ -271,8 +271,8 @@ general_protection_fault:
 	call libs_puts
 
 	/* error code */
-	/* FIXME display error code, needs "and, shrb" hence disabled 
-	 *       for now. 
+	/* FIXME display error code, needs "and, shrb" hence disabled
+	 *       for now.
 	popl %eax
 	pushl %eax
 	shrb $4, %al
@@ -294,7 +294,7 @@ page_fault:
 
 	iret
 
-	
+
 /* exception handler for division by 0 */
 handle_div0:
 	movl $str_div0, %edx
@@ -422,7 +422,7 @@ os_call_handler:
 	push %fs
 	push %es
 	push %ds
-	
+
 	/* use os data segments... stack segment mustn't change! */
 	pushl %eax
 	movl $0x10, %eax
@@ -472,7 +472,7 @@ os_call_write:
 	movl $0x10, %eax
 	movw %ax, %ds
 	popl %eax
-	
+
 	/* w00t, so eax contains the character now, call libs_printc */
 	pushl %ebx
 	pushl %ecx
@@ -485,7 +485,7 @@ os_call_write:
 	jmp os_call_out
 
 os_call_read:
-	/* FIXME reads are not that easy! need real process handling 
+	/* FIXME reads are not that easy! need real process handling
 	 * for that.
 	 */
 	jmp os_call_out
@@ -496,17 +496,17 @@ idt:
 	/* generic format traps/interrupts:
 	 * (we're little endian!)
          *
-	 * l1: 
+	 * l1:
 	 * 	15-0: offset 15-0.
 	 * 	31-16: segment selector
-	 * l0: 
+	 * l0:
 	 * 	7-5: 000, 4-0: reserved (use 0 here)
 	 *      15-8:
-	 *      	15: valid?, 
-	 * 		14+13: dpl, 
+	 *      	15: valid?,
+	 * 		14+13: dpl,
 	 *		12-9: 0D11 (D=1 -> 32 bit, 0 -> 16 bit)
 	 * 		8: leave IF enabled? (1)
-	 * 
+	 *
 	 * 	31-16: offset 31-16
 	 */
 
@@ -1052,7 +1052,7 @@ str_debug:
 	.asciz "debug 1\n"
 
 gdt:
-	/* entries: 
+	/* entries:
 	 * limit 7-0
 	 * limit 15-8
 	 * base 7-0
@@ -1062,7 +1062,7 @@ gdt:
 	 * 	-p: present
 	 *	-dpl: descriptor privilege level
 	 *	-s: descriptor type (0=system, 1=code or data)
-	 *	-type: 
+	 *	-type:
 	 *		s=1
 	 *			cs:e:w:a
 	 *			cs:c:r:a
@@ -1071,7 +1071,7 @@ gdt:
 	 *			-e: expand down
 	 *			-w: write allowed
 	 *			-a: accessed? (set by CPU on load of entry)
-	 *			
+	 *
 	 *			-cs: 1=code segment
 	 *			-c: conforming/non-conforming
 	 *			    (conforming=dpl check not done)
@@ -1160,7 +1160,7 @@ gdt:
 	.byte 0b11000000
 	.byte 0 /* base 31-24 */
 gdt_end:
-	
+
 gdt_descriptor:
 	.word (gdt_end - gdt) - 1
 	.long gdt
