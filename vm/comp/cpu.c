@@ -1113,6 +1113,10 @@ cpu_step(void *_cpu_state) {
 
 		#include "instructionBlocks/cpu_ioInst.c"
 
+		#include "instructionBlocks/cpu_pushInst.c"
+
+		#include "instructionBlocks/cpu_popInst.c"
+
 		default:
 			break;
 	}

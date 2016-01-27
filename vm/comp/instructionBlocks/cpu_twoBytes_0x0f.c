@@ -58,3 +58,41 @@ jmp32: {
 
 	return true;
 }
+
+case 0xa0: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("PUSH FS \n");
+	#endif
+
+	cpu_stack_push_doubleword(cpu_state, cpu_state->fs.public_part);
+	return true;
+}
+
+case 0xa8: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("PUSH GS \n");
+	#endif
+
+	cpu_stack_push_doubleword(cpu_state, cpu_state->gs.public_part);
+	return true;
+}
+
+case 0xa1: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("POP FS \n");
+	#endif
+
+	uint32_t val = cpu_stack_pop_doubleword(cpu_state);
+	cpu_load_segment_register(cpu_state, GENERAL_PURPOSE1, val);
+	return true;
+}
+
+case 0xa9: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("POP GS \n");
+	#endif
+
+	uint32_t val = cpu_stack_pop_doubleword(cpu_state);
+	cpu_load_segment_register(cpu_state, GENERAL_PURPOSE2, val);
+	return true;
+}

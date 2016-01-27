@@ -59,5 +59,18 @@ case 4: {
 	return true;
 }
 
+case 6: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("PUSH RM32 \n");
+	#endif
+	uint32_t src;
+	if(s_op.regmem_type == MEMORY){
+		src = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
+	} else {
+		src = cpu_read_doubleword_from_reg(s_op.reg);
+	}
+	cpu_stack_push_doubleword(cpu_state, src);
+}
+
 default:
 	break;
