@@ -45,7 +45,7 @@ case 0x75: {
 jmp8: {
 	int8_t offset = cpu_consume_byte_from_mem(cpu_state);
 	if(cond){
-		cpu_set_eip(cpu_state, cpu_state->eip + offset);
+		cpu_set_eip(cpu_state, cpu_state->cs.base_addr+cpu_state->eip + offset);
 	}
 	return true;
 }
@@ -78,7 +78,7 @@ case 0xEB: {
 	#endif
 	/* Jump short relative 8*/
 	int8_t rel8 = cpu_consume_byte_from_mem(cpu_state);
-	cpu_set_eip(cpu_state, cpu_state->eip + rel8);
+	cpu_set_eip(cpu_state, cpu_state->cs.base_addr+cpu_state->eip + rel8);
 
 
 	return true;
@@ -90,7 +90,7 @@ case 0xE9: {
 	#endif
 	/* Jump near, relative 32*/
 	int32_t rel32 = cpu_consume_doubleword_from_mem(cpu_state);
-	cpu_set_eip(cpu_state, cpu_state->eip + rel32);
+	cpu_set_eip(cpu_state, cpu_state->cs.base_addr+cpu_state->eip + rel32);
 
 
 	return true;
