@@ -23,10 +23,16 @@ disk_ctrl_readb(void *_disk_state, uint32_t addr, uint8_t *valp){
 
 	switch (offset) {
 		case DISK_BNR:
+			*valp = disk_state->bnr >> 24;
+			return true;
 		case DISK_BNR_1:
+			*valp = disk_state->bnr >> 16;
+			return true;
 		case DISK_BNR_2:
+			*valp = disk_state->bnr >> 8;
+			return true;
 		case DISK_BNR_3:
-			*valp = ((uint8_t*) &disk_state->bnr)[offset];
+			*valp = disk_state->bnr >> 0;
 			return true;
 		case DISK_ERR_REG:
 			*valp = disk_state->err_reg;
@@ -40,7 +46,13 @@ disk_ctrl_readb(void *_disk_state, uint32_t addr, uint8_t *valp){
 				return false;
 			}
 
+
 			offset = offset - DISK_MEM_BUF;
+
+			if(offset < 10){
+				*valp = disk_state->buffer[offset];
+			}
+
 			*valp = disk_state->buffer[offset];
 			return true;
 	}
@@ -50,7 +62,7 @@ static bool
 read_from_disk(void *_disk_state){
 		disk_state* disk_state = (struct disk_state*) _disk_state;
 		int disk_addr = BUF_SIZE * disk_state->bnr;
-		
+
 		if(disk_addr + BUF_SIZE > DISK_SIZE){
 				return false;
 		}
@@ -75,11 +87,11 @@ static bool
 write_to_disk(void *_disk_state){
 		disk_state* disk_state = (struct disk_state*) _disk_state;
 		int disk_addr = BUF_SIZE * disk_state->bnr;
-		
+
 		if(disk_addr + BUF_SIZE > DISK_SIZE){
 				return false;
 		}
-		
+
 		/* Set filepointer to dis_addr */
 		if(0 != fseek(disk_state->f, disk_addr, SEEK_SET)){
 			return false;
@@ -97,15 +109,25 @@ disk_ctrl_writeb(void *_disk_state, uint32_t addr, uint8_t val){
 	if(offset >= DISK_MEM_BORDER){
 		return false;
 	}
-	
+
 	/* Adress is in range [0xD000; 0xD400] */
 
 	switch (offset) {
 		case DISK_BNR:
+			disk_state->bnr &= ~(0xFF << 24);
+			disk_state->bnr |= val << 24;
+			return true;
 		case DISK_BNR_1:
+			disk_state->bnr &= ~(0xFF << 16);
+			disk_state->bnr |= val << 16;
+			return true;
 		case DISK_BNR_2:
+			disk_state->bnr &= ~(0xFF << 8);
+			disk_state->bnr |= val << 8;
+			return true;
 		case DISK_BNR_3:
-			((uint8_t*) &disk_state->bnr)[offset] = val;
+			disk_state->bnr &= ~(0xFF << 0);
+			disk_state->bnr |= val << 0;
 			return true;
 		case DISK_ERR_REG:
 			disk_state->err_reg = val;
