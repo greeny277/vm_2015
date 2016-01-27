@@ -161,9 +161,9 @@ cpu_print_inst("ADD eax imm32 \n");
 #endif
 
 	/*ADD EAX, imm32*/
-	uint8_t op1 = cpu_read_doubleword_from_reg(&(cpu_state->eax));
-	uint8_t op2 = cpu_consume_doubleword_from_mem(cpu_state);
-	uint8_t result = op1 + op2;
+	uint32_t op1 = cpu_read_doubleword_from_reg(&(cpu_state->eax));
+	uint32_t op2 = cpu_consume_doubleword_from_mem(cpu_state);
+	uint32_t result = op1 + op2;
 	cpu_write_doubleword_in_reg(&(cpu_state->eax), result);
 
 	cpu_set_overflow_add(cpu_state, op1, op2, result, !EIGHT_BIT);

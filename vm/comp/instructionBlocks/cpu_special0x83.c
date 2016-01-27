@@ -4,7 +4,7 @@ case 0: {
 	cpu_print_inst("XOR rm32 imm8\n");
 	#endif
 	/*r/m32 ADD imm8.*/
-	uint8_t op1;
+	uint32_t op1;
 	if(s_op.regmem_type == MEMORY)
 		op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
@@ -34,7 +34,7 @@ case 6: {
 	cpu_print_inst("XOR rm32 imm8\n");
 	#endif
 	/*r/m32 XOR imm8.*/
-	uint8_t op1;
+	uint32_t op1;
 	if(s_op.regmem_type == MEMORY)
 		op1 = cpu_read_doubleword_from_mem(cpu_state, s_op.regmem_mem, DATA);
 	else
