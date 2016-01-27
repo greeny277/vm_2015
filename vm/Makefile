@@ -60,7 +60,7 @@ clean:
 	$(RM) $(ROMS_OBJ)
 	$(RM) $(ROMS_ELFS)
 	$(RM) disk.bin
-	$(MAKE) -C comp/test $@
+	#$(MAKE) -C comp/test $@
 
 %.o:%.c
 	$(CC) $(CFLAGS) $(CINCLUDE_FLAGS) -c $< -o $@
