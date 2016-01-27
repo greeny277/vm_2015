@@ -92,7 +92,10 @@ case 0x8C: {
 		} else {
 			cpu_write_doubleword_in_reg(s_op.regmem_reg, cur_reg->public_part);
 		}
+
+		return true;
 	}
+	break;
 }
 
 case 0x8E: {
@@ -114,7 +117,10 @@ case 0x8E: {
 		}
 
 		cpu_load_segment_register(cpu_state, (cpu_segment) s_op.reg_value, value);
+
+		return true;
 	}
+	break;
 }
 
 case 0xA0: {
