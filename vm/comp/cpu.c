@@ -62,6 +62,7 @@ static void cpu_set_flag(cpu_state *cpu_state, flag flag, bool raised);
 
 static void cpu_set_carry_add(cpu_state *cpu_state, uint32_t first_summand, uint32_t result);
 static void cpu_set_carry_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend);
+static void cpu_set_parity_flag(cpu_state *cpu_state, uint32_t result);
 
 static void cpu_set_overflow_add(cpu_state *cpu_state, uint32_t summand_fst, uint32_t summand_snd, uint32_t result, bool is_8bit);
 static void cpu_set_overflow_sub(cpu_state *cpu_state, uint32_t minuend, uint32_t subtrahend, uint32_t result, bool is_8bit);

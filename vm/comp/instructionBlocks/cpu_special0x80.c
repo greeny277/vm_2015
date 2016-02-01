@@ -28,6 +28,35 @@ case 0: {
 	return true;
 }
 
+case 4: {
+	#ifdef DEBUG_PRINT_INST
+	cpu_print_inst("AND r/m8, imm8\n");
+	#endif
+	
+	uint8_t imm = cpu_consume_byte_from_mem(cpu_state);
+	
+	uint8_t op1;
+	if(s_op.regmem_type == MEMORY)
+		op1 = cpu_read_byte_from_mem(cpu_state, s_op.regmem_mem, DATA);
+	else
+		op1 = cpu_read_byte_from_reg(s_op.regmem_reg, IS_HIGH(s_op.regmem));
+
+	uint8_t result = imm & op1;
+	
+	if(s_op.regmem_type == MEMORY)
+		cpu_write_byte_in_mem(cpu_state, result, s_op.regmem_mem, DATA);
+	else
+		cpu_write_byte_in_reg(s_op.regmem_reg, result, IS_HIGH(s_op.regmem));
+
+	cpu_set_sign_flag(cpu_state, result, EIGHT_BIT);
+	cpu_set_zero_flag(cpu_state, result);
+	cpu_set_parity_flag(cpu_state, result);
+	cpu_clear_flag(cpu_state, OVERFLOW_FLAG);
+	cpu_clear_flag(cpu_state, CARRY_FLAG);
+
+	return true;
+}
+
 case 6: {
 
 	#ifdef DEBUG_PRINT_INST
