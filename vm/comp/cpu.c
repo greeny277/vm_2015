@@ -1073,6 +1073,7 @@ static void cpu_handle_interrupt_vector(cpu_state *cpu_state, int vector_number)
 	cpu_state->interrupt_raised = false;
 	cpu_clear_flag(cpu_state, INTERRUPT_FLAG);
 
+	cpu_load_segment_register(cpu_state, CODE, segment);
 	cpu_state->eip = offset;
 }
 
