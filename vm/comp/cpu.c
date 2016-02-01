@@ -633,10 +633,9 @@ static void cpu_check_segment_range(cpu_state *cpu_state, cpu_segment segment, u
 	if(segment == NOCHECK)
 		return;
 
-	uint32_t segment_base = (&(cpu_state->es)+segment)->base_addr;
 	uint32_t segment_limit = (&(cpu_state->es)+segment)->limit;
 
-	if(unlikely(segment_base + address >= segment_limit)){
+	if(unlikely(address > segment_limit)){
 		cpu_handle_gpf(cpu_state);
 		//this should never be reached!
 		assert(false);
@@ -682,7 +681,8 @@ cpu_read_doubleword_from_reg(uint32_t *reg_addr) {
 static uint8_t
 cpu_consume_byte_from_mem(cpu_state *cpu_state) {
 	cpu_check_segment_range(cpu_state, CODE, cpu_state->eip);
-	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->eip);
+
+	uint8_t next_byte = sig_host_bus_readb(cpu_state->port_host, (void *)cpu_state, cpu_state->cs.base_addr + cpu_state->eip);
 	cpu_state->eip = cpu_state->eip + 1;
 
 	return next_byte;
@@ -749,7 +749,13 @@ static uint8_t
 cpu_read_byte_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment) {
 	cpu_check_segment_range(cpu_state, segment, mem_addr);
 
-	return sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	uint32_t segment_base;
+	if(segment != NOCHECK)
+		segment_base = (&(cpu_state->es)+segment)->base_addr;
+	else
+		segment_base = 0;
+
+	return sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 }
 
 /** @brief read a word (2 byte) at given address from memory. keeps IP untouched.
@@ -763,12 +769,18 @@ static uint16_t
 cpu_read_word_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment) {
 	cpu_check_segment_range(cpu_state, segment, mem_addr);
 
+	uint32_t segment_base;
+	if(segment != NOCHECK)
+		segment_base = (&(cpu_state->es)+segment)->base_addr;
+	else
+		segment_base = 0;
+
 	uint16_t data = 0;
 	uint8_t byte1, byte2;
-	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 	mem_addr++;
 
-	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 	mem_addr++;
 
 	data = byte1;
@@ -788,18 +800,24 @@ static uint32_t
 cpu_read_doubleword_from_mem(cpu_state *cpu_state, uint32_t mem_addr, cpu_segment segment) {
 	cpu_check_segment_range(cpu_state, segment, mem_addr);
 
+	uint32_t segment_base;
+	if(segment != NOCHECK)
+		segment_base = (&(cpu_state->es)+segment)->base_addr;
+	else
+		segment_base = 0;
+
 	uint32_t data = 0;
 	uint8_t byte1, byte2, byte3, byte4;
-	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	byte1 = sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 	mem_addr++;
 
-	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	byte2 = sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 	mem_addr++;
 
-	byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	byte3 = sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 	mem_addr++;
 
-	byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, mem_addr);
+	byte4 = sig_host_bus_readb(cpu_state->port_host, cpu_state, segment_base + mem_addr);
 
 	data = byte1;
 	data |= (byte2 << 8);
@@ -851,7 +869,14 @@ cpu_write_doubleword_in_reg(uint32_t *reg_addr, uint32_t word) {
 static void
 cpu_write_byte_in_mem(cpu_state *cpu_state, uint8_t byte, uint32_t mem_addr, cpu_segment segment) {
 	cpu_check_segment_range(cpu_state, segment, mem_addr);
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
+
+	uint32_t segment_base;
+	if(segment != NOCHECK)
+		segment_base = (&(cpu_state->es)+segment)->base_addr;
+	else
+		segment_base = 0;
+
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, segment_base + mem_addr, byte);
 }
 
 /** @brief write a word (4 byte) to the memory
@@ -865,19 +890,25 @@ cpu_write_doubleword_in_mem(cpu_state *cpu_state, uint32_t word, uint32_t mem_ad
 	cpu_check_segment_range(cpu_state, segment, mem_addr);
 	uint8_t byte = word & 0xff;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
+	uint32_t segment_base;
+	if(segment != NOCHECK)
+		segment_base = (&(cpu_state->es)+segment)->base_addr;
+	else
+		segment_base = 0;
+
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, segment_base + mem_addr, byte);
 	byte = (word >> 8) & 0xff;
 	mem_addr++;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, segment_base + mem_addr, byte);
 	byte = (word >> 16) & 0xff;
 	mem_addr++;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, segment_base + mem_addr, byte);
 	byte = (word >> 24) & 0xff;
 	mem_addr++;
 
-	sig_host_bus_writeb(cpu_state->port_host, cpu_state, mem_addr, byte);
+	sig_host_bus_writeb(cpu_state->port_host, cpu_state, segment_base + mem_addr, byte);
 }
 
 /** @brief Save byte on stack and decrements stack pointer afterwards
@@ -1032,6 +1063,7 @@ static void cpu_handle_gpf(cpu_state *cpu_state){
 static void cpu_handle_interrupt_vector(cpu_state *cpu_state, int vector_number){
 	uint32_t idtr_vector_base = (cpu_state->idtr_base) + vector_number * VECTOR_SIZE;
 
+	uint32_t segment = cpu_read_word_from_mem(cpu_state, idtr_vector_base+2, NOCHECK);
 	uint32_t offset = cpu_read_word_from_mem(cpu_state, idtr_vector_base, NOCHECK) |
 						cpu_read_word_from_mem(cpu_state, idtr_vector_base+6, NOCHECK) << 16;
 

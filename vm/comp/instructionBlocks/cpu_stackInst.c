@@ -99,7 +99,7 @@ case 0x9A: {
 	cpu_save_state(cpu_state);
 
 	cpu_load_segment_register(cpu_state, CODE, segment);
-	cpu_write_doubleword_in_reg(&(cpu_state->eip), cpu_state->cs.base_addr+abs);
+	cpu_write_doubleword_in_reg(&(cpu_state->eip), abs);
 
 
 	return true;
