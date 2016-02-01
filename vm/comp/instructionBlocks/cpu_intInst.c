@@ -10,7 +10,7 @@ case 0xCD : {
 
 case 0xCE : {
 	if(cpu_get_overflow_flag(cpu_state)){
-		cpu_handle_interrupt(cpu_state, 4);
+		cpu_handle_interrupt_vector(cpu_state, 4);
 	}
 	return true;
 }
