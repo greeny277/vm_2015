@@ -1113,6 +1113,8 @@ cpu_step(void *_cpu_state) {
 			return true;
 		}
 
+		#include "instructionBlocks/cpu_andInst.c"
+
 		#include "instructionBlocks/cpu_addInst.c"
 
 		#include "instructionBlocks/cpu_compareInst.c"
@@ -1128,6 +1130,8 @@ cpu_step(void *_cpu_state) {
 		#include "instructionBlocks/cpu_xorInst.c"
 
 		#include "instructionBlocks/cpu_incInst.c"
+
+		#include "instructionBlocks/cpu_intInst.c"
 
 		#include "instructionBlocks/cpu_decInst.c"
 
